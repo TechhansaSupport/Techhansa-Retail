@@ -9,9 +9,9 @@
 
 @layer base {
   :root {
-    /* Yahan hum logo ke professional colors define kar rahe hain */
-    --tech-blue: #2A85D1;
-    --tech-blue-hover: #1E6BA8;
+ 
+    --tech-blue: #0d3863;
+    --techgolden-hover: #D4A22E;
     --premium-gold: #DDA73C;
     --soft-bg: #E4EBF4;
     --text-dark: #1E293B;

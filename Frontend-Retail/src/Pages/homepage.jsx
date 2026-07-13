@@ -13,7 +13,7 @@ export default function Homepage() {
     <div className="page-container">
       <Hero />
       
-      <section className="products-section">
+      {/* <section className="products-section">
         <h2>Featured Products</h2>
         <div className="product-grid">
           {featuredProducts.map((product) => (
@@ -27,7 +27,7 @@ export default function Homepage() {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
     </div>
   );
 }
