@@ -6,7 +6,7 @@ import About from './Pages/about';
 import Contact from './Pages/contact';
 import Partners from './Pages/partners';
 import Investers from './Pages/investers';
-import './App.css';
+
 
 function App() {
   return (
