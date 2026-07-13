@@ -22,6 +22,11 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/partners" element={<Partners />} />
             <Route path="/investors" element={<Investers />} />
+            <Route path="/arpit" element={
+              <div className="min-h-screen flex items-center justify-center">
+                <h1 className="text-5xl font-bold text-blue-600">from arpit</h1>
+              </div>
+            } />
           </Routes>
         </main>
 
