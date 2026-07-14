@@ -159,7 +159,7 @@ export default function Footer() {
             
             {/* COLUMN 1: Brand Logo & Information (Using exact old margins/sizing) */}
             <div className="flex flex-col pr-4">
-              <Link to="/" className="flex items-center mb-4 ml-8 md:ml-16 cursor-pointer">
+              <Link to="/" className="flex items-center mb-4 ml-6 md:ml-8 cursor-pointer">
                 <div className="w-24 h-24 lg:w-26 lg:h-26 bg-transparent border-0 -mt-2 lg:-mt-6 rounded-full flex items-center justify-center shadow-none overflow-hidden">
                   <img 
                     src={logo} 
