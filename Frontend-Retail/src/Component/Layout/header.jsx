@@ -105,7 +105,7 @@ export default function Header() {
               </button>
 
               {/* Login Button */}
-              <button className="hidden sm:block bg-[var(--tech-blue)] hover:bg-[var(--tech-blue-hover)] text-white px-5 lg:px-7 py-2 rounded-md font-semibold text-[14px] lg:text-[15px] transition-all duration-300 active:scale-95 shadow-md hover:shadow-lg whitespace-nowrap">
+              <button className="hidden sm:block bg-[var(--tech-blue)] hover:bg-[var(--techgolden-hover)] text-white px-5 lg:px-7 py-2 rounded-md font-semibold text-[14px] lg:text-[15px] transition-all duration-300 active:scale-95 shadow-md hover:shadow-lg whitespace-nowrap">
                 Login
               </button>
             </div>
