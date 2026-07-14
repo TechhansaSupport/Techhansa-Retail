@@ -6,16 +6,21 @@ import About from './Pages/about';
 import Contact from './Pages/contact';
 import Partners from './Pages/partners';
 import Investers from './Pages/investers';
-
+import CircuitPattern from './Component/circuitpattern'; // Name should be capitalized
 
 function App() {
   return (
     <Router>
-      <div className="app-container">
+      {/* 1. Background Pattern (z-0) */}
+      <CircuitPattern id="global-pattern" color="#2A85D1" opacity={0.15} />
+
+      {/* 2. Main Application Wrapper (z-10) */}
+      {/* relative aur z-10 lagane se aapka content pattern ke upar aayega */}
+      <div className="app-container relative z-10 bg-transparent min-h-screen flex flex-col">
         <Header />
         
         {/* Main Content Area */}
-        <main className="main-content">
+        <main className="main-content flex-grow">
           <Routes>
             <Route path="/" element={<Homepage />} />
             <Route path="/about" element={<About />} />
