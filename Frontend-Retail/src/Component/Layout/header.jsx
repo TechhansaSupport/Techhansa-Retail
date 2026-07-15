@@ -41,8 +41,8 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* 2. Desktop Navigation Links (Ab ye search open hone par HIDE nahi honge) */}
-        <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
+      
+        <nav className="hidden lg:flex items-center gap-6 xl:gap-8 ml-12 xl:ml-20">
           {navLinks.map((link) => (
             <Link 
               key={link.name} 
@@ -58,7 +58,7 @@ export default function Header() {
         {/* 3. Action & Search Section */}
         <div className="flex items-center gap-3 lg:gap-6 z-20">
           
-          {/* Search Container (Fixed width taaki layout jump na kare) */}
+      
           <div ref={searchContainerRef} className="relative flex items-center justify-end h-10 w-auto lg:w-[320px]">
             
             {/* === SEARCH BAR === */}
@@ -82,18 +82,12 @@ export default function Header() {
             </div>
 
             {/* === DEFAULT ACTIONS (Contact, Login, Search Icon) === */}
-            {/* translate-x-8 hata diya aur scale animation lagaya taaki horizontal scroll na aaye */}
+           
             <div 
               className={`flex items-center gap-4 xl:gap-6 transition-all duration-400 ease-in-out ${
                 isSearchOpen ? 'opacity-0 invisible absolute right-0 scale-90' : 'opacity-100 visible relative scale-100'
               }`}
             >
-              {/* Contact Details */}
-              <div className="hidden xl:flex items-center gap-2 font-semibold text-[15px] whitespace-nowrap">
-                <span className="text-lg">📞</span>
-                <span>+91 98765 43210</span>
-              </div>
-              
               {/* Search Icon */}
               <button 
                 onClick={() => setIsSearchOpen(true)}
@@ -104,10 +98,19 @@ export default function Header() {
                 </svg>
               </button>
 
-              {/* Login Button */}
-              <button className="hidden sm:block bg-[var(--tech-blue)] hover:bg-[var(--techgolden-hover)] text-white px-5 lg:px-7 py-2 rounded-md font-semibold text-[14px] lg:text-[15px] transition-all duration-300 active:scale-95 shadow-md hover:shadow-lg whitespace-nowrap">
-                Login
-              </button>
+              {/* Contact & Login Section - Stacked Vertically */}
+              <div className="hidden xl:flex flex-col -mt-8 items-end gap-0.5">
+                {/* Contact Details */}
+                <div className="flex items-center gap-1 font-semibold text-[14px] whitespace-nowrap">
+                  <span className="text-lg">📞</span>
+                  <span>+91 98765 43210</span>
+                </div>
+                
+                {/* Login Button */}
+                <button className="bg-[var(--tech-blue)] hover:bg-[var(--techgolden-hover)] text-white px-5 lg:px-7 py-1.5 rounded-md font-semibold text-[13px] lg:text-[14px] transition-all duration-300 active:scale-95 shadow-md hover:shadow-lg whitespace-nowrap">
+                  Login
+                </button>
+              </div>
             </div>
           </div>
 
