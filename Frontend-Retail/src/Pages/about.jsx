@@ -53,30 +53,6 @@ const whoCanJoin = [
   { type: "Franchise Partners", icon: TrendingUp, list: ["Entrepreneurs", "Business Owners", "IT Professionals", "Consultants"] }
 ];
 
-// --- ANIMATED WORD REVEAL HELPER ---
-const WordReveal = ({ text, className }) => {
-  return (
-    <motion.h1 
-      initial="hidden" animate="visible"
-      variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
-      className={className}
-    >
-      {text.split(" ").map((word, i) => (
-        <motion.span
-          key={i}
-          variants={{
-            hidden: { opacity: 0, y: 15, filter: "blur(6px)" },
-            visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { type: "spring", damping: 20, stiffness: 100 } }
-          }}
-          className="inline-block mr-[0.25em]"
-        >
-          {word}
-        </motion.span>
-      ))}
-    </motion.h1>
-  );
-};
-
 // --- MAIN PAGE COMPONENT ---
 export default function AboutPage() {
   const containerRef = useRef(null);
@@ -139,11 +115,16 @@ export default function AboutPage() {
       >
         <div className="relative z-10 max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-            {/* Gradient applied to make it Gray + #0d3863 */}
-            <WordReveal 
-              text="Empowering Businesses with Smarter IT Procurement"
+            
+            {/* WordReveal removed, replaced with standard motion.h1 and text */}
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
               className="text-4xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#929292] to-[#0d3863] leading-[1.1] mb-6"
-            />
+            >
+              Empowering Businesses with Smarter IT Procurement
+            </motion.h1>
 
             <motion.p 
               initial={{ opacity: 0, y: 20 }} 
@@ -339,8 +320,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
-    
 
     </div>
   );
