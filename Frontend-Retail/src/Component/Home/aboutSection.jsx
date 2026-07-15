@@ -74,8 +74,8 @@ export default function AboutSection() {
           </div>
 
           {/* ================= RIGHT COLUMN: COMPACT IMAGE WITH HOVER ================= */}
-          {/* Image container height reduced to 350px/400px to fit on one screen cleanly */}
-          <div className="relative w-full h-[320px] lg:h-[400px] mt-6 lg:mt-0">
+
+          <div className="relative w-full h-[300px] lg:h-[300px] mt-6 lg:mt-0">
             
             <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(13,56,99,0.12)] z-10 group cursor-pointer border-[3px] border-white">
               
@@ -90,18 +90,7 @@ export default function AboutSection() {
               {/* Glassy Shine Effect */}
               <div className="absolute top-0 -left-[150%] z-20 w-1/2 h-full block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent transition-all duration-1000 ease-in-out group-hover:left-[150%] pointer-events-none"></div>
               
-              {/* Floating Badge - Scaled down to match the new image size */}
-              <div className="absolute bottom-4 left-4 right-4 md:left-6 md:right-6 bg-white/10 backdrop-blur-md border border-white/20 p-3 md:p-4 rounded-xl shadow-lg z-20 flex items-center gap-3 transition-transform duration-500 group-hover:-translate-y-1">
-                <div className="w-10 h-10 rounded-full bg-[var(--premium-gold)] flex items-center justify-center text-white shadow-md flex-shrink-0">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-[18px] md:text-[20px] font-extrabold text-white leading-none mb-1">100%</p>
-                  <p className="text-[11px] md:text-[12px] font-semibold text-white/90 uppercase tracking-wider">Genuine Hardware</p>
-                </div>
-              </div>
+          
 
             </div>
 

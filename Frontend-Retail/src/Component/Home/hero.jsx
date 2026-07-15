@@ -30,7 +30,7 @@ export default function Hero() {
 
         {/* 2. Massive Main Heading */}
         <h1 className="text-white text-6xl md:text-7xl lg:text-[7rem] font-extrabold tracking-tight mb-2 md:mb-4 leading-none drop-shadow-lg">
-          Your Growth.
+          Your Growth
         </h1>
 
         {/* 3. Tagline with Serif Golden Highlight (Matching the "Digital Transformation" style) */}
