@@ -35,7 +35,7 @@ export default function Header() {
         <div className="flex-shrink-0 z-20">
           <Link to="/" className="flex items-center gap-2 lg:gap-3">
             <img src={logo} alt="Techhansa Retail" className="h-12 lg:h-24 w-auto object-contain" />
-            <span className="text-[var(--premium-gold)] font-extrabold text-lg lg:text-[22px] tracking-wide whitespace-nowrap">
+            <span className="text-[var(--premium-gold)] font-extrabold text-lg lg:text-[26px] tracking-wide whitespace-nowrap">
               Techhansa Retail
             </span>
           </Link>

@@ -1,21 +1,24 @@
 import { Link } from 'react-router-dom';
-import HeroSec from '../../assets/HeroSec.jpg'; // Ensure this image is in your assets folder
+import HeroSec from '../../assets/Hero.mp4';
 
 export default function Hero() {
   return (
     <section 
-      className="relative w-full h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden"
-      style={{
-        backgroundImage: `url(${HeroSec})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
+      className="relative w-full h-[80vh] min-h-[500px] flex items-center justify-center overflow-hidden"
     >
-      
+      <video
+        className="absolute inset-0 w-full h-full object-cover -z-10"
+        src={HeroSec}
+        autoPlay
+        muted
+        loop
+        playsInline
+        aria-hidden="true"
+      />
+
       {/* ================= DARK OVERLAY ================= */}
     
-      <div className="absolute inset-0 bg-[#07162c]/60 z-0"></div>
+      <div className="absolute inset-0 bg-[#07162c]/50 z-0"></div>
 
       {/* ================= CENTERED CONTENT ================= */}
       <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-5xl mx-auto w-full mt-[-3rem]">

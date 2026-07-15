@@ -1,0 +1,114 @@
+import { Link } from 'react-router-dom';
+import AboutImg from '../../assets/AboutImg.jpg'; 
+
+export default function AboutSection() {
+  return (
+    // Padding py-28 se kam karke py-12/16 kar di hai taaki screen me fit aaye
+    <section className="relative w-full py-12 lg:py-16 bg-[var(--soft-bg)] overflow-hidden">
+      
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-[#e2e6eb] to-transparent z-0"></div>
+      <div className="absolute -left-20 top-10 w-48 h-48 bg-[var(--tech-blue)] opacity-5 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+        {/* Gap kam karke 10 kar diya hai taaki text aur image paas rahein */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          
+          {/* ================= LEFT COLUMN: TEXT CONTENT ================= */}
+          <div className="flex flex-col">
+            
+            <div className="flex items-center gap-3 mb-3">
+              <span className="w-8 h-0.5 bg-[var(--premium-gold)]"></span>
+              <span className="text-[12px] md:text-[13px] font-bold text-[var(--tech-blue)] uppercase tracking-widest">
+                About Techhansa Retail
+              </span>
+            </div>
+
+            {/* Heading size thoda compact kiya (text-3xl se text-4xl ke beech) */}
+            <h2 className="text-3xl lg:text-[2.2rem] font-extrabold text-[var(--text-dark)] leading-tight mb-4">
+              Building India's Trusted <br />
+              <span className="text-[var(--tech-blue)]">IT Hardware Supply Network</span>
+            </h2>
+
+            {/* Text size 15px/16px for a cleaner corporate read */}
+            <p className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed mb-4 font-medium">
+              Techhansa Retail is a technology-driven B2B hardware distribution platform built to simplify how businesses purchase and manage IT infrastructure. We connect corporates, educational institutions, system integrators, and retailers with genuine hardware from leading global brands.
+            </p>
+
+            <p className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed mb-5">
+              Alongside enterprise procurement, we empower entrepreneurs through our franchise ecosystem—providing access to factory pricing, dedicated business support, and exclusive territory opportunities.
+            </p>
+
+            {/* Mission Box - Made more compact (p-4 instead of p-6) */}
+            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mb-6">
+              <h4 className="text-[14px] font-bold text-[var(--tech-blue)] uppercase tracking-wider mb-3">Our Mission</h4>
+              <ul className="space-y-2">
+                {[
+                  "Deliver authentic and genuine products",
+                  "Ensure transparent and factory-level pricing",
+                  "Provide dependable service that businesses can trust"
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5">
+                    <span className="flex-shrink-0 w-4 h-4 rounded-full bg-[var(--premium-gold)]/20 flex items-center justify-center mt-0.5">
+                      <svg className="w-3 h-3 text-[var(--premium-gold)]" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                    <span className="text-[13.5px] text-gray-700 font-medium">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <Link 
+                to="/about"
+                className="inline-flex items-center gap-2 font-bold text-[14px] text-[var(--tech-blue)] hover:text-[var(--techgolden-hover)] transition-colors duration-300 group"
+              >
+                Discover Our Journey
+                <svg className="w-4 h-4 transform transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+
+          {/* ================= RIGHT COLUMN: COMPACT IMAGE WITH HOVER ================= */}
+          {/* Image container height reduced to 350px/400px to fit on one screen cleanly */}
+          <div className="relative w-full h-[320px] lg:h-[400px] mt-6 lg:mt-0">
+            
+            <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(13,56,99,0.12)] z-10 group cursor-pointer border-[3px] border-white">
+              
+              <img 
+                src={AboutImg} 
+                alt="IT Hardware Supply" 
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+              
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--tech-blue)]/80 via-transparent to-transparent opacity-80"></div>
+
+              {/* Glassy Shine Effect */}
+              <div className="absolute top-0 -left-[150%] z-20 w-1/2 h-full block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent transition-all duration-1000 ease-in-out group-hover:left-[150%] pointer-events-none"></div>
+              
+              {/* Floating Badge - Scaled down to match the new image size */}
+              <div className="absolute bottom-4 left-4 right-4 md:left-6 md:right-6 bg-white/10 backdrop-blur-md border border-white/20 p-3 md:p-4 rounded-xl shadow-lg z-20 flex items-center gap-3 transition-transform duration-500 group-hover:-translate-y-1">
+                <div className="w-10 h-10 rounded-full bg-[var(--premium-gold)] flex items-center justify-center text-white shadow-md flex-shrink-0">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[18px] md:text-[20px] font-extrabold text-white leading-none mb-1">100%</p>
+                  <p className="text-[11px] md:text-[12px] font-semibold text-white/90 uppercase tracking-wider">Genuine Hardware</p>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
