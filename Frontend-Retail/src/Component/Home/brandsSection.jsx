@@ -6,6 +6,9 @@ import AsusLogo from '../../assets/asus.webp';
 import AcerLogo from '../../assets/acer.webp';
 import SamsungLogo from '../../assets/samsung.webp';
 import EpsonLogo from '../../assets/Epson.jpg';
+// import LogitechLogo from '../../assets/logitech.webp';
+// import IntelLogo from '../../assets/intel.webp';
+// import MsiLogo from '../../assets/msi.webp';
 
 export default function BrandsSection() {
   const brands = [
@@ -16,6 +19,9 @@ export default function BrandsSection() {
     { name: 'ASUS', logoSrc: AsusLogo },
     { name: 'Acer', logoSrc: AcerLogo },
     { name: 'Samsung', logoSrc: SamsungLogo },
+     { name: 'Logitech', logoSrc: HPLogo }, // Replace with actual Logitech import
+        { name: 'Intel', logoSrc: DellLogo },  // Replace with actual Intel import
+        { name: 'MSI', logoSrc: LenovoLogo },
     { name: 'Epson', logoSrc: EpsonLogo }
   ];
 
