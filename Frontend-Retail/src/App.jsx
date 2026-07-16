@@ -5,6 +5,9 @@ import Homepage from './Pages/homepage';
 import About from './Pages/about';
 import Contact from './Pages/contact';
 import Partners from './Pages/partners';
+import OemPartner from './Pages/Partners/OEM';
+import ChannelPartner from './Pages/Partners/Channel';
+import FranchisePartner from './Pages/Partners/Franchise';
 import Investers from './Pages/investers';
 
 
@@ -25,12 +28,10 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/partners" element={<Partners />} />
+            <Route path="/partner/oem" element={<OemPartner />} />
+            <Route path="/partner/channel" element={<ChannelPartner />} />
+            <Route path="/partner/franchise" element={<FranchisePartner />} />
             <Route path="/investors" element={<Investers />} />
-            <Route path="/arpit" element={
-              <div className="min-h-screen flex items-center justify-center">
-                <h1 className="text-5xl font-bold text-blue-600">from arpit</h1>
-              </div>
-            } />
           </Routes>
         </main>
 
