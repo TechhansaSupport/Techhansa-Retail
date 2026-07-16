@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './Component/Layout/header';
 import Footer from './Component/Layout/footer';
 import Homepage from './Pages/homepage';
@@ -7,14 +8,26 @@ import Contact from './Pages/contact';
 import Partners from './Pages/partners';
 import Investers from './Pages/investers';
 
+// --- Scroll To Top Component ---
+// Yeh component route change hone par instantly page ko top par bhej dega
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // window.scrollTo(0, 0) instantly top par scroll karta hai (smooth scroll nahi karega)
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   return (
     <Router>
-    
+      {/* ScrollToTop component ko yahan Router ke andar add kiya gaya hai */}
+      <ScrollToTop />
 
       {/* 2. Main Application Wrapper (z-10) */}
-      {/* relative aur z-10 lagane se aapka content pattern ke upar aayega */}
       <div className="app-container relative z-10 bg-transparent min-h-screen flex flex-col">
         <Header />
         
