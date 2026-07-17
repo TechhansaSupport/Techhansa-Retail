@@ -5,7 +5,7 @@ import Footer from './Component/Layout/footer';
 import Homepage from './Pages/homepage';
 import About from './Pages/about';
 import Contact from './Pages/contact';
-import Partners from './Pages/partners';
+import Partners from './Pages/Partners/partnersMain';
 import OemPartner from './Pages/Partners/OEM';
 import ChannelPartner from './Pages/Partners/Channel';
 import FranchisePartner from './Pages/Partners/Franchise';
