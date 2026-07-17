@@ -181,7 +181,7 @@ export default function InvestorsPage() {
       </section>
 
       {/* --- OUR INVESTMENT ECOSYSTEM --- */}
-      {/* <section className="relative z-10 py-24 px-6 lg:px-12 bg-gray-50/50 border-y border-gray-200/50">
+      <section className="relative z-10 py-24 px-6 lg:px-12 bg-gray-50/50 border-y border-gray-200/50">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">
             <span className="text-gray-500">Building the Future</span> <span className="text-[#0d3863]">Together</span>
@@ -193,10 +193,11 @@ export default function InvestorsPage() {
             Together, we are creating a future-ready platform that connects businesses with world-class IT hardware solutions while expanding opportunities through our nationwide franchise network.
           </p>
         </div>
-      </section> */}
+      </section>
 
     
-      {/* <section className="relative z-10 py-32 px-6 lg:px-12 max-w-7xl mx-auto">
+  {/* --- INVESTOR PROFILES (FIXED TOP LINE BORDER RADIUS) --- */}
+      <section className="relative z-10 py-32 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
             <span className="text-gray-500">Our Strategic</span> <span className="text-[#0d3863]">Investors</span>
@@ -211,13 +212,14 @@ export default function InvestorsPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="group relative bg-white p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+              // Yahan 'overflow-hidden' aur 'isolation-isolate' add kiya gaya hai
+              className="group relative bg-white p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden isolation-isolate"
             >
+              {/* Top Animated Line */}
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-gray-300 to-[#0d3863] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
 
-        
+              {/* Logo Container */}
               <div className="w-24 h-24 mb-8 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-center overflow-hidden p-2 group-hover:border-[#0d3863]/20 transition-all shadow-inner">
-           
                 <img 
                   src={investor.logo} 
                   alt={`${investor.name} Logo`} 
@@ -237,9 +239,16 @@ export default function InvestorsPage() {
             </motion.div>
           ))}
         </div>
-      </section> */}
+      </section>
 
-{/*       
+
+      <section className = "relative z-10 py-2 px-2 lg:px-2 h-100 bg-slate-50 overflow-hidden">
+
+      <div className= "text-center mb-20">
+        <h2 className = " txt-3xl md:text-4xl font-mdium tracking-tight mb-4">Our Investors</h2>
+      </div>
+      </section>
+      
       <section className="relative z-10 py-2 px-2 lg:px-2 h-100 bg-slate-50 overflow-hidden">
 
   <div className="absolute inset-0 opacity-[0.05] bg-[linear-gradient(rgba(0,0,0,1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,1)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
@@ -262,11 +271,11 @@ export default function InvestorsPage() {
       Together, we are committed to enabling businesses, entrepreneurs, and franchise partners with the tools, resources, and technology they need to succeed in an increasingly digital world.
     </p>
   </div>
-</section> */}
+</section>
 
       {/* --- WHY OUR INVESTORS MATTER & HIGHLIGHTS (SPLIT SECTION) --- */}
 
-      {/* <section className="relative z-10 py-32 px-6 lg:px-12 bg-white">
+      <section className="relative z-10 py-32 px-6 lg:px-12 bg-white">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 lg:gap-24">
           
       
@@ -310,7 +319,7 @@ export default function InvestorsPage() {
           </div>
 
         </div>
-      </section> */}
+      </section>
     </div>
   );
 }
