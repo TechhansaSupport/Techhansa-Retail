@@ -104,24 +104,28 @@ export default function BrandsSection() {
               return (
                 <div 
                   key={index}
-                  className="carousel-card absolute inset-0 bg-white/80 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgba(13,56,99,0.08)] border border-white/60 flex flex-col items-center justify-center p-8 cursor-pointer group overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(221,167,60,0.15)] hover:border-[var(--premium-gold)]/40 hover:-translate-y-2"
+                  className="carousel-card absolute inset-0"
                   style={{
                     transform: `rotateY(${angle}deg) translateZ(400px)`
                   }}
                 >
-                  
-                  {/* Subtle Inner Glow on Hover */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--premium-gold)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="group w-full h-full cursor-pointer">
+                    <div className="w-full h-full bg-white/80 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgba(13,56,99,0.08)] border border-white/60 flex flex-col items-center justify-center p-8 overflow-hidden transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(221,167,60,0.15)] group-hover:border-[var(--premium-gold)]/40 group-hover:-translate-y-2 relative">
+                      
+                      {/* Subtle Inner Glow on Hover */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--premium-gold)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                  {/* FULL COLOR LOGO: Adding 3D Drop Shadow & Scale on Hover */}
-                  <img
-                    src={brand.logoSrc}
-                    alt={brand.name}
-                    className="w-full h-full object-contain relative z-10 p-2 drop-shadow-sm transition-all duration-500 ease-out group-hover:scale-110 group-hover:drop-shadow-2xl"
-                  />
-                  
-                  {/* Glowing Bottom Line Effect */}
-                  <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gray-200/50 group-hover:bg-[var(--premium-gold)] transition-colors duration-500 shadow-[0_-2px_15px_rgba(221,167,60,0.6)] opacity-0 group-hover:opacity-100"></div>
+                      {/* FULL COLOR LOGO: Adding 3D Drop Shadow & Scale on Hover */}
+                      <img
+                        src={brand.logoSrc}
+                        alt={brand.name}
+                        className="w-full h-full object-contain relative z-10 p-2 drop-shadow-sm transition-all duration-500 ease-out group-hover:scale-110 group-hover:drop-shadow-2xl"
+                      />
+                      
+                      {/* Glowing Bottom Line Effect */}
+                      <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gray-200/50 group-hover:bg-[var(--premium-gold)] transition-colors duration-500 shadow-[0_-2px_15px_rgba(221,167,60,0.6)] opacity-0 group-hover:opacity-100"></div>
+                    </div>
+                  </div>
                 </div>
               );
             })}

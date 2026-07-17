@@ -143,16 +143,18 @@ export default function FranchisePartner() {
 
             {/* Desktop CTA Button hidden on mobile to show in text block below */}
             <div className="hidden lg:block">
-              <Link 
-                to="/franchise-apply"
-                className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-[var(--tech-blue)] rounded-xl font-bold text-white text-[15px] overflow-hidden shadow-[0_8px_20px_rgba(13,56,99,0.25)] hover:shadow-[0_15px_30px_rgba(13,56,99,0.4)] hover:-translate-y-1 transition-all duration-300"
-              >
+              <div className="inline-block group">
+                <Link 
+                  to="/franchise-apply"
+                  className="relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-[var(--tech-blue)] rounded-xl font-bold text-white text-[15px] overflow-hidden shadow-[0_8px_20px_rgba(13,56,99,0.25)] group-hover:shadow-[0_15px_30px_rgba(13,56,99,0.4)] group-hover:-translate-y-1 transition-all duration-300"
+                >
                 <span className="absolute inset-0 w-full h-full -ml-[-100%] bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-sweep pointer-events-none"></span>
                 Become a Franchise Partner
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform group-hover:translate-x-1.5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </Link>
+              </div>
             </div>
           </div>
 
@@ -201,8 +203,9 @@ export default function FranchisePartner() {
               key={index}
               data-aos="fade-up" 
               data-aos-delay={index * 50}
-              className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_4px_15px_rgba(0,0,0,0.02)] hover:border-[var(--premium-gold)]/40 hover:shadow-[0_15px_30px_rgba(13,56,99,0.08)] transition-all duration-300 hover:-translate-y-1.5 flex flex-col items-start relative overflow-hidden"
+              className="group h-full"
             >
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_4px_15px_rgba(0,0,0,0.02)] group-hover:border-[var(--premium-gold)]/40 group-hover:shadow-[0_15px_30px_rgba(13,56,99,0.08)] transition-all duration-300 group-hover:-translate-y-1.5 flex flex-col items-start relative overflow-hidden h-full">
               {/* Subtle top border highlight on hover */}
               <div className="absolute top-0 left-0 w-full h-1 bg-[var(--premium-gold)] transform scale-x-0 group-hover:scale-x-100 origin-center transition-transform duration-500"></div>
 
@@ -218,6 +221,7 @@ export default function FranchisePartner() {
               <p className="text-[13.5px] text-gray-500 leading-relaxed font-medium">
                 {benefit.desc}
               </p>
+              </div>
             </div>
           ))}
           

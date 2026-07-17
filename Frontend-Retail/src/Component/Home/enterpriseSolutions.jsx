@@ -73,13 +73,16 @@ export default function EnterpriseSolutions() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
           {solutions.map((item, index) => (
-            <Link 
-              to="/contact" 
+            <div 
               key={item.id}
               data-aos="fade-up"
               data-aos-delay={index * 100}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden group cursor-pointer block"
+              className="group h-full cursor-pointer block"
             >
+              <Link 
+                to="/contact" 
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-300 overflow-hidden flex flex-col h-full"
+              >
               {/* Card Image Container */}
               <div className="h-56 overflow-hidden relative">
                  <img 
@@ -110,7 +113,8 @@ export default function EnterpriseSolutions() {
                     {item.desc}
                  </p>
               </div>
-            </Link>
+              </Link>
+            </div>
           ))}
           
         </div>
