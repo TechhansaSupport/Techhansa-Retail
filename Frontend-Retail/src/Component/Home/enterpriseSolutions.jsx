@@ -2,8 +2,20 @@ import { Link } from 'react-router-dom';
 import CorporateImg from '../../assets/Corporate-procurement.jpg';
 import EducationImg from '../../assets/Educational-institution.jpg';
 import IntegratorsImg from '../../assets/system-integrator.jpg';
+import React, { useEffect } from 'react';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 export default function EnterpriseSolutions() {
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 50,
+    });
+  }, []);
+
   const solutions = [
     {
       id: 1,
@@ -39,7 +51,7 @@ export default function EnterpriseSolutions() {
       <div className="max-w-[1300px] mx-auto px-6 md:px-12 relative z-10">
         
         {/* ================= HEADER SECTION ================= */}
-        <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20">
+        <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20" data-aos="fade-up">
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="w-8 h-0.5 bg-[var(--premium-gold)]"></span>
             <span className="text-[12.5px] md:text-[14px] font-extrabold text-[var(--tech-blue)] uppercase tracking-[0.2em]">
@@ -60,10 +72,12 @@ export default function EnterpriseSolutions() {
         {/* ================= EXACT ABOUT-OVERVIEW STYLE CARDS GRID ================= */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          {solutions.map((item) => (
+          {solutions.map((item, index) => (
             <Link 
               to="/contact" 
               key={item.id}
+              data-aos="fade-up"
+              data-aos-delay={index * 100}
               className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden group cursor-pointer block"
             >
               {/* Card Image Container */}

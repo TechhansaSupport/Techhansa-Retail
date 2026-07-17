@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 // Import all product images
 import LaptopImg from '../../assets/buisness-laptops.jpg';
@@ -33,6 +35,15 @@ const categories = [
 export default function ProductShowcase() {
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 50,
+    });
+  }, []);
 
   // Auto-scroll loop logic
   useEffect(() => {
@@ -85,7 +96,7 @@ export default function ProductShowcase() {
       <div className="max-w-[1400px] mx-auto px-6 relative z-10">
         
         {/* ================= HEADER SECTION ================= */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-16" data-aos="fade-up">
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="w-8 h-0.5 bg-[var(--premium-gold)]"></span>
             <span className="text-[12.5px] md:text-[14px] font-extrabold text-[var(--tech-blue)] uppercase tracking-[0.2em]">
@@ -108,6 +119,8 @@ export default function ProductShowcase() {
           className="relative w-full py-4 group"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
+          data-aos="fade-up"
+          data-aos-delay="200"
         >
           
           {/* Left Navigation Arrow */}
@@ -168,7 +181,7 @@ export default function ProductShowcase() {
         </div>
 
         {/* View Full Catalog CTA */}
-        <div className="mt-12 text-center relative z-20">
+        <div className="mt-12 text-center relative z-20" data-aos="fade-up" data-aos-delay="300">
           <Link 
             to="/catalog"
             className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white border-2 border-gray-200 rounded-xl font-bold text-[var(--text-dark)] hover:border-[var(--tech-blue)] hover:bg-[var(--tech-blue)] hover:text-white transition-all duration-300 shadow-sm hover:shadow-md group"

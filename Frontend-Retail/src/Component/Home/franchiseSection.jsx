@@ -1,6 +1,18 @@
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 export default function FranchiseSection() {
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 50,
+    });
+  }, []);
+
   const benefits = [
     {
       title: "Factory & Wholesale Pricing",
@@ -40,7 +52,7 @@ export default function FranchiseSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           
           {/* ================= LEFT COLUMN: CONTENT & CTA ================= */}
-          <div className="flex flex-col">
+          <div className="flex flex-col" data-aos="fade-right">
             
             <div className="flex items-center gap-3 mb-5">
               <span className="w-10 h-0.5 bg-[var(--premium-gold)]"></span>
@@ -83,7 +95,7 @@ export default function FranchiseSection() {
           </div>
 
           {/* ================= RIGHT COLUMN: BENEFITS GRID ================= */}
-          <div className="relative w-full">
+          <div className="relative w-full" data-aos="fade-left" data-aos-delay="200">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
               

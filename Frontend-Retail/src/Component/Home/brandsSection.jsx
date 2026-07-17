@@ -9,8 +9,20 @@ import EpsonLogo from '../../assets/Epson.jpg';
 // import LogitechLogo from '../../assets/logitech.webp';
 // import IntelLogo from '../../assets/intel.webp';
 // import MsiLogo from '../../assets/msi.webp';
+import React, { useEffect } from 'react';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 export default function BrandsSection() {
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 50,
+    });
+  }, []);
+
   const brands = [
     { name: 'HP', logoSrc: HPLogo },
     { name: 'Dell', logoSrc: DellLogo },
@@ -58,7 +70,7 @@ export default function BrandsSection() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-white rounded-full mix-blend-overlay filter blur-[100px] opacity-60 pointer-events-none z-0"></div>
 
       {/* ================= TEXT CONTENT SECTION ================= */}
-      <div className="max-w-4xl mx-auto px-6 text-center relative z-10 mb-20 md:mb-28">
+      <div className="max-w-4xl mx-auto px-6 text-center relative z-10 mb-20 md:mb-28" data-aos="fade-up">
         
         <div className="flex items-center justify-center gap-3 mb-5">
           <span className="w-10 h-0.5 bg-gradient-to-r from-transparent to-[var(--premium-gold)]"></span>
@@ -81,7 +93,7 @@ export default function BrandsSection() {
       </div>
 
       {/* ================= 3D CAROUSEL SECTION ================= */}
-      <div className="relative w-full h-[320px] md:h-[450px] flex justify-center items-center transform scale-[0.6] sm:scale-75 md:scale-100 z-10 mt-[-3rem] md:mt-0">
+      <div className="relative w-full h-[320px] md:h-[450px] flex justify-center items-center transform scale-[0.6] sm:scale-75 md:scale-100 z-10 mt-[-3rem] md:mt-0" data-aos="zoom-in" data-aos-delay="200">
         
         <div className="relative w-[240px] h-[300px] carousel-3d-wrapper">
           <div className="absolute inset-0 carousel-track">

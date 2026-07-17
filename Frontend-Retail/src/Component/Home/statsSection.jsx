@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 // Custom Hook for Animated Counting on Scroll
 const AnimatedCounter = ({ endValue, duration = 2000 }) => {
@@ -53,6 +55,15 @@ const AnimatedCounter = ({ endValue, duration = 2000 }) => {
 };
 
 export default function StatsSection() {
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 50,
+    });
+  }, []);
+
   const stats = [
     { id: 1, number: 5000, suffix: "+", label: "Products Available" },
     { id: 2, number: 100, suffix: "+", label: "Corporate Clients" },
@@ -76,7 +87,12 @@ export default function StatsSection() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 md:gap-4 divide-x-0 lg:divide-x lg:divide-white/10 text-center">
           
           {stats.map((stat, index) => (
-            <div key={stat.id} className={`flex flex-col items-center justify-center p-4 ${index !== 0 ? 'lg:pl-4' : ''}`}>
+            <div 
+              key={stat.id} 
+              data-aos="fade-up"
+              data-aos-delay={index * 100}
+              className={`flex flex-col items-center justify-center p-4 ${index !== 0 ? 'lg:pl-4' : ''}`}
+            >
               
               {/* If it's a number stat */}
               {!stat.isIcon ? (
