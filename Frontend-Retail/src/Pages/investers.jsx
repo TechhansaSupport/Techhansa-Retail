@@ -199,12 +199,7 @@ export default function InvestorsPage() {
   {/* --- INVESTOR PROFILES (FIXED TOP LINE BORDER RADIUS) --- */}
 
 
-      <section className = "relative z-10 py-2 px-2 lg:px-2 h-100 bg-slate-50 overflow-hidden">
-
-      <div className= "text-center mb-20">
-        <h2 className = " txt-3xl md:text-4xl font-mdium tracking-tight mb-4">Our Investors</h2>
-      </div>
-      </section>
+  
       
       <section className="relative z-10 py-2 px-2 lg:px-2 h-100 bg-slate-50 overflow-hidden">
 
