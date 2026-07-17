@@ -500,37 +500,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- OUR COMMITMENT & CTA SECTION --- */}
-      <section className="relative z-10 py-20 px-6 lg:px-12 flex justify-center text-center overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-20 bg-[#0d3863]/5 rounded-full blur-[120px] pointer-events-none"></div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-          className="relative max-w-5xl w-full bg-white rounded-[3rem] p-12 md:p-20 shadow-2xl overflow-hidden border border-gray-100"
-        >
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">
-              <span className="text-gray-600">Our</span> <span className="text-[#0d3863]">Commitment</span>
-            </h2>
-            <p className="text-gray-600 text-lg md:text-xl mb-12 max-w-3xl mx-auto font-light leading-relaxed">
-              We are committed to building long-lasting relationships based on trust, transparency, quality, and customer satisfaction. Every product, quotation, and partnership reflects our dedication to helping businesses procure technology more efficiently.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button className="group relative inline-flex items-center justify-center px-10 py-5 bg-[#0d3863] text-white rounded-2xl font-bold text-lg overflow-hidden transition-colors hover:bg-[#154c82] shadow-lg shadow-[#0d3863]/20">
-                <span className="relative flex items-center gap-2">
-                  Join the Techhansa Retail Network <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </button>
-            </div>
-            
-            <p className="mt-8 text-sm font-semibold text-[#0d3863] uppercase tracking-widest opacity-80">
-              Smart Procurement • Trusted Partnerships • Sustainable Growth
-            </p>
-          </div>
-        </motion.div>
-      </section>
-
     </div>
   );
 }

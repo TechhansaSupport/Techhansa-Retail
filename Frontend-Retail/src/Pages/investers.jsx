@@ -11,25 +11,29 @@ const investors = [
     name: "Shaatika Vastram",
     role: "Strategic Investor",
     desc: "A valued strategic investor committed to supporting innovation and long-term business development. With a vision focused on sustainable growth and operational excellence, they contribute to strengthening Techhansa Retail's expansion and future-ready initiatives.",
-    logo: "/src/assets/shaatika-vastram.png" // <-- ADD YOUR LOGO PATH HERE
+    logo: "/src/assets/shaatika-vastram.png", 
+    link: "https://www.shaatikavastram.in/" // 
   },
   {
     name: "Techhansa Private Limited",
     role: "Enterprise Growth Partner",
     desc: "Plays a vital role in strengthening our business foundation through strategic guidance and long-term investment. Their commitment to innovation and business excellence enables us to continuously enhance technology, infrastructure, and customer experience.",
-    logo: "/src/assets/logo.png" // <-- ADD YOUR LOGO PATH HERE
+    logo: "/src/assets/logo.png", 
+    link: "https://techhansa.com/" //
   },
   {
     name: "Techhansa Solutions Pvt. Ltd.",
     role: "Digital Transformation Partner",
     desc: "Brings deep expertise in digital transformation, enterprise technology, and business solutions. Their support enables us to build scalable digital platforms, optimize operations, and deliver seamless experiences for our ecosystem.",
-    logo: "/src/assets/logo.png" // <-- ADD YOUR LOGO PATH HERE
+    logo: "/src/assets/logo.png", 
+    link: "https://techhansa.com" // 
   },
   {
     name: "Techhansa IT Private Limited",
     role: "Technology & Infrastructure Partner",
     desc: "Strengthens our technological capabilities by supporting innovation, IT infrastructure, and enterprise-grade digital solutions. Their expertise helps maintain a secure, scalable, and high-performance platform across India.",
-    logo: "/src/assets/logo.png" // <-- ADD YOUR LOGO PATH HERE
+    logo: "/src/assets/logo.png", 
+    link: "https://techhansait.com/" // 
   }
 ];
 
@@ -196,7 +200,7 @@ export default function InvestorsPage() {
       </section>
 
     
-  {/* --- INVESTOR PROFILES (FIXED TOP LINE BORDER RADIUS) --- */}
+  {/* --- INVESTOR PROFILES (FIXED TOP LINE BORDER RADIUS & MADE LINKABLE) --- */}
     <section className="relative z-10 py-32 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
@@ -206,14 +210,17 @@ export default function InvestorsPage() {
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           {investors.map((investor, i) => (
-            <motion.div
+            <motion.a
+              href={investor.link}
+              target="_blank"
+              rel="noopener noreferrer"
               key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              // Yahan 'overflow-hidden' aur 'isolation-isolate' add kiya gaya hai
-              className="group relative bg-white p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden isolation-isolate"
+              // Added 'block' and 'cursor-pointer' since it's now an anchor tag
+              className="block cursor-pointer group relative bg-white p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden isolation-isolate"
             >
               {/* Top Animated Line */}
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-gray-300 to-[#0d3863] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
@@ -236,7 +243,7 @@ export default function InvestorsPage() {
               <p className="text-gray-600 leading-relaxed font-medium">
                 {investor.desc}
               </p>
-            </motion.div>
+            </motion.a>
           ))}
         </div>
       </section>
