@@ -53,7 +53,7 @@ const coreValues = [
     title: "Excellence", 
     desc: "Continuously improving to deliver exceptional customer experiences. We settle for nothing less than superior quality in our network and services.", 
     icon: Award,
-    image: "/src/assets/excellence.jpg"
+    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800"
   },
   { 
     title: "Innovation", 
