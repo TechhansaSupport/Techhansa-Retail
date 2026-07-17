@@ -1,7 +1,18 @@
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 import AboutImg from '../../assets/AboutImg.jpg'; 
 
 export default function AboutSection() {
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 50,
+    });
+  }, []);
   return (
     // Padding py-28 se kam karke py-12/16 kar di hai taaki screen me fit aaye
     <section className="relative w-full py-12 lg:py-16 bg-[var(--soft-bg)] overflow-hidden">
@@ -15,7 +26,7 @@ export default function AboutSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           
           {/* ================= LEFT COLUMN: TEXT CONTENT ================= */}
-          <div className="flex flex-col">
+          <div className="flex flex-col" data-aos="fade-right">
             
             <div className="flex items-center gap-3 mb-3">
               <span className="w-8 h-0.5 bg-[var(--premium-gold)]"></span>
@@ -40,7 +51,7 @@ export default function AboutSection() {
             </p>
 
             {/* Mission Box - Made more compact (p-4 instead of p-6) */}
-            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mb-6">
+            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mb-6" data-aos="fade-up" data-aos-delay="100">
               <h4 className="text-[14px] font-bold text-[var(--tech-blue)] uppercase tracking-wider mb-3">Our Mission</h4>
               <ul className="space-y-2">
                 {[
@@ -75,7 +86,7 @@ export default function AboutSection() {
 
           {/* ================= RIGHT COLUMN: COMPACT IMAGE WITH HOVER ================= */}
 
-          <div className="relative w-full h-[300px] lg:h-[300px] mt-6 lg:mt-0">
+          <div className="relative w-full h-[300px] lg:h-[300px] mt-6 lg:mt-0" data-aos="fade-left" data-aos-delay="200">
             
             <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(13,56,99,0.12)] z-10 group cursor-pointer border-[3px] border-white">
               

@@ -2,11 +2,11 @@ import Hero from '../Component/Home/hero';
 import AboutSection from '../Component/Home/aboutSection';
 import StatsSection from '../Component/Home/statsSection';
 import BrandsSection from '../Component/Home/brandsSection';
-import Productshowcase from '../Component/Home/productshowcase';
+import Productshowcase from '../Component/Home/productShowcase';
 import WhyChooseUs from '../Component/Home/whyChooseUs';
 import EnterpriseSolutions from '../Component/Home/enterpriseSolutions'; 
 import FranchiseSection from '../Component/Home/franchiseSection';
-import HowItWorks from '../Component/Home/howItWorks';
+
 
 export default function Homepage() {
   return (
@@ -19,7 +19,7 @@ export default function Homepage() {
       <WhyChooseUs />
       <EnterpriseSolutions /> 
       <FranchiseSection />
-      <HowItWorks />
+    
     </div>
   );
 }
