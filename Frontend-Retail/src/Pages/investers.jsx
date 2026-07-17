@@ -197,7 +197,49 @@ export default function InvestorsPage() {
 
     
   {/* --- INVESTOR PROFILES (FIXED TOP LINE BORDER RADIUS) --- */}
+    <section className="relative z-10 py-32 px-6 lg:px-12 max-w-7xl mx-auto">
+        <div className="text-center mb-20">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+            <span className="text-gray-500">Our Strategic</span> <span className="text-[#0d3863]">Investors</span>
+          </h2>
+        </div>
 
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+          {investors.map((investor, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.6, delay: i * 0.1 }}
+              // Yahan 'overflow-hidden' aur 'isolation-isolate' add kiya gaya hai
+              className="group relative bg-white p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden isolation-isolate"
+            >
+              {/* Top Animated Line */}
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-gray-300 to-[#0d3863] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+
+              {/* Logo Container */}
+              <div className="w-24 h-24 mb-8 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-center overflow-hidden p-2 group-hover:border-[#0d3863]/20 transition-all shadow-inner">
+                <img 
+                  src={investor.logo} 
+                  alt={`${investor.name} Logo`} 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    // Fallback if logo is missing
+                    e.target.src = "https://via.placeholder.com/150?text=LOGO";
+                  }}
+                />
+              </div>
+
+              <h3 className="text-2xl font-bold text-[#0d3863] mb-2">{investor.name}</h3>
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">{investor.role}</p>
+              <p className="text-gray-600 leading-relaxed font-medium">
+                {investor.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
   
       
