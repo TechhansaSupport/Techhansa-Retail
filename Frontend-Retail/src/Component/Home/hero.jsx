@@ -1,7 +1,18 @@
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 import HeroSec from '../../assets/Hero.mp4';
 
 export default function Hero() {
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 50,
+    });
+  }, []);
   return (
     <section 
       className="relative w-full h-[80vh] min-h-[500px] flex items-center justify-center overflow-hidden"
@@ -24,22 +35,22 @@ export default function Hero() {
       <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-5xl mx-auto w-full mt-[-3rem]">
         
         {/* 1. Top Subheading (Uppercase, Spaced out) */}
-        <p className="text-white/90 tracking-[0.25em] md:tracking-[0.3em] font-semibold text-sm md:text-base uppercase mb-4 md:mb-6">
+        <p className="text-white/90 tracking-[0.25em] md:tracking-[0.3em] font-semibold text-sm md:text-base uppercase mb-4 md:mb-6" data-aos="fade-up">
           Trusted by Businesses Across India
         </p>
 
         {/* 2. Massive Main Heading */}
-        <h1 className="text-white text-6xl md:text-7xl lg:text-[7rem] font-extrabold tracking-tight mb-2 md:mb-4 leading-none drop-shadow-lg">
+        <h1 className="text-white text-6xl md:text-7xl lg:text-[7rem] font-extrabold tracking-tight mb-2 md:mb-4 leading-none drop-shadow-lg" data-aos="fade-up" data-aos-delay="100">
           Your Growth
         </h1>
 
         {/* 3. Tagline with Serif Golden Highlight (Matching the "Digital Transformation" style) */}
-        <p className="text-white text-2xl md:text-4xl lg:text-[2.5rem] font-light mb-12 drop-shadow-md">
+        <p className="text-white text-2xl md:text-4xl lg:text-[2.5rem] font-light mb-12 drop-shadow-md" data-aos="fade-up" data-aos-delay="200">
           powered by our <span className="text-[var(--premium-gold)] font-serif font-medium italic">IT Hardware</span> ecosystem
         </p>
 
         {/* 4. Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-5">
+        <div className="flex flex-col sm:flex-row gap-5" data-aos="fade-up" data-aos-delay="300">
           
           {/* Primary CTA (Solid Gold with Arrow - Exact match to reference) */}
           <Link 
@@ -65,7 +76,7 @@ export default function Hero() {
 
       {/* ================= SCROLL DOWN INDICATOR ================= */}
       {/* Absolute bottom par reference ki tarah */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70 hover:opacity-100 cursor-pointer transition-opacity duration-300">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70 hover:opacity-100 cursor-pointer transition-opacity duration-300" data-aos="fade-in" data-aos-delay="500">
         <span className="text-white text-[11px] font-bold tracking-[0.2em] mb-2 uppercase">
           Scroll Down
         </span>
