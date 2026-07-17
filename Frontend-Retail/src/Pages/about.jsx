@@ -6,6 +6,16 @@ import {
   CheckCircle, Globe, HeadphonesIcon, ThumbsUp, HeartHandshake, Shield
 } from 'lucide-react';
 
+// --- IMAGE IMPORTS ---
+// (Note: Adjust the '../assets/' path if your folder structure is slightly different)
+import aboutBannerImg from '../assets/about-banner.jpg';
+import procurementImg from '../assets/procurment.jpg';
+import integrity from '../assets/integrity.jpg';
+import excellenceImg from '../assets/excellence.jpg';
+import innovationImg from '../assets/innovation.jpg';
+import partnershipImg from '../assets/partnership.jpg';
+import customerSuccessImg from '../assets/customer-success.jpg';
+
 // --- DATA ARRAYS ---
 
 const productPortfolio = [
@@ -47,31 +57,31 @@ const coreValues = [
     title: "Integrity", 
     desc: "Honesty, transparency, and accountability in every interaction. We build trust by delivering on our promises and maintaining the highest ethical standards.", 
     icon: ShieldCheck,
-    image: "/src/assets/integrity.jpg" 
+    image: integrity 
   },
   { 
     title: "Excellence", 
     desc: "Continuously improving to deliver exceptional customer experiences. We settle for nothing less than superior quality in our network and services.", 
     icon: Award,
-    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800"
+    image: excellenceImg
   },
   { 
     title: "Innovation", 
     desc: "Technology driving smarter procurement and better outcomes. We constantly adapt our platform to meet the evolving needs of modern enterprises.", 
     icon: Zap,
-    image: "/src/assets/innovation.jpg"
+    image: innovationImg
   },
   { 
     title: "Partnership", 
     desc: "Building long-term relationships through trust and shared success. We believe in collaborative growth with both our buyers and suppliers.", 
     icon: Users,
-    image: "/src/assets/partnership.jpg"
+    image: partnershipImg
   },
   { 
     title: "Customer Success", 
     desc: "Measured strictly by the growth, efficiency, and satisfaction of our ecosystem. Your operational success is our primary benchmark.", 
     icon: Target,
-    image: "/src/assets/customer-success.jpg"
+    image: customerSuccessImg
   }
 ];
 
@@ -120,7 +130,7 @@ export default function AboutPage() {
       <section className="relative w-full h-[300px] flex items-center justify-center overflow-hidden bg-slate-900">
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('./src/assets/about-banner.jpg')" }}
+          style={{ backgroundImage: `url(${aboutBannerImg})` }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 to-slate-900/50"></div>
         </div>
@@ -186,7 +196,7 @@ export default function AboutPage() {
           >
             <div className="relative w-full max-w-md lg:max-w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-[4px] border-white/60">
               <img 
-                src="/src/assets/procurment.jpg" 
+                src={procurementImg} 
                 alt="IT Hardware Procurement" 
                 className="w-full h-auto md:h-[500px] object-cover"
               />
@@ -196,7 +206,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- WHO WE ARE & MISSION / VISION (VIDEO OVERLAY EFFECT APPLIED) --- */}
+      {/* --- WHO WE ARE & MISSION / VISION --- */}
       <section className="relative z-10 py-24 px-6 lg:px-12 bg-gray-50/50 backdrop-blur-lg border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto">
           
@@ -211,16 +221,16 @@ export default function AboutPage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Mission Card */}
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[300px] cursor-pointer">
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[300px] cursor-pointer isolation-isolate">
               {/* Default View */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
                 <div className="w-20 h-20 rounded-2xl bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-6">
-                  <Eye className="w-10 h-10" />
+                  <Target className="w-10 h-10" />
                 </div>
-                <h3 className="text-3xl font-bold text-[#0d3863]">Our Vision</h3>
+                <h3 className="text-3xl font-bold text-[#0d3863]">Our mission</h3>
               </div>
-              {/* Hover View (Video Style Slide-up) */}
-              <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+              {/* Hover View */}
+              <div className="absolute inset-0 bg-[#0d3863] rounded-[2rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                 <h3 className="text-2xl font-bold text-white mb-4">Our mission</h3>
                 <p className="text-blue-100 leading-relaxed md:text-lg">
                  To revolutionize B2B IT hardware procurement through a transparent, technology-driven platform connecting buyers, suppliers, partners, and franchise businesses while making procurement smarter, faster, and more cost-effective.
@@ -229,7 +239,7 @@ export default function AboutPage() {
             </motion.div>
 
             {/* Vision Card */}
-            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[300px] cursor-pointer">
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[300px] cursor-pointer isolation-isolate">
               {/* Default View */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
                 <div className="w-20 h-20 rounded-2xl bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-6">
@@ -237,9 +247,9 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-3xl font-bold text-[#0d3863]">Our Vision</h3>
               </div>
-              {/* Hover View (Video Style Slide-up) */}
-              <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                <h3 className="text-2xl font-bold text-white mb-4">Our Vision</h3>
+              {/* Hover View */}
+              <div className="absolute inset-0 bg-[#0d3863] rounded-[2rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                <h3 className="text-2xl font-bold text-white mb-4">Our vision</h3>
                 <p className="text-blue-100 leading-relaxed md:text-lg">
                   To become India's most trusted B2B IT hardware procurement ecosystem by enabling seamless collaboration between organizations, suppliers, partners, and franchise entrepreneurs.
                 </p>
@@ -276,14 +286,14 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- SOLUTIONS, PARTNER PORTAL, FRANCHISE (VIDEO OVERLAY EFFECT APPLIED) --- */}
+      {/* --- SOLUTIONS, PARTNER PORTAL, FRANCHISE --- */}
       <section className="relative z-10 py-24 px-6 lg:px-12 bg-gray-50/50 border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
           {pillars.map((pillar, i) => (
             <motion.div 
               key={i}
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-              className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[380px] md:h-[420px] cursor-pointer"
+              className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[380px] md:h-[420px] cursor-pointer isolation-isolate"
             >
               {/* Default View */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
@@ -293,8 +303,8 @@ export default function AboutPage() {
                 <h3 className="text-2xl font-bold text-[#0d3863] text-center px-4">{pillar.title}</h3>
               </div>
               
-              {/* Hover View (Video Style Slide-up) */}
-              <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+              {/* Hover View */}
+              <div className="absolute inset-0 bg-[#0d3863] rounded-[2rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                 <h3 className="text-2xl font-bold text-white mb-6 border-b border-white/20 pb-4">{pillar.title}</h3>
                 <p className="text-blue-100 leading-relaxed md:text-lg">
                   {pillar.desc}
@@ -305,7 +315,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- WHY CHOOSE US (VIDEO OVERLAY EFFECT APPLIED) --- */}
+      {/* --- WHY CHOOSE US --- */}
       <section className="relative z-10 py-24 px-6 lg:px-12">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-16">
@@ -316,7 +326,7 @@ export default function AboutPage() {
               <motion.div 
                 key={i}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="group relative bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden h-[220px] cursor-pointer"
+                className="group relative bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden h-[220px] cursor-pointer isolation-isolate"
               >
                 {/* Default View */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-8 group-hover:opacity-0">
@@ -326,8 +336,8 @@ export default function AboutPage() {
                   <h3 className="text-lg font-bold text-gray-700">{item.title}</h3>
                 </div>
 
-                {/* Hover View (Video Style Slide-up) */}
-                <div className="absolute inset-0 bg-[#0d3863] p-6 flex flex-col items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                {/* Hover View */}
+                <div className="absolute inset-0 bg-[#0d3863] rounded-3xl p-6 flex flex-col items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                   <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white mb-4">
                     <item.icon className="w-8 h-8" />
                   </div>
@@ -339,7 +349,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- ZIGZAG CORE VALUES SECTION (Removed Zooming) --- */}
+      {/* --- ZIGZAG CORE VALUES SECTION --- */}
       <section className="relative z-10 py-32 px-6 lg:px-12 bg-white/60 backdrop-blur-lg border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto text-center mb-24">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
@@ -410,7 +420,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- HOW IT WORKS (VIDEO OVERLAY EFFECT APPLIED) --- */}
+      {/* --- HOW IT WORKS (PURCHASING PROCESS) --- */}
       <section className="relative z-10 py-32 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="text-center mb-24">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
@@ -427,7 +437,7 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="group relative bg-white rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-22px)] h-[320px] cursor-pointer"
+              className="group relative bg-white rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-22px)] h-[320px] cursor-pointer isolation-isolate"
             >
               {/* Default View */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
@@ -437,8 +447,8 @@ export default function AboutPage() {
                 <h3 className="text-2xl font-bold text-[#0d3863] text-center">{step.title}</h3>
               </div>
 
-              {/* Hover View (Video Style Slide-up) */}
-              <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+              {/* Hover View */}
+              <div className="absolute inset-0 bg-[#0d3863] rounded-[2.5rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                 <div className="text-blue-300 font-bold text-sm tracking-widest uppercase mb-3">Step 0{i + 1}</div>
                 <h3 className="text-2xl font-bold text-white mb-4">{step.title}</h3>
                 <p className="text-blue-100 leading-relaxed font-medium">
@@ -450,7 +460,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- WHO CAN JOIN (VIDEO OVERLAY EFFECT APPLIED) --- */}
+      {/* --- WHO CAN JOIN --- */}
       <section className="relative z-10 py-32 px-6 lg:px-12 bg-gray-50/50 backdrop-blur-lg border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-16">
@@ -462,7 +472,7 @@ export default function AboutPage() {
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-                className="group relative bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden h-[450px] cursor-pointer"
+                className="group relative bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden h-[450px] cursor-pointer isolation-isolate"
               >
                 {/* Default View */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-10 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
@@ -472,8 +482,8 @@ export default function AboutPage() {
                   <h3 className="text-3xl font-bold text-[#0d3863] text-center">{group.type}</h3>
                 </div>
 
-                {/* Hover View (Video Style Slide-up) */}
-                <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                {/* Hover View */}
+                <div className="absolute inset-0 bg-[#0d3863] rounded-[2rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                   <h3 className="text-3xl font-bold text-white mb-6 border-b border-white/20 pb-4">{group.type}</h3>
                   <ul className="space-y-4">
                     {group.list.map((item, idx) => (
@@ -490,7 +500,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- OUR COMMITMENT & CTA SECTION (No Zoom) --- */}
+      {/* --- OUR COMMITMENT & CTA SECTION --- */}
       <section className="relative z-10 py-20 px-6 lg:px-12 flex justify-center text-center overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-20 bg-[#0d3863]/5 rounded-full blur-[120px] pointer-events-none"></div>
         
