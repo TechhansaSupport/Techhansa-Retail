@@ -171,8 +171,9 @@ export default function ChannelPartner() {
               key={index}
               data-aos="fade-up" 
               data-aos-delay={index * 100}
-              className="group bg-white rounded-2xl p-8 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-[var(--tech-blue)]/20 hover:shadow-[0_15px_30px_rgba(13,56,99,0.1)] transition-all duration-300 hover:-translate-y-1 flex flex-col items-start relative overflow-hidden"
+              className="group h-full"
             >
+              <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:border-[var(--tech-blue)]/20 group-hover:shadow-[0_15px_30px_rgba(13,56,99,0.1)] transition-all duration-300 group-hover:-translate-y-1 flex flex-col items-start relative overflow-hidden h-full">
               {/* Subtle hover background glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-[var(--tech-blue)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
 
@@ -193,6 +194,7 @@ export default function ChannelPartner() {
 
               {/* Bottom expanding line */}
               <div className="absolute bottom-0 left-0 w-full h-1 bg-[var(--tech-blue)] transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500"></div>
+              </div>
             </div>
           ))}
           

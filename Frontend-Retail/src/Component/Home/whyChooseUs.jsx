@@ -92,10 +92,10 @@ export default function WhyChooseUs() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-10">
           
           {features.map((feature) => (
-            <div 
-              key={feature.id} 
-              className="group relative bg-white rounded-2xl p-8 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_-10px_rgba(13,56,99,0.15)] transition-all duration-500 ease-out hover:-translate-y-2 overflow-hidden flex flex-col h-full"
-            >
+            <div key={feature.id} className="group h-full">
+              <div 
+                className="relative bg-white rounded-2xl p-8 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:shadow-[0_20px_40px_-10px_rgba(13,56,99,0.15)] transition-all duration-500 ease-out group-hover:-translate-y-2 overflow-hidden flex flex-col h-full"
+              >
               {/* Subtle Tech Glow inside card on hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-[var(--tech-blue)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               
@@ -123,6 +123,7 @@ export default function WhyChooseUs() {
               {/* Expanding Bottom Border Line */}
               <div className="absolute bottom-0 left-0 w-full h-1.5 bg-[var(--tech-blue)] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               
+              </div>
             </div>
           ))}
           
