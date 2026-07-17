@@ -2,55 +2,91 @@ import React, { useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion';
 import { 
   ArrowRight, ShieldCheck, Award, Zap, Users, Target, 
-  Briefcase, Server, TrendingUp, CheckCircle2
+  Briefcase, Server, TrendingUp, CheckCircle2, Eye, Building2,
+  CheckCircle, Globe, HeadphonesIcon, ThumbsUp, HeartHandshake, Shield
 } from 'lucide-react';
 
 // --- DATA ARRAYS ---
+
+const productPortfolio = [
+  "Business Laptops", "Desktop Computers", "Workstations", 
+  "Enterprise Servers", "Networking Solutions", "Monitors", 
+  "Printers & Scanners", "Storage Devices", "CCTV & Security Systems", 
+  "UPS & Power Backup Solutions", "IT Accessories & Peripherals", "Custom Enterprise IT Solutions"
+];
+
+const pillars = [
+  { 
+    title: "Solutions for Every Industry", 
+    icon: Building2, 
+    desc: "We proudly serve Corporate Offices, IT Companies, Educational Institutions, Universities & Colleges, Schools, Hospitals, Public Sector Enterprises, Banking & Financial Institutions, Manufacturing Industries, Startups, MSMEs, System Integrators, and Business Consultants." 
+  },
+  { 
+    title: "Partner Portal", 
+    icon: Users, 
+    desc: "Designed for IT distributors, suppliers, OEMs, authorized dealers, and system integrators. Partners can participate in live bidding opportunities, receive qualified leads, submit quotations, manage orders, and expand their customer base." 
+  },
+  { 
+    title: "Franchise Opportunities", 
+    icon: Globe, 
+    desc: "Our nationwide franchise program offers an established business model, brand support, technical assistance, business training, marketing support, lead generation, sales guidance, and continuous operational support." 
+  }
+];
+
+const whyChooseUs = [
+  { title: "Trusted Procurement Platform", icon: Shield },
+  { title: "Competitive Pricing", icon: Zap },
+  { title: "Verified Vendor Network", icon: CheckCircle2 },
+  { title: "End-to-End Support", icon: HeadphonesIcon },
+  { title: "Quality Assurance", icon: ThumbsUp },
+  { title: "Customer-Centric Approach", icon: HeartHandshake }
+];
+
 const coreValues = [
   { 
     title: "Integrity", 
     desc: "Honesty, transparency, and accountability in every interaction. We build trust by delivering on our promises and maintaining the highest ethical standards.", 
     icon: ShieldCheck,
-    image: "/src/assets/integrity.jpg"
+    image: "/src/assets/integrity.jpg" 
   },
   { 
     title: "Excellence", 
     desc: "Continuously improving to deliver exceptional customer experiences. We settle for nothing less than superior quality in our network and services.", 
     icon: Award,
-    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800"
+    image: "/src/assets/excellence.jpg"
   },
   { 
     title: "Innovation", 
     desc: "Technology driving smarter procurement and better outcomes. We constantly adapt our platform to meet the evolving needs of modern enterprises.", 
     icon: Zap,
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800"
+    image: "/src/assets/innovation.jpg"
   },
   { 
     title: "Partnership", 
     desc: "Building long-term relationships through trust and shared success. We believe in collaborative growth with both our buyers and suppliers.", 
     icon: Users,
-    image: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&q=80&w=800"
+    image: "/src/assets/partnership.jpg"
   },
   { 
     title: "Customer Success", 
     desc: "Measured strictly by the growth, efficiency, and satisfaction of our ecosystem. Your operational success is our primary benchmark.", 
     icon: Target,
-    image: "src/assets/customer-success.jpg"
+    image: "/src/assets/customer-success.jpg"
   }
 ];
 
 const steps = [
-  { title: "Register Account", desc: "Create your verified business profile on the Techhansa platform." },
+  { title: "Register", desc: "Create your verified business profile on the Techhansa platform." },
   { title: "Submit Requirements", desc: "Share your bulk hardware needs with complete specifications." },
-  { title: "Receive Bids", desc: "Verified suppliers submit competitive quotations transparently." },
+  { title: "Receive Competitive Bids", desc: "Verified suppliers submit competitive quotations transparently." },
   { title: "Compare & Select", desc: "Evaluate pricing and offerings before making your decision." },
-  { title: "Procure Confidently", desc: "Complete purchases through our secure, streamlined workflow." }
+  { title: "Procure with Confidence", desc: "Complete purchases through our secure, streamlined workflow." }
 ];
 
 const whoCanJoin = [
-  { type: "Buyers", icon: Briefcase, list: ["Corporates", "Institutions", "Government", "Hospitals", "Enterprises", "Startups"] },
-  { type: "Business Partners", icon: Server, list: ["IT Distributors", "Authorized Dealers", "OEM Partners", "System Integrators"] },
-  { type: "Franchise Partners", icon: TrendingUp, list: ["Entrepreneurs", "Business Owners", "IT Professionals", "Consultants"] }
+  { type: "Buyers", icon: Briefcase, list: ["Corporate Companies", "Educational Institutions", "Hospitals", "Enterprises", "MSMEs", "Startups"] },
+  { type: "Business Partners", icon: Server, list: ["IT Distributors", "Authorized Dealers", "OEM Partners", "Suppliers", "System Integrators"] },
+  { type: "Franchise Partners", icon: TrendingUp, list: ["Entrepreneurs", "Existing Business Owners", "IT Professionals", "Technology Consultants", "Regional Business Developers"] }
 ];
 
 // --- MAIN PAGE COMPONENT ---
@@ -111,17 +147,15 @@ export default function AboutPage() {
       {/* --- HERO SECTION --- */}
       <section 
         onMouseMove={handleMouseMove}
-        className="relative z-10 pt-10 pb-12 px-6 lg:px-12 w-full min-h-[90vh] flex items-center"
+        className="relative z-10 pt-16 pb-12 px-6 lg:px-12 w-full flex items-center"
       >
-        <div className="relative z-10 max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-            
-            {/* WordReveal removed, replaced with standard motion.h1 and text */}
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-4xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#929292] to-[#0d3863] leading-[1.1] mb-6"
+              className="text-4xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#929292] to-[#0d3863] leading-[1.1] mb-6"
             >
               Empowering Businesses with Smarter IT Procurement
             </motion.h1>
@@ -129,10 +163,18 @@ export default function AboutPage() {
             <motion.p 
               initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }} 
-              transition={{ delay: 0.6, duration: 0.8 }}
-              className="text-lg md:text-base text-gray-500 max-w-xl leading-relaxed mb-10 font-light"
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="text-lg text-gray-600 max-w-xl leading-relaxed mb-6 font-medium"
             >
-              Welcome to Techhansa Retail. We bridge the gap between buyers and trusted suppliers by offering a transparent, efficient, and competitive procurement ecosystem designed for modern enterprises.
+              Welcome to Techhansa Retail, a next-generation B2B IT hardware procurement platform dedicated to simplifying enterprise technology purchasing. We connect organizations with trusted suppliers through a transparent, efficient, and competitive procurement ecosystem.
+            </motion.p>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="text-lg text-gray-600 max-w-xl leading-relaxed mb-6 font-medium"
+            >
+              Whether you are a corporate enterprise, educational institution, healthcare provider, startup, or reseller, we help you source high-quality IT hardware. Beyond procurement, we are building a nationwide network of partners and franchise associates to make enterprise IT solutions more accessible across India.
             </motion.p>
           </div>
 
@@ -142,44 +184,167 @@ export default function AboutPage() {
             transition={{ delay: 0.4, duration: 1, ease: "easeOut" }}
             className="relative w-full h-full flex justify-center lg:justify-end"
           >
-            <div className="relative w-full max-w-md lg:max-w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-[4px] border-white/60 group">
-              <motion.img 
-                whileHover={{ scale: 1.03 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                src="https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&q=80&w=1200" 
-                alt="Bulk Enterprise IT Hardware" 
+            <div className="relative w-full max-w-md lg:max-w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-[4px] border-white/60">
+              <img 
+                src="/src/assets/procurment.jpg" 
+                alt="IT Hardware Procurement" 
                 className="w-full h-auto md:h-[500px] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-[#0d3863]/20 to-transparent pointer-events-none mix-blend-overlay"></div>
-              
-              <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute bottom-6 left-6 md:bottom-8 md:left-8 bg-white/90 backdrop-blur-md p-4 pr-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/50 flex items-center gap-4"
-              >
-                <div className="w-12 h-12 rounded-xl bg-[#0d3863]/10 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-[#0d3863]" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-[#0d3863]">Bulk Hardware</p>
-                  <p className="text-xs text-gray-500 font-medium">Verified Network</p>
-                </div>
-              </motion.div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* --- REDESIGNED ZIGZAG CORE VALUES SECTION --- */}
+      {/* --- WHO WE ARE & MISSION / VISION (VIDEO OVERLAY EFFECT APPLIED) --- */}
+      <section className="relative z-10 py-24 px-6 lg:px-12 bg-gray-50/50 backdrop-blur-lg border-y border-gray-200/50">
+        <div className="max-w-7xl mx-auto">
+          
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">
+              <span className="text-gray-600">Who We</span> <span className="text-[#0d3863]">Are</span>
+            </h2>
+            <p className="text-gray-600 text-lg leading-relaxed">
+              At Techhansa Retail, we believe technology procurement should be simple, transparent, and value-driven. Our centralized marketplace enables verified suppliers to compete for your business, helping organizations make smarter purchasing decisions while creating new opportunities for suppliers, partners, and entrepreneurs.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Mission Card */}
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[300px] cursor-pointer">
+              {/* Default View */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
+                <div className="w-20 h-20 rounded-2xl bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-6">
+                  <Eye className="w-10 h-10" />
+                </div>
+                <h3 className="text-3xl font-bold text-[#0d3863]">Our Vision</h3>
+              </div>
+              {/* Hover View (Video Style Slide-up) */}
+              <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                <h3 className="text-2xl font-bold text-white mb-4">Our mission</h3>
+                <p className="text-blue-100 leading-relaxed md:text-lg">
+                 To revolutionize B2B IT hardware procurement through a transparent, technology-driven platform connecting buyers, suppliers, partners, and franchise businesses while making procurement smarter, faster, and more cost-effective.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Vision Card */}
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[300px] cursor-pointer">
+              {/* Default View */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
+                <div className="w-20 h-20 rounded-2xl bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-6">
+                  <Eye className="w-10 h-10" />
+                </div>
+                <h3 className="text-3xl font-bold text-[#0d3863]">Our Vision</h3>
+              </div>
+              {/* Hover View (Video Style Slide-up) */}
+              <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                <h3 className="text-2xl font-bold text-white mb-4">Our Vision</h3>
+                <p className="text-blue-100 leading-relaxed md:text-lg">
+                  To become India's most trusted B2B IT hardware procurement ecosystem by enabling seamless collaboration between organizations, suppliers, partners, and franchise entrepreneurs.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- WHAT WE DO & PRODUCT PORTFOLIO --- */}
+      <section className="relative z-10 py-24 px-6 lg:px-12">
+        <div className="max-w-7xl mx-auto text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">
+            <span className="text-gray-600">What We</span> <span className="text-[#0d3863]">Do</span>
+          </h2>
+          <p className="text-gray-600 text-lg leading-relaxed max-w-3xl mx-auto">
+            We specialize in bulk IT hardware procurement through a smart bidding platform. Organizations submit requirements, receive competitive quotations, compare offers, and select the best solution for their operational and budget needs.
+          </p>
+        </div>
+
+        <div className="max-w-5xl mx-auto">
+          <h3 className="text-xl font-bold text-[#0d3863] mb-8 text-center uppercase tracking-wider">Product Portfolio</h3>
+          <div className="flex flex-wrap justify-center gap-4">
+            {productPortfolio.map((item, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                className="flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-sm border border-gray-100 text-gray-600 font-medium hover:bg-[#0d3863] hover:text-white transition-colors cursor-default"
+              >
+                <CheckCircle className="w-4 h-4" /> {item}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- SOLUTIONS, PARTNER PORTAL, FRANCHISE (VIDEO OVERLAY EFFECT APPLIED) --- */}
+      <section className="relative z-10 py-24 px-6 lg:px-12 bg-gray-50/50 border-y border-gray-200/50">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+          {pillars.map((pillar, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
+              className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[380px] md:h-[420px] cursor-pointer"
+            >
+              {/* Default View */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
+                <div className="w-20 h-20 rounded-2xl bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-8">
+                  <pillar.icon className="w-10 h-10" />
+                </div>
+                <h3 className="text-2xl font-bold text-[#0d3863] text-center px-4">{pillar.title}</h3>
+              </div>
+              
+              {/* Hover View (Video Style Slide-up) */}
+              <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                <h3 className="text-2xl font-bold text-white mb-6 border-b border-white/20 pb-4">{pillar.title}</h3>
+                <p className="text-blue-100 leading-relaxed md:text-lg">
+                  {pillar.desc}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* --- WHY CHOOSE US (VIDEO OVERLAY EFFECT APPLIED) --- */}
+      <section className="relative z-10 py-24 px-6 lg:px-12">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-16">
+            <span className="text-gray-600">Why Choose</span> <span className="text-[#0d3863]">Techhansa Retail</span>
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 lg:gap-10">
+            {whyChooseUs.map((item, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="group relative bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden h-[220px] cursor-pointer"
+              >
+                {/* Default View */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-8 group-hover:opacity-0">
+                  <div className="w-16 h-16 rounded-full bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-4">
+                    <item.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-700">{item.title}</h3>
+                </div>
+
+                {/* Hover View (Video Style Slide-up) */}
+                <div className="absolute inset-0 bg-[#0d3863] p-6 flex flex-col items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                  <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white mb-4">
+                    <item.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">{item.title}</h3>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- ZIGZAG CORE VALUES SECTION (Removed Zooming) --- */}
       <section className="relative z-10 py-32 px-6 lg:px-12 bg-white/60 backdrop-blur-lg border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto text-center mb-24">
-          {/* Dual Color Heading */}
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            <span className="text-[#6d6c6c]">What Guides</span> <span className="text-[#0d3863]">Us</span>
+            <span className="text-[#6d6c6c]">Our Core</span> <span className="text-[#0d3863]">Values</span>
           </h2>
-          <p className="text-[#6d6c6c] text-lg max-w-2xl mx-auto">
-            Built on a foundation of trust, our platform is designed to align with the highest standards of enterprise procurement.
-          </p>
         </div>
         
         <div className="relative max-w-6xl mx-auto" ref={principlesRef}>
@@ -204,12 +369,10 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
-                  className={`w-full md:w-1/2 pl-14 md:pl-0 ${i % 2 === 0 ? 'md:pr-12 lg:pr-20' : 'md:pl-12 lg:pl-20'} mb-10 md:mb-0 relative group`}
+                  className={`w-full md:w-1/2 pl-14 md:pl-0 ${i % 2 === 0 ? 'md:pr-12 lg:pr-20' : 'md:pl-12 lg:pl-20'} mb-10 md:mb-0 relative`}
                 >
                   <div className="relative rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(13,56,99,0.07)] aspect-[4/3]">
-                    <motion.img
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ duration: 0.8 }}
+                    <img
                       src={val.image}
                       alt={val.title}
                       className="w-full h-full object-cover"
@@ -247,10 +410,9 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- PROCUREMENT JOURNEY --- */}
+      {/* --- HOW IT WORKS (VIDEO OVERLAY EFFECT APPLIED) --- */}
       <section className="relative z-10 py-32 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="text-center mb-24">
-          {/* Dual Color Heading */}
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
             <span className="text-gray-500">Purchasing</span> <span className="text-[#0d3863]">Process</span>
           </h2>
@@ -265,18 +427,21 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="group relative bg-white p-8 md:p-10 rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-22px)]"
+              className="group relative bg-white rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-22px)] h-[320px] cursor-pointer"
             >
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-gray-400 to-[#0d3863] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-
-              <div className="relative z-10">
-                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#0d3863] font-bold text-lg mb-8 group-hover:bg-[#0d3863] group-hover:text-white transition-all duration-300">
+              {/* Default View */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
+                <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-[#0d3863] font-bold text-2xl mb-6">
                   0{i + 1}
                 </div>
-                
-                <h3 className="text-2xl font-bold text-[#0d3863] mb-4">{step.title}</h3>
-                
-                <p className="text-gray-600 leading-relaxed font-medium">
+                <h3 className="text-2xl font-bold text-[#0d3863] text-center">{step.title}</h3>
+              </div>
+
+              {/* Hover View (Video Style Slide-up) */}
+              <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                <div className="text-blue-300 font-bold text-sm tracking-widest uppercase mb-3">Step 0{i + 1}</div>
+                <h3 className="text-2xl font-bold text-white mb-4">{step.title}</h3>
+                <p className="text-blue-100 leading-relaxed font-medium">
                   {step.desc}
                 </p>
               </div>
@@ -285,10 +450,9 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- WHO CAN JOIN --- */}
+      {/* --- WHO CAN JOIN (VIDEO OVERLAY EFFECT APPLIED) --- */}
       <section className="relative z-10 py-32 px-6 lg:px-12 bg-gray-50/50 backdrop-blur-lg border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto">
-          {/* Dual Color Heading */}
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-16">
             <span className="text-gray-500">One Ecosystem,</span> <span className="text-[#0d3863]">Endless Possibilities</span>
           </h2>
@@ -298,18 +462,23 @@ export default function AboutPage() {
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-                className="group relative bg-white p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden"
+                className="group relative bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden h-[450px] cursor-pointer"
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0d3863]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-[#0d3863] mb-8 group-hover:scale-110 group-hover:border-[#0d3863]/20 group-hover:bg-[#0d3863] group-hover:text-white transition-all duration-300">
-                    <group.icon strokeWidth={1.5} className="w-7 h-7" />
+                {/* Default View */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-10 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
+                  <div className="w-24 h-24 rounded-[2rem] bg-gray-50 border border-gray-100 flex items-center justify-center text-[#0d3863] mb-8">
+                    <group.icon strokeWidth={1.5} className="w-12 h-12" />
                   </div>
-                  <h3 className="text-2xl font-bold text-[#0d3863] mb-6">{group.type}</h3>
+                  <h3 className="text-3xl font-bold text-[#0d3863] text-center">{group.type}</h3>
+                </div>
+
+                {/* Hover View (Video Style Slide-up) */}
+                <div className="absolute inset-0 bg-[#0d3863] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                  <h3 className="text-3xl font-bold text-white mb-6 border-b border-white/20 pb-4">{group.type}</h3>
                   <ul className="space-y-4">
                     {group.list.map((item, idx) => (
-                      <li key={idx} className="flex items-center text-gray-600 font-medium group-hover:text-[#0d3863] transition-colors">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-300 mr-3 group-hover:bg-[#0d3863] transition-colors"></span>
+                      <li key={idx} className="flex items-center text-blue-100 font-medium md:text-lg">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-400 mr-4 shrink-0"></span>
                         {item}
                       </li>
                     ))}
@@ -319,6 +488,37 @@ export default function AboutPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* --- OUR COMMITMENT & CTA SECTION (No Zoom) --- */}
+      <section className="relative z-10 py-20 px-6 lg:px-12 flex justify-center text-center overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-20 bg-[#0d3863]/5 rounded-full blur-[120px] pointer-events-none"></div>
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
+          className="relative max-w-5xl w-full bg-white rounded-[3rem] p-12 md:p-20 shadow-2xl overflow-hidden border border-gray-100"
+        >
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">
+              <span className="text-gray-600">Our</span> <span className="text-[#0d3863]">Commitment</span>
+            </h2>
+            <p className="text-gray-600 text-lg md:text-xl mb-12 max-w-3xl mx-auto font-light leading-relaxed">
+              We are committed to building long-lasting relationships based on trust, transparency, quality, and customer satisfaction. Every product, quotation, and partnership reflects our dedication to helping businesses procure technology more efficiently.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <button className="group relative inline-flex items-center justify-center px-10 py-5 bg-[#0d3863] text-white rounded-2xl font-bold text-lg overflow-hidden transition-colors hover:bg-[#154c82] shadow-lg shadow-[#0d3863]/20">
+                <span className="relative flex items-center gap-2">
+                  Join the Techhansa Retail Network <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </button>
+            </div>
+            
+            <p className="mt-8 text-sm font-semibold text-[#0d3863] uppercase tracking-widest opacity-80">
+              Smart Procurement • Trusted Partnerships • Sustainable Growth
+            </p>
+          </div>
+        </motion.div>
       </section>
 
     </div>
