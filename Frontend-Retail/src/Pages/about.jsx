@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion';
+import { motion, useMotionValue } from 'framer-motion';
 import { 
   ArrowRight, ShieldCheck, Award, Zap, Users, Target, 
   Briefcase, Server, TrendingUp, CheckCircle2, Eye, Building2,
@@ -7,14 +7,17 @@ import {
 } from 'lucide-react';
 
 // --- IMAGE IMPORTS ---
-// (Note: Adjust the '../assets/' path if your folder structure is slightly different)
-import aboutBannerImg from '../assets/about-banner.jpg';
-import procurementImg from '../assets/procurment.jpg';
+// Replace these with your actual local paths
+import aboutBannerImg from '../assets/about-banner.jpg'; 
 import integrity from '../assets/integrity.jpg';
 import excellenceImg from '../assets/excellence.jpg';
 import innovationImg from '../assets/innovation.jpg';
 import partnershipImg from '../assets/partnership.jpg';
 import customerSuccessImg from '../assets/customer-success.jpg';
+
+// Variables for Mission & Vision Images (Replace with local imports)
+const missionImg = "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800";
+const visionImg = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800";
 
 // --- DATA ARRAYS ---
 
@@ -29,27 +32,30 @@ const pillars = [
   { 
     title: "Solutions for Every Industry", 
     icon: Building2, 
-    desc: "We proudly serve Corporate Offices, IT Companies, Educational Institutions, Universities & Colleges, Schools, Hospitals, Public Sector Enterprises, Banking & Financial Institutions, Manufacturing Industries, Startups, MSMEs, System Integrators, and Business Consultants." 
+    desc: "We proudly serve Corporate Offices, IT Companies, Educational Institutions, Universities & Colleges, Schools, Hospitals, Public Sector Enterprises, Banking & Financial Institutions, Manufacturing Industries, Startups, MSMEs, System Integrators, and Business Consultants.",
+    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800"
   },
   { 
     title: "Partner Portal", 
     icon: Users, 
-    desc: "Designed for IT distributors, suppliers, OEMs, authorized dealers, and system integrators. Partners can participate in live bidding opportunities, receive qualified leads, submit quotations, manage orders, and expand their customer base." 
+    desc: "Designed for IT distributors, suppliers, OEMs, authorized dealers, and system integrators. Partners can participate in live bidding opportunities, receive qualified leads, submit quotations, manage orders, and expand their customer base.",
+    image: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&q=80&w=800"
   },
   { 
     title: "Franchise Opportunities", 
     icon: Globe, 
-    desc: "Our nationwide franchise program offers an established business model, brand support, technical assistance, business training, marketing support, lead generation, sales guidance, and continuous operational support." 
+    desc: "Our nationwide franchise program offers an established business model, brand support, technical assistance, business training, marketing support, lead generation, sales guidance, and continuous operational support.",
+    image: "https://i.pinimg.com/736x/cf/eb/9e/cfeb9e87faa3fccfde6b977381dc204f.jpg"
   }
 ];
 
 const whyChooseUs = [
-  { title: "Trusted Procurement Platform", icon: Shield },
-  { title: "Competitive Pricing", icon: Zap },
-  { title: "Verified Vendor Network", icon: CheckCircle2 },
-  { title: "End-to-End Support", icon: HeadphonesIcon },
-  { title: "Quality Assurance", icon: ThumbsUp },
-  { title: "Customer-Centric Approach", icon: HeartHandshake }
+  { title: "Trusted Procurement Platform", icon: Shield, image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600" },
+  { title: "Competitive Pricing", icon: Zap, image: "https://i.pinimg.com/1200x/93/0d/c1/930dc1ac4570507ca25303a967e0cc2d.jpg" },
+  { title: "Verified Vendor Network", icon: CheckCircle2, image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&q=80&w=600" },
+  { title: "End-to-End Support", icon: HeadphonesIcon, image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=600" },
+  { title: "Quality Assurance", icon: ThumbsUp, image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=600" },
+  { title: "Customer-Centric Approach", icon: HeartHandshake, image: "https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&q=80&w=600" }
 ];
 
 const coreValues = [
@@ -85,31 +91,28 @@ const coreValues = [
   }
 ];
 
-const steps = [
-  { title: "Register", desc: "Create your verified business profile on the Techhansa platform." },
-  { title: "Submit Requirements", desc: "Share your bulk hardware needs with complete specifications." },
-  { title: "Receive Competitive Bids", desc: "Verified suppliers submit competitive quotations transparently." },
-  { title: "Compare & Select", desc: "Evaluate pricing and offerings before making your decision." },
-  { title: "Procure with Confidence", desc: "Complete purchases through our secure, streamlined workflow." }
+const whoCanJoin = [
+  { type: "Buyers", icon: Briefcase, image: "https://i.pinimg.com/736x/11/d3/e6/11d3e646686d55ba13b55a6539dccfc0.jpg", list: ["Corporate Companies", "Educational Institutions", "Hospitals", "Enterprises", "MSMEs", "Startups"] },
+  { type: "Business Partners", icon: Server, image: "https://i.pinimg.com/736x/5c/ae/01/5cae01eae285a5c3c4953899a3cadc35.jpg", list: ["IT Distributors", "Authorized Dealers", "OEM Partners", "Suppliers", "System Integrators"] },
+  { type: "Franchise Partners", icon: TrendingUp, image: "https://i.pinimg.com/736x/f7/23/f3/f723f3bbc5e48d38bfd7032305ecc498.jpg", list: ["Entrepreneurs", "Existing Business Owners", "IT Professionals", "Technology Consultants", "Regional Business Developers"] }
 ];
 
-const whoCanJoin = [
-  { type: "Buyers", icon: Briefcase, list: ["Corporate Companies", "Educational Institutions", "Hospitals", "Enterprises", "MSMEs", "Startups"] },
-  { type: "Business Partners", icon: Server, list: ["IT Distributors", "Authorized Dealers", "OEM Partners", "Suppliers", "System Integrators"] },
-  { type: "Franchise Partners", icon: TrendingUp, list: ["Entrepreneurs", "Existing Business Owners", "IT Professionals", "Technology Consultants", "Regional Business Developers"] }
+// NOTE: This single "process" array (title + desc + image) now drives the
+// "Purchasing Process" section below. The old duplicate "steps" array
+// (which had no "image" field) has been removed — it was the cause of the
+// missing images, since the render was mistakenly reading from "steps"
+// while the real image URLs lived only in "process".
+const process = [
+  { title: "Register", desc: "Create your verified business profile on the Techhansa platform.", image: "https://images.unsplash.com/photo-1560264280-88b68371db39?auto=format&fit=crop&q=80&w=800" },
+  { title: "Submit Requirements", desc: "Share your bulk hardware needs with complete specifications.", image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=800" },
+  { title: "Receive Competitive Bids", desc: "Verified suppliers submit competitive quotations transparently.", image: "https://i.pinimg.com/1200x/81/68/aa/8168aa6a74b02852966486adbedba38f.jpg" },
+  { title: "Compare & Select", desc: "Evaluate pricing and offerings before making your decision.", image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800" },
+  { title: "Procure with Confidence", desc: "Complete purchases through our secure, streamlined workflow.", image: "https://i.pinimg.com/1200x/2c/e1/80/2ce180ff97a6d078bfc3da7eb849f56d.jpg" }
 ];
 
 // --- MAIN PAGE COMPONENT ---
 export default function AboutPage() {
   const containerRef = useRef(null);
-  
-  // Ref and Scroll Tracker for the Principles (Zigzag) Section
-  const principlesRef = useRef(null);
-  const { scrollYProgress: principlesScroll } = useScroll({
-    target: principlesRef,
-    offset: ["start center", "end center"]
-  });
-  const principlesScaleY = useSpring(principlesScroll, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   // Parallax Mouse Tracking for Hero
   const mouseX = useMotionValue(0);
@@ -126,8 +129,21 @@ export default function AboutPage() {
   return (
     <div ref={containerRef} className="relative min-h-screen text-gray-600 font-sans bg-transparent overflow-hidden selection:bg-[#0d3863]/20 selection:text-[#0d3863]">
       
+      {/* --- INJECT CUSTOM CSS FOR SINGLE UPWARD SCANNING ANIMATION --- */}
+      <style>{`
+        @keyframes scanUpOnce {
+          0% { transform: translateY(200px); opacity: 0; }
+          10% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { transform: translateY(-500px); opacity: 0; }
+        }
+        .group:hover .animate-scanner-once {
+          animation: scanUpOnce 2.2s cubic-bezier(0.23, 1, 0.32, 1) 0.1s forwards;
+        }
+      `}</style>
+
       {/* --- TOP BANNER SECTION --- */}
-      <section className="relative w-full h-[300px] flex items-center justify-center overflow-hidden bg-slate-900">
+      <section className="relative w-full h-[300px] flex items-center justify-center overflow-hidden bg-slate-700">
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${aboutBannerImg})` }}
@@ -142,7 +158,7 @@ export default function AboutPage() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-5xl md:text-6xl font-extrabold text-white tracking-tight"
           >
-            About us
+            About Us
           </motion.h1>
           
           <motion.div 
@@ -196,7 +212,7 @@ export default function AboutPage() {
           >
             <div className="relative w-full max-w-md lg:max-w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-[4px] border-white/60">
               <img 
-                src={procurementImg} 
+                src={aboutBannerImg} 
                 alt="IT Hardware Procurement" 
                 className="w-full h-auto md:h-[500px] object-cover"
               />
@@ -206,7 +222,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- WHO WE ARE & MISSION / VISION --- */}
+      {/* --- WHO WE ARE & MISSION / VISION (WITH IMAGE BACKGROUNDS) --- */}
       <section className="relative z-10 py-24 px-6 lg:px-12 bg-gray-50/50 backdrop-blur-lg border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto">
           
@@ -221,17 +237,24 @@ export default function AboutPage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Mission Card */}
-            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[300px] cursor-pointer isolation-isolate">
-              {/* Default View */}
+            <motion.div initial={{ opacity: 50, y: 30 }} whileInView={{ opacity: 50, y: 0 }} viewport={{ once: true }} className="group relative bg-slate-400 rounded-[2rem]  border border-gray-100 overflow-hidden h-[300px] cursor-pointer isolation-isolate">
+              {/* Background Image Setup */}
+              <div className="absolute inset-0">
+                <img src={missionImg} alt="Mission Background" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-slate-900/35 transition-colors duration-500 group-hover:bg-slate-900/80"></div>
+              </div>
+              
+              {/* Default View Content */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
-                <div className="w-20 h-20 rounded-2xl bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-6">
+                <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white mb-6">
                   <Target className="w-10 h-10" />
                 </div>
-                <h3 className="text-3xl font-bold text-[#0d3863]">Our mission</h3>
+                <h3 className="text-3xl font-bold text-white">Our Mission</h3>
               </div>
-              {/* Hover View */}
+              
+              {/* Hover View Slide Up */}
               <div className="absolute inset-0 bg-[#0d3863] rounded-[2rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                <h3 className="text-2xl font-bold text-white mb-4">Our mission</h3>
+                <h3 className="text-2xl font-bold text-white mb-4">Our Mission</h3>
                 <p className="text-blue-100 leading-relaxed md:text-lg">
                  To revolutionize B2B IT hardware procurement through a transparent, technology-driven platform connecting buyers, suppliers, partners, and franchise businesses while making procurement smarter, faster, and more cost-effective.
                 </p>
@@ -239,17 +262,24 @@ export default function AboutPage() {
             </motion.div>
 
             {/* Vision Card */}
-            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[300px] cursor-pointer isolation-isolate">
-              {/* Default View */}
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="group relative bg-slate-900 rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[300px] cursor-pointer isolation-isolate">
+              {/* Background Image Setup */}
+              <div className="absolute inset-0">
+                <img src={visionImg} alt="Vision Background" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-slate-900/30 transition-colors duration-500 group-hover:bg-slate-900/80"></div>
+              </div>
+
+              {/* Default View Content */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
-                <div className="w-20 h-20 rounded-2xl bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-6">
+                <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white mb-6">
                   <Eye className="w-10 h-10" />
                 </div>
-                <h3 className="text-3xl font-bold text-[#0d3863]">Our Vision</h3>
+                <h3 className="text-3xl font-bold text-white">Our Vision</h3>
               </div>
-              {/* Hover View */}
+
+              {/* Hover View Slide Up */}
               <div className="absolute inset-0 bg-[#0d3863] rounded-[2rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                <h3 className="text-2xl font-bold text-white mb-4">Our vision</h3>
+                <h3 className="text-2xl font-bold text-white mb-4">Our Vision</h3>
                 <p className="text-blue-100 leading-relaxed md:text-lg">
                   To become India's most trusted B2B IT hardware procurement ecosystem by enabling seamless collaboration between organizations, suppliers, partners, and franchise entrepreneurs.
                 </p>
@@ -286,24 +316,30 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- SOLUTIONS, PARTNER PORTAL, FRANCHISE --- */}
+      {/* --- SOLUTIONS, PARTNER PORTAL, FRANCHISE (WITH IMAGE BACKGROUNDS) --- */}
       <section className="relative z-10 py-24 px-6 lg:px-12 bg-gray-50/50 border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
           {pillars.map((pillar, i) => (
             <motion.div 
               key={i}
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-              className="group relative bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[380px] md:h-[420px] cursor-pointer isolation-isolate"
+              className="group relative bg-slate-900 rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[380px] md:h-[420px] cursor-pointer isolation-isolate"
             >
+              {/* Image Background */}
+              <div className="absolute inset-0">
+                <img src={pillar.image} alt={pillar.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-slate-900/30 transition-colors duration-500 group-hover:bg-slate-900/80"></div>
+              </div>
+
               {/* Default View */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
-                <div className="w-20 h-20 rounded-2xl bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-8">
+                <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white mb-8">
                   <pillar.icon className="w-10 h-10" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0d3863] text-center px-4">{pillar.title}</h3>
+                <h3 className="text-2xl font-bold text-white text-center px-4">{pillar.title}</h3>
               </div>
               
-              {/* Hover View */}
+              {/* Hover View Slide Up */}
               <div className="absolute inset-0 bg-[#0d3863] rounded-[2rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                 <h3 className="text-2xl font-bold text-white mb-6 border-b border-white/20 pb-4">{pillar.title}</h3>
                 <p className="text-blue-100 leading-relaxed md:text-lg">
@@ -315,7 +351,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- WHY CHOOSE US --- */}
+      {/* --- WHY CHOOSE US (WITH IMAGE BACKGROUNDS) --- */}
       <section className="relative z-10 py-24 px-6 lg:px-12">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-16">
@@ -326,22 +362,28 @@ export default function AboutPage() {
               <motion.div 
                 key={i}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="group relative bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden h-[220px] cursor-pointer isolation-isolate"
+                className="group relative bg-slate-900 rounded-3xl border border-gray-100 shadow-sm overflow-hidden h-[220px] cursor-pointer isolation-isolate"
               >
-                {/* Default View */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-8 group-hover:opacity-0">
-                  <div className="w-16 h-16 rounded-full bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-4">
-                    <item.icon className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-700">{item.title}</h3>
+                {/* Background Image */}
+                <div className="absolute inset-0">
+                  <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-slate-900/30 transition-colors duration-500 group-hover:bg-slate-900/80"></div>
                 </div>
 
-                {/* Hover View */}
+                {/* Default View */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-8 group-hover:opacity-0">
+                  <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white mb-4">
+                    <item.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white drop-shadow-md">{item.title}</h3>
+                </div>
+
+                {/* Hover View Slide Up */}
                 <div className="absolute inset-0 bg-[#0d3863] rounded-3xl p-6 flex flex-col items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                   <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white mb-4">
                     <item.icon className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-bold text-white">{item.title}</h3>
+                  <h3 className="text-lg font-bold text-white text-center">{item.title}</h3>
                 </div>
               </motion.div>
             ))}
@@ -349,7 +391,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- ZIGZAG CORE VALUES SECTION --- */}
+      {/* --- ZIGZAG CORE VALUES SECTION (FIXED ANIMATION LINE) --- */}
       <section className="relative z-10 py-32 px-6 lg:px-12 bg-white/60 backdrop-blur-lg border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto text-center mb-24">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
@@ -357,12 +399,17 @@ export default function AboutPage() {
           </h2>
         </div>
         
-        <div className="relative max-w-6xl mx-auto" ref={principlesRef}>
+        <div className="relative max-w-6xl mx-auto">
+          {/* Base Background Line */}
           <div className="absolute left-[24px] md:left-1/2 top-0 bottom-0 w-[2px] bg-gray-200/20 transform md:-translate-x-1/2 rounded-full z-0"></div>
           
+          {/* Animated Gradient Line that automatically slides down based on Viewport instead of scroll */}
           <motion.div 
             className="absolute left-[24px] md:left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-gray-700 to-[#0d3863] transform md:-translate-x-1/2 rounded-full origin-top z-0"
-            style={{ scaleY: principlesScaleY }}
+            initial={{ scaleY: 0 }}
+            whileInView={{ scaleY: 1 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
           ></motion.div>
 
           <div className="flex flex-col gap-20 md:gap-32">
@@ -420,7 +467,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- HOW IT WORKS (PURCHASING PROCESS) --- */}
+     {/* --- HOW IT WORKS (PURCHASING PROCESS - WITH IMAGES) --- */}
       <section className="relative z-10 py-32 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="text-center mb-24">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
@@ -430,37 +477,51 @@ export default function AboutPage() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-6 lg:gap-8">
-          {steps.map((step, i) => (
+          {process.map((step, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="group relative bg-white rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-22px)] h-[320px] cursor-pointer isolation-isolate"
+              className="group relative bg-slate-900 rounded-[2.5rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-22px)] h-[320px] cursor-pointer isolation-isolate"
             >
-              {/* Default View */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
-                <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-[#0d3863] font-bold text-2xl mb-6">
-                  0{i + 1}
-                </div>
-                <h3 className="text-2xl font-bold text-[#0d3863] text-center">{step.title}</h3>
+              {/* Background Image */}
+              <div className="absolute inset-0">
+                <img src={step.image} alt={step.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-slate-900/30 transition-colors duration-500 group-hover:bg-slate-900/80"></div>
               </div>
 
-              {/* Hover View */}
+              {/* Default View */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
+                <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white font-bold text-2xl mb-6">
+                  0{i + 1}
+                </div>
+                <h3 className="text-2xl font-bold text-white text-center">{step.title}</h3>
+              </div>
+
+              {/* Hover View (Slide Up + Scanner) */}
               <div className="absolute inset-0 bg-[#0d3863] rounded-[2.5rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                <div className="text-blue-300 font-bold text-sm tracking-widest uppercase mb-3">Step 0{i + 1}</div>
-                <h3 className="text-2xl font-bold text-white mb-4">{step.title}</h3>
-                <p className="text-blue-100 leading-relaxed font-medium">
-                  {step.desc}
-                </p>
+                
+                {/* Scanner Effect */}
+                <div className="absolute inset-0 pointer-events-none rounded-[2.5rem] overflow-hidden">
+                  <div className="absolute -bottom-10 left-0 w-full h-[150px] bg-gradient-to-t from-transparent via-[#ffffff]/5 to-[#ffffff]/15 border-t-2 border-white/20 opacity-0 animate-scanner-once"></div>
+                </div>
+
+                <div className="relative z-10">
+                  <div className="text-blue-300 font-bold text-sm tracking-widest uppercase mb-3">Step 0{i + 1}</div>
+                  <h3 className="text-2xl font-bold text-white mb-4">{step.title}</h3>
+                  <p className="text-blue-100 leading-relaxed font-medium">
+                    {step.desc}
+                  </p>
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* --- WHO CAN JOIN --- */}
+      {/* --- WHO CAN JOIN (WITH IMAGE BACKGROUNDS) --- */}
       <section className="relative z-10 py-32 px-6 lg:px-12 bg-gray-50/50 backdrop-blur-lg border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-16">
@@ -472,17 +533,23 @@ export default function AboutPage() {
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-                className="group relative bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden h-[450px] cursor-pointer isolation-isolate"
+                className="group relative bg-slate-900 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden h-[450px] cursor-pointer isolation-isolate"
               >
-                {/* Default View */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-10 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
-                  <div className="w-24 h-24 rounded-[2rem] bg-gray-50 border border-gray-100 flex items-center justify-center text-[#0d3863] mb-8">
-                    <group.icon strokeWidth={1.5} className="w-12 h-12" />
-                  </div>
-                  <h3 className="text-3xl font-bold text-[#0d3863] text-center">{group.type}</h3>
+                {/* Background Image Setup */}
+                <div className="absolute inset-0">
+                  <img src={group.image} alt={group.type} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-slate-900/30 transition-colors duration-500 group-hover:bg-slate-900/80"></div>
                 </div>
 
-                {/* Hover View */}
+                {/* Default View */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-10 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-10 group-hover:opacity-0">
+                  <div className="w-24 h-24 rounded-[2rem] bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white mb-8">
+                    <group.icon strokeWidth={1.5} className="w-12 h-12" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-white text-center drop-shadow-md">{group.type}</h3>
+                </div>
+
+                {/* Hover View Slide Up */}
                 <div className="absolute inset-0 bg-[#0d3863] rounded-[2rem] p-10 flex flex-col justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                   <h3 className="text-3xl font-bold text-white mb-6 border-b border-white/20 pb-4">{group.type}</h3>
                   <ul className="space-y-4">
@@ -498,6 +565,37 @@ export default function AboutPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* --- OUR COMMITMENT & CTA SECTION --- */}
+      <section className="relative z-10 py-20 px-6 lg:px-12 flex justify-center text-center overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-20 bg-[#0d3863]/5 rounded-full blur-[120px] pointer-events-none"></div>
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
+          className="relative max-w-5xl w-full bg-white rounded-[3rem] p-12 md:p-20 shadow-2xl overflow-hidden border border-gray-100"
+        >
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">
+              <span className="text-gray-600">Our</span> <span className="text-[#0d3863]">Commitment</span>
+            </h2>
+            <p className="text-gray-600 text-lg md:text-xl mb-12 max-w-3xl mx-auto font-light leading-relaxed">
+              We are committed to building long-lasting relationships based on trust, transparency, quality, and customer satisfaction. Every product, quotation, and partnership reflects our dedication to helping businesses procure technology more efficiently.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <button className="group relative inline-flex items-center justify-center px-10 py-5 bg-[#0d3863] text-white rounded-2xl font-bold text-lg overflow-hidden transition-colors hover:bg-[#154c82] shadow-lg shadow-[#0d3863]/20">
+                <span className="relative flex items-center gap-2">
+                  Join the Techhansa Retail Network <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </button>
+            </div>
+            
+            <p className="mt-8 text-sm font-semibold text-[#0d3863] uppercase tracking-widest opacity-80">
+              Smart Procurement • Trusted Partnerships • Sustainable Growth
+            </p>
+          </div>
+        </motion.div>
       </section>
 
     </div>
