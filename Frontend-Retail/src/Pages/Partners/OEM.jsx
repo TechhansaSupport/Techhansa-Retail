@@ -30,6 +30,75 @@ export default function OemPartner() {
     { name: 'Epson', logoSrc: EpsonLogo }
   ];
 
+  const partnerDetails = [
+    {
+      name: 'HP',
+      logoSrc: HPLogo,
+      tagline: 'Enterprise Computing Excellence',
+      desc: 'HP is a global leader in business computing, offering high-performance laptops, desktops, workstations, printers, and enterprise IT solutions.'
+    },
+    {
+      name: 'Dell',
+      logoSrc: DellLogo,
+      tagline: 'Powering Modern Businesses',
+      desc: 'Dell provides innovative computing infrastructure trusted by enterprises worldwide.'
+    },
+    {
+      name: 'Lenovo',
+      logoSrc: LenovoLogo,
+      tagline: 'Smarter Technology for Every Business',
+      desc: 'Lenovo delivers innovative computing devices, ThinkPad business laptops, desktops, workstations, and data center solutions.'
+    },
+    {
+      name: 'Apple',
+      logoSrc: AppleLogo,
+      tagline: 'Premium Performance & Innovation',
+      desc: "Apple's ecosystem combines exceptional performance, seamless user experience, and industry-leading security."
+    },
+    {
+      name: 'ASUS',
+      logoSrc: AsusLogo,
+      tagline: 'Innovation That Inspires',
+      desc: 'ASUS develops award-winning laptops, desktops, motherboards, gaming devices, and business solutions.'
+    },
+    {
+      name: 'Acer',
+      logoSrc: AcerLogo,
+      tagline: 'Reliable Computing Solutions',
+      desc: 'Acer delivers dependable computing products designed for education, business, and enterprise environments.'
+    },
+    {
+      name: 'Samsung',
+      logoSrc: SamsungLogo,
+      tagline: 'Advanced Technology Solutions',
+      desc: 'Samsung offers monitors, SSDs, storage solutions, displays, and enterprise electronics.'
+    },
+    {
+      name: 'Logitech',
+      logoSrc: null, 
+      tagline: 'Productivity Without Limits',
+      desc: 'Logitech designs premium peripherals and collaboration devices.'
+    },
+    {
+      name: 'Intel',
+      logoSrc: null, 
+      tagline: 'The Power Behind Modern Computing',
+      desc: 'Intel processors deliver exceptional processing performance and enterprise-grade reliability.'
+    },
+    {
+      name: 'MSI',
+      logoSrc: null, 
+      tagline: 'High-Performance Computing',
+      desc: 'MSI is recognized for premium workstations, gaming systems, and business laptops.'
+    },
+    {
+      name: 'Epson',
+      logoSrc: EpsonLogo,
+      tagline: 'Professional Printing Solutions',
+      desc: 'Epson provides advanced printing, scanning, and imaging solutions.'
+    }
+  ];
+
   // Initialize AOS animations
   useEffect(() => {
     AOS.init({
@@ -223,6 +292,80 @@ export default function OemPartner() {
           </div>
         </div>
 
+      </section>
+
+      {/* ================= 4. DETAILED PARTNERS SECTION ================= */}
+      <section className="relative w-full py-24 bg-white overflow-hidden z-10">
+        
+        {/* Subtle Background Glow */}
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[var(--tech-blue)]/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+
+        <div className="max-w-[1300px] mx-auto px-6 relative z-10">
+          
+          {/* Header */}
+          <div className="text-center max-w-4xl mx-auto mb-16 md:mb-20" data-aos="fade-up">
+            <h2 className="text-4xl md:text-[2.75rem] font-extrabold text-[var(--text-dark)] leading-tight mb-4">
+              Our Technology Partners
+            </h2>
+            <h3 className="text-[18px] md:text-[20px] text-transparent bg-clip-text bg-gradient-to-r from-[var(--tech-blue)] to-[var(--premium-gold)] font-extrabold mb-6 tracking-wide">
+              Global Brands. Genuine Products. Trusted Solutions.
+            </h3>
+            <p className="text-gray-600 text-[16px] md:text-[17px] leading-relaxed font-medium">
+              Our extensive partner network enables us to provide businesses with a comprehensive portfolio of IT hardware, peripherals, networking equipment, and enterprise solutions. Through our authorized distribution ecosystem, we ensure authentic products, competitive pricing, and manufacturer-backed warranties.
+            </p>
+          </div>
+
+          {/* Partners Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {partnerDetails.map((partner, index) => (
+              <div 
+                key={index} 
+                data-aos="fade-up" 
+                data-aos-delay={(index % 3) * 100}
+                className="group h-full perspective-1000"
+              >
+                <div className="relative bg-white rounded-2xl p-8 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] group-hover:shadow-[0_20px_40px_-10px_rgba(13,56,99,0.12)] transition-all duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:-translate-y-2 overflow-hidden flex flex-col h-full transform-gpu">
+                  
+                  {/* Subtle Inner Glow */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--tech-blue)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none z-0"></div>
+                  
+                  {/* Glass Shine */}
+                  <div className="absolute top-0 -left-[100%] h-full w-[150%] z-20 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:left-[200%] transition-all duration-1000 ease-in-out pointer-events-none"></div>
+
+                  {/* Logo Container */}
+                  <div className="h-16 mb-8 flex items-center justify-start relative z-10">
+                    {partner.logoSrc ? (
+                      <img 
+                        src={partner.logoSrc} 
+                        alt={partner.name} 
+                        className="h-full max-w-[140px] object-contain filter grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 mix-blend-multiply origin-left group-hover:scale-105" 
+                      />
+                    ) : (
+                      <span className="text-3xl font-black text-gray-300 group-hover:text-[var(--tech-blue)] transition-colors duration-500 tracking-tight">
+                        {partner.name}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Text Content */}
+                  <div className="relative z-10 flex-grow flex flex-col">
+                    <h4 className="text-[19px] font-extrabold text-[#0a294b] mb-3 leading-snug group-hover:text-[var(--tech-blue)] transition-colors duration-500">
+                      {partner.tagline}
+                    </h4>
+                    <p className="text-[15px] text-gray-500 leading-relaxed font-medium group-hover:text-gray-700 transition-colors duration-500">
+                      {partner.desc}
+                    </p>
+                  </div>
+                  
+                  {/* Animated Bottom Line */}
+                  <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--tech-blue)] to-[var(--premium-gold)] transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]"></div>
+                  
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
       </section>
     </div>
   );

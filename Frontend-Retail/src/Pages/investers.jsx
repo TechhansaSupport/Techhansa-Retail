@@ -38,12 +38,12 @@ const investors = [
 ];
 
 const investorMatters = [
-  { title: "Long-Term Vision", icon: Globe },
-  { title: "Business Expansion", icon: TrendingUp },
-  { title: "Technology Innovation", icon: Zap },
-  { title: "Financial Stability", icon: Shield },
-  { title: "Strategic Leadership", icon: Target },
-  { title: "Nationwide Growth", icon: LineChart }
+  { title: "Long-Term Vision", img: "/src/assets/Long-Term.jpg" },
+  { title: "Business Expansion", img: "/src/assets/Business Expansion.jpg" },
+  { title: "Technology Innovation", img: "/src/assets/Technology-Innovation.jpg" },
+  { title: "Financial Stability", img: "/src/assets/Financial-Stability.jpg" },
+  { title: "Strategic Leadership", img: "/src/assets/Strategic-Leadership.jpg" },
+  { title: "Nationwide Growth", img: "/src/assets/Nationwide-Growth.jpg" }
 ];
 
 const investmentHighlights = [
@@ -289,10 +289,16 @@ export default function InvestorsPage() {
                 <motion.div 
                   key={i}
                   initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                  className="flex flex-col gap-3 p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-[#0d3863] hover:text-white group transition-colors duration-300"
+                  className="flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_30px_rgba(13,56,99,0.1)] hover:-translate-y-1 group transition-all duration-300"
                 >
-                  <item.icon className="w-8 h-8 text-[#0d3863] group-hover:text-white transition-colors" />
-                  <span className="font-bold text-gray-700 group-hover:text-white transition-colors">{item.title}</span>
+                  <div className="h-36 w-full overflow-hidden relative">
+                    <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />
+                    {/* Soft Inner Sweep Animation */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+                  </div>
+                  <div className="p-5 bg-white relative z-10">
+                    <span className="font-bold text-[#0a294b] group-hover:text-[var(--tech-blue)] tracking-wide transition-colors">{item.title}</span>
+                  </div>
                 </motion.div>
               ))}
             </div>
