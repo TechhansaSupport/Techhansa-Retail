@@ -16,8 +16,8 @@ import partnershipImg from '../assets/partnership.jpg';
 import customerSuccessImg from '../assets/customer-success.jpg';
 
 // Variables for Mission & Vision Images (Replace with local imports)
-const missionImg = "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800";
-const visionImg = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800";
+const missionImg = "/src/assets/mission.jpg"; // Replace with actual path
+const visionImg = "/src/assets/vision.jpg"; // Replace with actual path
 
 // --- DATA ARRAYS ---
 
@@ -33,29 +33,29 @@ const pillars = [
     title: "Solutions for Every Industry", 
     icon: Building2, 
     desc: "We proudly serve Corporate Offices, IT Companies, Educational Institutions, Universities & Colleges, Schools, Hospitals, Public Sector Enterprises, Banking & Financial Institutions, Manufacturing Industries, Startups, MSMEs, System Integrators, and Business Consultants.",
-    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800"
+    image: "src/assets/everyIndustry.avif"
   },
   { 
     title: "Partner Portal", 
     icon: Users, 
     desc: "Designed for IT distributors, suppliers, OEMs, authorized dealers, and system integrators. Partners can participate in live bidding opportunities, receive qualified leads, submit quotations, manage orders, and expand their customer base.",
-    image: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&q=80&w=800"
+    image: "src/assets/partnerPortal.avif"
   },
   { 
     title: "Franchise Opportunities", 
     icon: Globe, 
     desc: "Our nationwide franchise program offers an established business model, brand support, technical assistance, business training, marketing support, lead generation, sales guidance, and continuous operational support.",
-    image: "https://i.pinimg.com/736x/cf/eb/9e/cfeb9e87faa3fccfde6b977381dc204f.jpg"
+    image: "src/assets/franchiseopportunity.jpg"
   }
 ];
 
 const whyChooseUs = [
-  { title: "Trusted Procurement Platform", icon: Shield, image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600" },
-  { title: "Competitive Pricing", icon: Zap, image: "https://i.pinimg.com/1200x/93/0d/c1/930dc1ac4570507ca25303a967e0cc2d.jpg" },
-  { title: "Verified Vendor Network", icon: CheckCircle2, image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&q=80&w=600" },
-  { title: "End-to-End Support", icon: HeadphonesIcon, image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=600" },
-  { title: "Quality Assurance", icon: ThumbsUp, image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=600" },
-  { title: "Customer-Centric Approach", icon: HeartHandshake, image: "https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&q=80&w=600" }
+  { title: "Trusted Procurement Platform", icon: Shield, image: "src/assets/trustedprocurement.avif" },
+  { title: "Competitive Pricing", icon: Zap, image: "src/assets/compititiveprice.jpg" },
+  { title: "Verified Vendor Network", icon: CheckCircle2, image: "src/assets/verifiedvender.avif" },
+  { title: "End-to-End Support", icon: HeadphonesIcon, image: "src/assets/endtoendsupport.avif" },
+  { title: "Quality Assurance", icon: ThumbsUp, image: "src/assets/qualityassurance.avif" },
+  { title: "Customer-Centric Approach", icon: HeartHandshake, image: "src/assets/customercentric.avif" }
 ];
 
 const coreValues = [
@@ -92,9 +92,9 @@ const coreValues = [
 ];
 
 const whoCanJoin = [
-  { type: "Buyers", icon: Briefcase, image: "https://i.pinimg.com/736x/11/d3/e6/11d3e646686d55ba13b55a6539dccfc0.jpg", list: ["Corporate Companies", "Educational Institutions", "Hospitals", "Enterprises", "MSMEs", "Startups"] },
-  { type: "Business Partners", icon: Server, image: "https://i.pinimg.com/736x/5c/ae/01/5cae01eae285a5c3c4953899a3cadc35.jpg", list: ["IT Distributors", "Authorized Dealers", "OEM Partners", "Suppliers", "System Integrators"] },
-  { type: "Franchise Partners", icon: TrendingUp, image: "https://i.pinimg.com/736x/f7/23/f3/f723f3bbc5e48d38bfd7032305ecc498.jpg", list: ["Entrepreneurs", "Existing Business Owners", "IT Professionals", "Technology Consultants", "Regional Business Developers"] }
+  { type: "Buyers", icon: Briefcase, image: "src/assets/buyers.jpg", list: ["Corporate Companies", "Educational Institutions", "Hospitals", "Enterprises", "MSMEs", "Startups"] },
+  { type: "Business Partners", icon: Server, image: "src/assets/businesspartner.jpg", list: ["IT Distributors", "Authorized Dealers", "OEM Partners", "Suppliers", "System Integrators"] },
+  { type: "Franchise Partners", icon: TrendingUp, image: "src/assets/franchisepartner.jpg", list: ["Entrepreneurs", "Existing Business Owners", "IT Professionals", "Technology Consultants", "Regional Business Developers"] }
 ];
 
 // NOTE: This single "process" array (title + desc + image) now drives the
@@ -103,11 +103,11 @@ const whoCanJoin = [
 // missing images, since the render was mistakenly reading from "steps"
 // while the real image URLs lived only in "process".
 const process = [
-  { title: "Register", desc: "Create your verified business profile on the Techhansa platform.", image: "https://images.unsplash.com/photo-1560264280-88b68371db39?auto=format&fit=crop&q=80&w=800" },
-  { title: "Submit Requirements", desc: "Share your bulk hardware needs with complete specifications.", image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=800" },
-  { title: "Receive Competitive Bids", desc: "Verified suppliers submit competitive quotations transparently.", image: "https://i.pinimg.com/1200x/81/68/aa/8168aa6a74b02852966486adbedba38f.jpg" },
-  { title: "Compare & Select", desc: "Evaluate pricing and offerings before making your decision.", image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800" },
-  { title: "Procure with Confidence", desc: "Complete purchases through our secure, streamlined workflow.", image: "https://i.pinimg.com/1200x/2c/e1/80/2ce180ff97a6d078bfc3da7eb849f56d.jpg" }
+  { title: "Register", desc: "Create your verified business profile on the Techhansa platform.", image: "src/assets/register.avif" },
+  { title: "Submit Requirements", desc: "Share your bulk hardware needs with complete specifications.", image: "src/assets/servicerequirement.avif" },
+  { title: "Receive Competitive Bids", desc: "Verified suppliers submit competitive quotations transparently.", image: "src/assets/compititivebids.jpg" },
+  { title: "Compare & Select", desc: "Evaluate pricing and offerings before making your decision.", image: "src/assets/compareselect.avif" },
+  { title: "Procure with Confidence", desc: "Complete purchases through our secure, streamlined workflow.", image: "src/assets/procurewithconfidence.jpg" }
 ];
 
 // --- MAIN PAGE COMPONENT ---
@@ -249,7 +249,7 @@ export default function AboutPage() {
                 <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white mb-6">
                   <Target className="w-10 h-10" />
                 </div>
-                <h3 className="text-3xl font-bold text-white">Our Mission</h3>
+               
               </div>
               
               {/* Hover View Slide Up */}
@@ -274,7 +274,7 @@ export default function AboutPage() {
                 <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white mb-6">
                   <Eye className="w-10 h-10" />
                 </div>
-                <h3 className="text-3xl font-bold text-white">Our Vision</h3>
+                {/* <h3 className="text-3xl font-bold text-white">Our Vision</h3> */}
               </div>
 
               {/* Hover View Slide Up */}
@@ -567,37 +567,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* --- OUR COMMITMENT & CTA SECTION --- */}
-      <section className="relative z-10 py-20 px-6 lg:px-12 flex justify-center text-center overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-20 bg-[#0d3863]/5 rounded-full blur-[120px] pointer-events-none"></div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-          className="relative max-w-5xl w-full bg-white rounded-[3rem] p-12 md:p-20 shadow-2xl overflow-hidden border border-gray-100"
-        >
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">
-              <span className="text-gray-600">Our</span> <span className="text-[#0d3863]">Commitment</span>
-            </h2>
-            <p className="text-gray-600 text-lg md:text-xl mb-12 max-w-3xl mx-auto font-light leading-relaxed">
-              We are committed to building long-lasting relationships based on trust, transparency, quality, and customer satisfaction. Every product, quotation, and partnership reflects our dedication to helping businesses procure technology more efficiently.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button className="group relative inline-flex items-center justify-center px-10 py-5 bg-[#0d3863] text-white rounded-2xl font-bold text-lg overflow-hidden transition-colors hover:bg-[#154c82] shadow-lg shadow-[#0d3863]/20">
-                <span className="relative flex items-center gap-2">
-                  Join the Techhansa Retail Network <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </button>
-            </div>
-            
-            <p className="mt-8 text-sm font-semibold text-[#0d3863] uppercase tracking-widest opacity-80">
-              Smart Procurement • Trusted Partnerships • Sustainable Growth
-            </p>
-          </div>
-        </motion.div>
-      </section>
-
+    
     </div>
   );
 }
