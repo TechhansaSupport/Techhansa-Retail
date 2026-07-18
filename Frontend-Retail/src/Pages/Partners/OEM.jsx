@@ -3,17 +3,17 @@ import AOS from 'aos';
 import 'aos/dist/aos.css'; // Import AOS CSS
 
 import OEMHero from '../../assets/OEM.jpg';
-import HPLogo from '../../assets/hp.webp';
-import DellLogo from '../../assets/dell.webp';
-import LenovoLogo from '../../assets/lenovo.webp';
-import AppleLogo from '../../assets/apple.webp';
-import AsusLogo from '../../assets/asus.webp';
-import AcerLogo from '../../assets/acer.webp';
-import SamsungLogo from '../../assets/samsung.webp';
-import EpsonLogo from '../../assets/Epson.jpg';
-// import LogitechLogo from '../../assets/logitech.webp';
-// import IntelLogo from '../../assets/intel.webp';
-// import MsiLogo from '../../assets/msi.webp';
+import HPLogo from '../../assets/hp.png';
+import DellLogo from '../../assets/dell.png';
+import LenovoLogo from '../../assets/lenovo.png';
+import AppleLogo from '../../assets/apple.png';
+import AsusLogo from '../../assets/asus.png';
+import AcerLogo from '../../assets/acer.png';
+import SamsungLogo from '../../assets/samsung.png';
+import EpsonLogo from '../../assets/Epson.png';
+import LogitechLogo from '../../assets/logitech.png';
+import IntelLogo from '../../assets/intel.png';
+import MsiLogo from '../../assets/msi.png';
 
 export default function OemPartner() {
   const oemBrands = [
@@ -24,9 +24,9 @@ export default function OemPartner() {
     { name: 'ASUS', logoSrc: AsusLogo },
     { name: 'Acer', logoSrc: AcerLogo },
     { name: 'Samsung', logoSrc: SamsungLogo },
-    { name: 'Logitech', logoSrc: HPLogo }, // Replace with actual Logitech import
-    { name: 'Intel', logoSrc: DellLogo },  // Replace with actual Intel import
-    { name: 'MSI', logoSrc: LenovoLogo },
+    { name: 'Logitech', logoSrc: LogitechLogo },
+    { name: 'Intel', logoSrc: IntelLogo },
+    { name: 'MSI', logoSrc: MsiLogo },
     { name: 'Epson', logoSrc: EpsonLogo }
   ];
 
@@ -75,19 +75,19 @@ export default function OemPartner() {
     },
     {
       name: 'Logitech',
-      logoSrc: null, 
+      logoSrc: LogitechLogo, 
       tagline: 'Productivity Without Limits',
       desc: 'Logitech designs premium peripherals and collaboration devices.'
     },
     {
       name: 'Intel',
-      logoSrc: null, 
+      logoSrc: IntelLogo, 
       tagline: 'The Power Behind Modern Computing',
       desc: 'Intel processors deliver exceptional processing performance and enterprise-grade reliability.'
     },
     {
       name: 'MSI',
-      logoSrc: null, 
+      logoSrc: MsiLogo, 
       tagline: 'High-Performance Computing',
       desc: 'MSI is recognized for premium workstations, gaming systems, and business laptops.'
     },
@@ -264,7 +264,7 @@ export default function OemPartner() {
                     }}
                   >
                     <div className="group w-full h-full cursor-pointer">
-                      <div className="w-full h-full bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgba(13,56,99,0.08)] border border-white flex flex-col items-center justify-center p-8 overflow-hidden transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(221,167,60,0.15)] group-hover:border-[var(--premium-gold)]/40 group-hover:-translate-y-2 relative">
+                      <div className="w-full h-full bg-white/80 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgba(13,56,99,0.08)] border border-white/60 flex flex-col items-center justify-center p-8 overflow-hidden transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(221,167,60,0.15)] group-hover:border-[var(--premium-gold)]/40 group-hover:-translate-y-2 relative">
                     
                     {/* Subtle Inner Glow on Hover */}
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--premium-gold)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -273,7 +273,7 @@ export default function OemPartner() {
                     <img
                       src={brand.logoSrc}
                       alt={brand.name}
-                      className="w-full h-full object-contain relative z-10 p-2 drop-shadow-sm transition-all duration-500 ease-out group-hover:scale-110 group-hover:drop-shadow-2xl mix-blend-multiply"
+                      className="w-full h-full object-contain relative z-10 p-2 drop-shadow-sm transition-all duration-500 ease-out group-hover:scale-110 group-hover:drop-shadow-2xl"
                     />
                     
                     {/* Glowing Bottom Line Effect */}

@@ -1,14 +1,14 @@
-import HPLogo from '../../assets/hp.webp';
-import DellLogo from '../../assets/dell.webp';
-import LenovoLogo from '../../assets/lenovo.webp';
-import AppleLogo from '../../assets/apple.webp';
-import AsusLogo from '../../assets/asus.webp';
-import AcerLogo from '../../assets/acer.webp';
-import SamsungLogo from '../../assets/samsung.webp';
-import EpsonLogo from '../../assets/Epson.jpg';
-// import LogitechLogo from '../../assets/logitech.webp';
-// import IntelLogo from '../../assets/intel.webp';
-// import MsiLogo from '../../assets/msi.webp';
+import HPLogo from '../../assets/hp.png';
+import DellLogo from '../../assets/dell.png';
+import LenovoLogo from '../../assets/lenovo.png';
+import AppleLogo from '../../assets/apple.png';
+import AsusLogo from '../../assets/asus.png';
+import AcerLogo from '../../assets/acer.png';
+import SamsungLogo from '../../assets/samsung.png';
+import EpsonLogo from '../../assets/Epson.png';
+import LogitechLogo from '../../assets/logitech.png';
+import IntelLogo from '../../assets/intel.png';
+import MsiLogo from '../../assets/msi.png';
 import React, { useEffect } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -31,9 +31,9 @@ export default function BrandsSection() {
     { name: 'ASUS', logoSrc: AsusLogo },
     { name: 'Acer', logoSrc: AcerLogo },
     { name: 'Samsung', logoSrc: SamsungLogo },
-     { name: 'Logitech', logoSrc: HPLogo }, // Replace with actual Logitech import
-        { name: 'Intel', logoSrc: DellLogo },  // Replace with actual Intel import
-        { name: 'MSI', logoSrc: LenovoLogo },
+    { name: 'Logitech', logoSrc: LogitechLogo },
+    { name: 'Intel', logoSrc: IntelLogo },
+    { name: 'MSI', logoSrc: MsiLogo },
     { name: 'Epson', logoSrc: EpsonLogo }
   ];
 
@@ -99,7 +99,7 @@ export default function BrandsSection() {
           <div className="absolute inset-0 carousel-track">
             
             {brands.map((brand, index) => {
-              const angle = 45 * index; 
+              const angle = (360 / brands.length) * index; 
               
               return (
                 <div 
