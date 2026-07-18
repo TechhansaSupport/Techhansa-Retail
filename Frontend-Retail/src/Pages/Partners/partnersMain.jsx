@@ -81,7 +81,7 @@ export default function PartnersMain() {
     {
       id: "channel",
       title: "Channel Partner",
-      subtitle: "Distributors & Resellers",
+      subtitle: "Resellers",
       desc: "Procure IT hardware in bulk and distribute products to regional markets with competitive business pricing.",
       link: "/partner/channel",
       img: ChannelImg
