@@ -10,45 +10,61 @@ import {
 import contactBannerImg from '../assets/contact-banner.jpg'; 
 
 // --- DATA ARRAYS ---
-// Maine yahan har ek item ke liye context ke according images add ki hain
 const whyContactUs = [
   { 
     title: "Fast Response", 
     icon: Zap, 
-    image: "src/assets/fastreponse.avif" // Tech/Speed context
+    image: "src/assets/fastreponse.avif"
   },
   { 
     title: "Expert Consultation", 
     icon: HeadphonesIcon, 
-    image: "src/assets/expertconsulation.avif" // Consulting/Meeting context
+    image: "src/assets/expertconsulation.avif"
   },
   { 
     title: "Nationwide Service", 
     icon: Map, 
-    image: "src/assets/nationwideservice.avif" // Logistics/Map context
+    image: "src/assets/nationwideservice.avif"
   },
   { 
     title: "Genuine Products", 
     icon: ShieldCheck, 
-    image: "src/assets/genuineproduct.jpg" // Quality/Warehouse context
+    image: "src/assets/genuineproduct.jpg"
   },
   { 
     title: "Customized Solutions", 
     icon: Settings, 
-    image: "src/assets/customisesolutions.jpg" // Custom Tech Solutions
+    image: "src/assets/customisesolutions.jpg"
   },
   { 
     title: "Long-Term Partnership", 
     icon: HeartHandshake, 
-    image: "src/assets/longtermpartnership.avif" // Partnership/Handshake context
+    image: "src/assets/longtermpartnership.avif"
   }
 ];
 
+// Added hover colors for each FAQ item
 const faqs = [
-  { q: "Can I request a bulk quotation?", a: "Yes. Submit your requirements through our contact form or email our sales team." },
-  { q: "How can I become a franchise partner?", a: "Complete the franchise inquiry form or contact our franchise team." },
-  { q: "Do you provide nationwide delivery?", a: "Yes. We deliver across India." },
-  { q: "Are all products covered under warranty?", a: "Yes. All products come with applicable manufacturer warranty." }
+  { 
+    q: "Can I request a bulk quotation?", 
+    a: "Yes. Submit your requirements through our contact form or email our sales team.",
+    hoverColor: "hover:bg-blue-50 hover:border-blue-200"
+  },
+  { 
+    q: "How can I become a franchise partner?", 
+    a: "Complete the franchise inquiry form or contact our franchise team.",
+    hoverColor: "hover:bg-emerald-50 hover:border-emerald-200"
+  },
+  { 
+    q: "Do you provide nationwide delivery?", 
+    a: "Yes. We deliver across India.",
+    hoverColor: "hover:bg-orange-50 hover:border-orange-200"
+  },
+  { 
+    q: "Are all products covered under warranty?", 
+    a: "Yes. All products come with applicable manufacturer warranty.",
+    hoverColor: "hover:bg-purple-50 hover:border-purple-200"
+  }
 ];
 
 const bulkServices = [
@@ -67,10 +83,12 @@ const businessTypes = [
 ];
 
 // --- INTERACTIVE FAQ COMPONENT ---
-const FAQItem = ({ question, answer }) => {
+// Added hoverColor prop
+const FAQItem = ({ question, answer, hoverColor }) => {
   const [isOpen, setIsOpen] = useState(false);
+  
   return (
-    <div className="border border-gray-100 rounded-2xl bg-white shadow-sm overflow-hidden mb-4 transition-colors hover:border-[#0d3863]/20">
+    <div className={`border border-gray-100 rounded-2xl bg-white shadow-sm overflow-hidden mb-4 transition-all duration-300 hover:shadow-md ${hoverColor}`}>
       <button 
         onClick={() => setIsOpen(!isOpen)} 
         className="w-full flex items-center justify-between p-6 text-left focus:outline-none"
@@ -455,7 +473,11 @@ export default function ContactPage() {
           <div>
             {faqs.map((faq, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <FAQItem question={faq.q} answer={faq.a} />
+                <FAQItem 
+                  question={faq.q} 
+                  answer={faq.a} 
+                  hoverColor={faq.hoverColor} 
+                />
               </motion.div>
             ))}
           </div>
