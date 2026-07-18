@@ -11,19 +11,60 @@ import contactBannerImg from '../assets/contact-banner.jpg';
 
 // --- DATA ARRAYS ---
 const whyContactUs = [
-  { title: "Fast Response", icon: Zap },
-  { title: "Expert Consultation", icon: HeadphonesIcon },
-  { title: "Nationwide Service", icon: Map },
-  { title: "Genuine Products", icon: ShieldCheck },
-  { title: "Customized Solutions", icon: Settings },
-  { title: "Long-Term Partnership", icon: HeartHandshake }
+  { 
+    title: "Fast Response", 
+    icon: Zap, 
+    image: "src/assets/fastreponse.avif"
+  },
+  { 
+    title: "Expert Consultation", 
+    icon: HeadphonesIcon, 
+    image: "src/assets/expertconsulation.avif"
+  },
+  { 
+    title: "Nationwide Service", 
+    icon: Map, 
+    image: "src/assets/nationwideservice.avif"
+  },
+  { 
+    title: "Genuine Products", 
+    icon: ShieldCheck, 
+    image: "src/assets/genuineproduct.jpg"
+  },
+  { 
+    title: "Customized Solutions", 
+    icon: Settings, 
+    image: "src/assets/customisesolutions.jpg"
+  },
+  { 
+    title: "Long-Term Partnership", 
+    icon: HeartHandshake, 
+    image: "src/assets/longtermpartnership.avif"
+  }
 ];
 
+// Added hover colors for each FAQ item
 const faqs = [
-  { q: "Can I request a bulk quotation?", a: "Yes. Submit your requirements through our contact form or email our sales team." },
-  { q: "How can I become a franchise partner?", a: "Complete the franchise inquiry form or contact our franchise team." },
-  { q: "Do you provide nationwide delivery?", a: "Yes. We deliver across India." },
-  { q: "Are all products covered under warranty?", a: "Yes. All products come with applicable manufacturer warranty." }
+  { 
+    q: "Can I request a bulk quotation?", 
+    a: "Yes. Submit your requirements through our contact form or email our sales team.",
+    hoverColor: "hover:bg-blue-50 hover:border-blue-200"
+  },
+  { 
+    q: "How can I become a franchise partner?", 
+    a: "Complete the franchise inquiry form or contact our franchise team.",
+    hoverColor: "hover:bg-emerald-50 hover:border-emerald-200"
+  },
+  { 
+    q: "Do you provide nationwide delivery?", 
+    a: "Yes. We deliver across India.",
+    hoverColor: "hover:bg-orange-50 hover:border-orange-200"
+  },
+  { 
+    q: "Are all products covered under warranty?", 
+    a: "Yes. All products come with applicable manufacturer warranty.",
+    hoverColor: "hover:bg-purple-50 hover:border-purple-200"
+  }
 ];
 
 const bulkServices = [
@@ -42,10 +83,12 @@ const businessTypes = [
 ];
 
 // --- INTERACTIVE FAQ COMPONENT ---
-const FAQItem = ({ question, answer }) => {
+// Added hoverColor prop
+const FAQItem = ({ question, answer, hoverColor }) => {
   const [isOpen, setIsOpen] = useState(false);
+  
   return (
-    <div className="border border-gray-100 rounded-2xl bg-white shadow-sm overflow-hidden mb-4 transition-colors hover:border-[#0d3863]/20">
+    <div className={`border border-gray-100 rounded-2xl bg-white shadow-sm overflow-hidden mb-4 transition-all duration-300 hover:shadow-md ${hoverColor}`}>
       <button 
         onClick={() => setIsOpen(!isOpen)} 
         className="w-full flex items-center justify-between p-6 text-left focus:outline-none"
@@ -95,15 +138,12 @@ export default function ContactPage() {
       {/* --- INJECT CUSTOM CSS FOR SINGLE UPWARD SCANNING ANIMATION --- */}
       <style>{`
         @keyframes scanUpOnce {
-          /* Starts from the bottom and moves to the top */
           0% { transform: translateY(200px); opacity: 0; }
           10% { opacity: 1; }
           80% { opacity: 1; }
           100% { transform: translateY(-500px); opacity: 0; }
         }
-        /* Group hover triggers the animation exactly once */
         .group:hover .animate-scanner-once {
-          /* Timing is matched to slide-up animation */
           animation: scanUpOnce 2.2s cubic-bezier(0.23, 1, 0.32, 1) 0.1s forwards;
         }
       `}</style>
@@ -178,7 +218,7 @@ export default function ContactPage() {
       <section className="relative z-10 py-16 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
           
-          {/* LEFT: Contact Information Card  */}
+          {/* LEFT: Contact Information Card */}
           <motion.div 
             initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
             className="lg:col-span-1 bg-[#0d3863] rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden flex flex-col justify-between"
@@ -242,10 +282,10 @@ export default function ContactPage() {
             initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
             className="lg:col-span-2 bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
           >
-             <div className="mb-8">
+            <div className="mb-8">
               <h3 className="text-3xl font-bold text-[#0d3863] mb-2">Send Us a Message</h3>
               <p className="text-gray-500 font-medium">We'd Love to Hear From You</p>
-            </div> 
+            </div>
 
             <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
               <div className="grid md:grid-cols-2 gap-6">
@@ -301,7 +341,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* --- BULK PURCHASE & FRANCHISE SUPPORT CARDS (WHITE UPWARD SCANNER HOVER APPLIED) --- */}
+      {/* --- BULK PURCHASE & FRANCHISE SUPPORT CARDS --- */}
       <section className="relative z-10 py-24 px-6 lg:px-12 bg-gray-50/50 border-y border-gray-200/50">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 lg:gap-12">
           
@@ -380,7 +420,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* --- WHY CONTACT TECHHANSA RETAIL --- */}
+      {/* --- WHY CONTACT TECHHANSA RETAIL (WITH IMAGE BACKGROUNDS) --- */}
       <section className="relative z-10 py-24 px-6 lg:px-12">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-16">
@@ -391,17 +431,23 @@ export default function ContactPage() {
               <motion.div 
                 key={i}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="group relative bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden h-[220px] cursor-pointer isolation-isolate"
+                className="group relative bg-slate-900 rounded-3xl border border-gray-100 shadow-sm overflow-hidden h-[220px] cursor-pointer isolation-isolate"
               >
-                {/* Default View */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-8 group-hover:opacity-0">
-                  <div className="w-16 h-16 rounded-full bg-[#0d3863]/5 flex items-center justify-center text-[#0d3863] mb-4">
-                    <item.icon className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-700">{item.title}</h3>
+                {/* Background Image Setup */}
+                <div className="absolute inset-0">
+                  <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-slate-900/30 transition-colors duration-500 group-hover:bg-slate-900/80"></div>
                 </div>
 
-                {/* Hover View */}
+                {/* Default View */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-8 group-hover:opacity-0">
+                  <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white mb-4">
+                    <item.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white drop-shadow-md">{item.title}</h3>
+                </div>
+
+                {/* Hover View Slide Up */}
                 <div className="absolute inset-0 bg-[#0d3863] rounded-3xl p-6 flex flex-col items-center justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
                   <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white mb-4">
                     <item.icon className="w-8 h-8" />
@@ -427,18 +473,17 @@ export default function ContactPage() {
           <div>
             {faqs.map((faq, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <FAQItem question={faq.q} answer={faq.a} />
+                <FAQItem 
+                  question={faq.q} 
+                  answer={faq.a} 
+                  hoverColor={faq.hoverColor} 
+                />
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-  
-      
-
     </div>
-   
-     
   );
 }
