@@ -4,6 +4,15 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import FranchiseHero from '../../assets/Franchise.jpg';
 
+import img1 from '../../assets/Business-Setup.jpg';
+import img2 from '../../assets/Factory-Pricing.jpg';
+import img3 from '../../assets/Exclusive-Territory.jpg';
+import img4 from '../../assets/Inventory-Planning.jpg';
+import img5 from '../../assets/Marketing-Support.jpg';
+import img6 from '../../assets/Technical-Training.jpg';
+import img7 from '../../assets/Dedicated-Manager.jpg';
+import img8 from '../../assets/Continuous-Support.jpg';
+
 export default function FranchisePartner() {
   useEffect(() => {
     AOS.init({
@@ -19,75 +28,42 @@ export default function FranchisePartner() {
     {
       title: "Business Setup Assistance",
       desc: "End-to-end guidance from store layout design to IT infrastructure deployment.",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
-        </svg>
-      )
+      image: img1
     },
     {
       title: "Factory Pricing",
       desc: "Direct access to OEM-level margins ensuring highly competitive retail pricing.",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
+      image: img2
     },
     {
       title: "Exclusive Territory",
       desc: "Protected geographical rights to ensure zero internal conflict and max footfall.",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-        </svg>
-      )
+      image: img3
     },
     {
       title: "Inventory Planning",
       desc: "Data-driven stock management for optimized capital rotation and zero dead stock.",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-        </svg>
-      )
+      image: img4
     },
     {
       title: "Marketing Support",
       desc: "Backed by national digital campaigns, local promo collateral, and branding kits.",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-        </svg>
-      )
+      image: img5
     },
     {
       title: "Technical Training",
       desc: "Comprehensive staff enablement on product specs, sales pitching, and support.",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
-        </svg>
-      )
+      image: img6
     },
     {
       title: "Dedicated Manager",
       desc: "Your personal business expert for seamless daily operations and strategic growth.",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-        </svg>
-      )
+      image: img7
     },
     {
       title: "Continuous Support",
       desc: "24/7 operational assistance, IT backend support, and continuous strategy reviews.",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
-        </svg>
-      )
+      image: img8
     }
   ];
 
@@ -203,24 +179,47 @@ export default function FranchisePartner() {
               key={index}
               data-aos="fade-up" 
               data-aos-delay={index * 50}
-              className="group h-full"
+              className="group h-[320px] md:h-[380px] perspective-1000 w-full"
             >
-              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_4px_15px_rgba(0,0,0,0.02)] group-hover:border-[var(--premium-gold)]/40 group-hover:shadow-[0_15px_30px_rgba(13,56,99,0.08)] transition-all duration-300 group-hover:-translate-y-1.5 flex flex-col items-start relative overflow-hidden h-full">
-              {/* Subtle top border highlight on hover */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-[var(--premium-gold)] transform scale-x-0 group-hover:scale-x-100 origin-center transition-transform duration-500"></div>
+              <div 
+                className="relative w-full h-full rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:shadow-[0_20px_50px_rgba(10,41,75,0.3)] transition-all duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] transform-gpu hover:-translate-y-2"
+              >
+                
+                {/* Background Image */}
+                <img 
+                  src={benefit.image} 
+                  alt={benefit.title} 
+                  className="absolute inset-0 w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-1000 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]" 
+                />
+                
+                {/* Deep Gradient Overlays for Text Readability & Aura */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a294b]/95 via-[#0a294b]/40 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-700"></div>
+                <div className="absolute inset-0 bg-[var(--tech-blue)]/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
 
-              {/* Icon Container */}
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--soft-bg)] to-gray-50 flex items-center justify-center text-[var(--tech-blue)] mb-5 group-hover:bg-[var(--tech-blue)] group-hover:text-white transition-colors duration-300 shadow-sm border border-gray-100 group-hover:border-transparent">
-                {benefit.icon}
-              </div>
-              
-              {/* Content */}
-              <h4 className="text-[17px] font-extrabold text-[var(--text-dark)] mb-2 tracking-tight group-hover:text-[var(--tech-blue)] transition-colors duration-300">
-                {benefit.title}
-              </h4>
-              <p className="text-[13.5px] text-gray-500 leading-relaxed font-medium">
-                {benefit.desc}
-              </p>
+                {/* Content Container (Bottom Aligned) */}
+                <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                  
+                  {/* Decorative Line that expands on hover */}
+                  <div className="w-8 h-1 bg-[var(--premium-gold)] mb-4 rounded-full transform origin-left group-hover:scale-x-150 transition-transform duration-500"></div>
+                  
+                  <div className="transform translate-y-8 group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]">
+                    <h4 className="text-[20px] font-extrabold text-white mb-2 tracking-tight leading-snug drop-shadow-md">
+                      {benefit.title}
+                    </h4>
+                    
+                    {/* Description - Reveals on Hover */}
+                    <div className="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-700 ease-in-out">
+                      <p className="text-[14px] text-gray-200 leading-relaxed font-medium pb-1">
+                        {benefit.desc}
+                      </p>
+                    </div>
+                  </div>
+                  
+                </div>
+
+                {/* Ambient Sweep Shine */}
+                <div className="absolute top-0 -left-[100%] h-full w-[150%] z-20 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:left-[200%] transition-all duration-1000 ease-in-out pointer-events-none"></div>
+
               </div>
             </div>
           ))}
