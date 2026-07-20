@@ -57,12 +57,12 @@ export default function Header() {
         
         {/* 1. Logo Section */}
         <div className="flex-shrink-0 z-20">
-          <Link to="/" className="flex items-center gap-2 lg:gap-3">
+          <a href="/" className="flex items-center gap-2 lg:gap-3">
             <img src={logo} alt="Techhansa Retail" className="h-12 lg:h-24 w-auto object-contain" />
             <span className="text-[var(--premium-gold)] font-extrabold text-lg lg:text-[26px] tracking-wide whitespace-nowrap">
               Techhansa Retail
             </span>
-          </Link>
+          </a>
         </div>
 
         {/* 2. Desktop Navigation */}
@@ -181,7 +181,7 @@ export default function Header() {
               <div className="hidden xl:flex flex-col -mt-8 items-end gap-0.5">
                 <div className="flex items-center gap-1 font-semibold text-[14px] whitespace-nowrap">
                   <span className="text-lg">📞</span>
-                  <span>+91 98765 43210</span>
+                  <a href="tel:+919711888951" className="hover:text-[var(--tech-blue)] transition-colors">+91 9711888951</a>
                 </div>
                 
                 <button className="bg-[var(--tech-blue)] hover:bg-[var(--techgolden-hover)] text-white px-5 lg:px-7 py-1.5 rounded-md font-semibold text-[13px] lg:text-[14px] transition-all duration-300 active:scale-95 shadow-md hover:shadow-lg whitespace-nowrap">
@@ -247,7 +247,7 @@ export default function Header() {
           ))}
           
           <div className="flex flex-col gap-3 mt-3">
-            <span className="font-semibold text-sm">📞 +91 98765 43210</span>
+            <a href="tel:+919711888951" className="font-semibold text-sm hover:text-[var(--tech-blue)] transition-colors">📞 +91 9711888951</a>
             <button className="bg-[var(--tech-blue)] text-white px-4 py-2 rounded-md font-semibold text-center w-full sm:hidden hover:bg-[#0a294b]">
               Login
             </button>

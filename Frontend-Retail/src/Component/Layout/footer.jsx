@@ -159,7 +159,7 @@ export default function Footer() {
             
             {/* COLUMN 1: Brand Logo & Information (Using exact old margins/sizing) */}
             <div className="flex flex-col pr-4">
-              <Link to="/" className="flex items-center mb-4 ml-6 md:ml-8 cursor-pointer">
+              <a href="/" className="flex items-center mb-4 ml-6 md:ml-8 cursor-pointer">
                 <div className="w-24 h-24 lg:w-26 lg:h-26 bg-transparent border-0 -mt-2 lg:-mt-6 rounded-full flex items-center justify-center shadow-none overflow-hidden">
                   <img 
                     src={logo} 
@@ -167,13 +167,17 @@ export default function Footer() {
                     className="w-full h-full object-contain drop-shadow-sm"
                   />
                 </div>
-              </Link>
+              </a>
               <span className="text-[22px] font-extrabold tracking-tight mb-4 -ml-2 leading-none" style={{ color: "var(--premium-gold)" }}>
                 Techhansa Retail
               </span>
               <p className="text-[13px] text-gray-600 leading-relaxed mb-6">
                 IT hardware bulk supply and franchise network for corporates, institutions and resellers across India.
               </p>
+              <div className="flex items-center gap-2 text-gray-600 hover:text-[var(--premium-gold)] transition-colors cursor-pointer w-fit mb-4">
+                <PhoneIcon className="w-5 h-5" />
+                <a href="tel:+919711888951" className="text-[14px] font-medium">+91 9711888951</a>
+              </div>
             </div>
 
             {/* COLUMN 2, 3, 4: Link Columns using exact old spacing */}
