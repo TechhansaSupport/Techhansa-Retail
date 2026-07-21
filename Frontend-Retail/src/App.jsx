@@ -10,8 +10,9 @@ import OemPartner from './Pages/Partners/OEM';
 import ChannelPartner from './Pages/Partners/Channel';
 import FranchisePartner from './Pages/Partners/Franchise';
 import Investers from './Pages/investers';
+import FranchiseForm from './Pages/Partners/FranchiseForm';
 
-// --- Scroll To Top Component ---
+// --- Scroll To Top Component ---  
 // Yeh component route change hone par instantly page ko top par bhej dega
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -45,6 +46,7 @@ function App() {
             <Route path="/partner/channel" element={<ChannelPartner />} />
             <Route path="/partner/franchise" element={<FranchisePartner />} />
             <Route path="/investors" element={<Investers />} />
+            <Route path="/franchise/form" element={<FranchiseForm />} />
           </Routes>
         </main>
 
