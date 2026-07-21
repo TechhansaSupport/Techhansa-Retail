@@ -51,8 +51,9 @@ const companyLinks = [
   { name: "Investors", path: "/investors" }, 
   { name: "Contact Us", path: "/contact" }
 ];
+
 const franchiseLinks = [
-  { name: "Apply for Franchise", path: "#" }, 
+  { name: "Apply for Franchise", path: "/franchise/form" }, 
   { name: "Franchise / Partner Login", path: "#" }, 
   { name: "Store Setup Support", path: "#" }, 
   { name: "Check Territory Availability", path: "#" }
@@ -120,7 +121,9 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <button
+            {/*  Changed button to Link and added route */}
+            <Link
+              to="/franchise/form"
               className="group relative px-7 py-3 rounded-xl font-semibold text-white
                          shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_6px_0_0_#c59942,0_18px_30px_-8px_rgba(0,0,0,0.5)]
                          transition-all duration-150 ease-out
@@ -130,7 +133,7 @@ export default function Footer() {
             >
               Apply for Franchise
               <ArrowRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </button>
+            </Link>
           </div>
         </div>
       </div>
