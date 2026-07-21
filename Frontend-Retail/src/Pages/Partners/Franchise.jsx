@@ -121,7 +121,7 @@ export default function FranchisePartner() {
             <div className="hidden lg:block">
               <div className="inline-block group">
                 <Link 
-                  to="/franchise-apply"
+                  to="/franchise/form"
                   className="relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-[var(--tech-blue)] rounded-xl font-bold text-white text-[15px] overflow-hidden shadow-[0_8px_20px_rgba(13,56,99,0.25)] group-hover:shadow-[0_15px_30px_rgba(13,56,99,0.4)] group-hover:-translate-y-1 transition-all duration-300"
                 >
                 <span className="absolute inset-0 w-full h-full -ml-[-100%] bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-sweep pointer-events-none"></span>
@@ -149,7 +149,7 @@ export default function FranchisePartner() {
             {/* Mobile CTA Button */}
             <div className="mt-8 lg:hidden flex justify-center">
               <Link 
-                to="/franchise-apply"
+                to="/franchise/form"
                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-[var(--tech-blue)] rounded-xl font-bold text-white text-[15px] shadow-lg w-full"
               >
                 Become a Franchise Partner

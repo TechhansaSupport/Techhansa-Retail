@@ -11,8 +11,9 @@ import ChannelPartner from './Pages/Partners/Channel';
 import FranchisePartner from './Pages/Partners/Franchise';
 import Investers from './Pages/investers';
 import LoginPage from './Pages/LoginPage';
+import FranchiseForm from './Pages/Partners/FranchiseForm';
 
-// --- Scroll To Top Component ---
+// --- Scroll To Top Component ---  
 // Yeh component route change hone par instantly page ko top par bhej dega
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -58,6 +59,27 @@ function App() {
           </div>
         } />
       </Routes>
+      {/* 2. Main Application Wrapper (z-10) */}
+      <div className="app-container relative z-10 bg-transparent min-h-screen flex flex-col">
+        <Header />
+        
+        {/* Main Content Area */}
+        <main className="main-content flex-grow">
+          <Routes>
+            <Route path="/" element={<Homepage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/partners" element={<Partners />} />
+            <Route path="/partner/oem" element={<OemPartner />} />
+            <Route path="/partner/channel" element={<ChannelPartner />} />
+            <Route path="/partner/franchise" element={<FranchisePartner />} />
+            <Route path="/investors" element={<Investers />} />
+            <Route path="/franchise/form" element={<FranchiseForm />} />
+          </Routes>
+        </main>
+
+        <Footer />
+      </div>
     </Router>
   );
 }
