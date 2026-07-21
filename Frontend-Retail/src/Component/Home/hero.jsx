@@ -57,7 +57,7 @@ export default function Hero() {
             to="/catalog"
             className="group bg-[var(--premium-gold)] hover:bg-[var(--techgolden-hover)] text-white px-8 py-3.5 rounded-[4px] text-[13px] md:text-[14px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
           >
-            Explore Catalog
+           Channel Partner
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transform transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
