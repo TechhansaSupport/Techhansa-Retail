@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../../assets/logo.png'; 
+import logo from '../../assets/logo.png';
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobilePartnersOpen, setIsMobilePartnersOpen] = useState(false); // Mobile dropdown state
+
   const searchContainerRef = useRef(null);
 
   // NavLinks me Partners ke andar subLinks add kiye hain aur description/icons bhi
@@ -184,9 +185,12 @@ export default function Header() {
                   <a href="tel:+919711888951" className="hover:text-[var(--tech-blue)] transition-colors">+91 9711888951</a>
                 </div>
                 
-                <button className="bg-[var(--tech-blue)] hover:bg-[var(--techgolden-hover)] text-white px-5 lg:px-7 py-1.5 rounded-md font-semibold text-[13px] lg:text-[14px] transition-all duration-300 active:scale-95 shadow-md hover:shadow-lg whitespace-nowrap">
+                <Link 
+                  to="/login"
+                  className="bg-[var(--tech-blue)] hover:bg-[var(--techgolden-hover)] text-white px-5 lg:px-7 py-1.5 rounded-md font-semibold text-[13px] lg:text-[14px] transition-all duration-300 active:scale-95 shadow-md hover:shadow-lg whitespace-nowrap"
+                >
                   Login
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -248,12 +252,17 @@ export default function Header() {
           
           <div className="flex flex-col gap-3 mt-3">
             <a href="tel:+919711888951" className="font-semibold text-sm hover:text-[var(--tech-blue)] transition-colors">📞 +91 9711888951</a>
-            <button className="bg-[var(--tech-blue)] text-white px-4 py-2 rounded-md font-semibold text-center w-full sm:hidden hover:bg-[#0a294b]">
+            <Link 
+              to="/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="bg-[var(--tech-blue)] text-white px-4 py-2 rounded-md font-semibold text-center w-full sm:hidden hover:bg-[#0a294b]"
+            >
               Login
-            </button>
+            </Link>
           </div>
         </nav>
       </div>
+
     </header>
   );
 }
