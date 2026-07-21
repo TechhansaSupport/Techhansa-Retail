@@ -12,9 +12,11 @@ app.use(express.json());
 
 // Import Routes
 const contactRoute = require('./routes/contact');
+const franchiseRoute = require('./routes/franchise');
 
 // Use Routes
 app.use('/api/contact', contactRoute);
+app.use('/api/franchise', franchiseRoute);
 
 // Initialize Database & Start Server
 async function startServer() {
@@ -38,6 +40,42 @@ async function startServer() {
       );
     `);
     console.log('✅ Contacts table is ready');
+
+    // Create franchise_applications table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS franchise_applications (
+        id SERIAL PRIMARY KEY,
+        company_name VARCHAR(255) NOT NULL,
+        cin_gst VARCHAR(100),
+        company_pan VARCHAR(50),
+        company_tan VARCHAR(50),
+        registered_address TEXT NOT NULL,
+        company_contact VARCHAR(50) NOT NULL,
+        auth_name VARCHAR(255) NOT NULL,
+        auth_contact VARCHAR(50) NOT NULL,
+        auth_email VARCHAR(255) NOT NULL,
+        document_path TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ Franchise Applications table is ready');
+
+    // Create franchise_directors table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS franchise_directors (
+        id SERIAL PRIMARY KEY,
+        application_id INTEGER REFERENCES franchise_applications(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        contact VARCHAR(50) NOT NULL,
+        income_amount VARCHAR(50),
+        income_unit VARCHAR(50),
+        aadhar VARCHAR(50) NOT NULL,
+        pan VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ Franchise Directors table is ready');
 
     // Start server only after DB is confirmed
     app.listen(PORT, () => {
