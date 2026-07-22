@@ -52,7 +52,7 @@ function App() {
                 <Route path="/partner/channel" element={<ChannelPartner />} />
                 <Route path="/partner/franchise" element={<FranchisePartner />} />
                 <Route path="/investors" element={<Investers />} />
-                <Route path="/franchise/form" element={<FranchiseForm />} />
+                <Route path="/franchise/form" element={<partnerpage />} />
               </Routes>
             </main>
 

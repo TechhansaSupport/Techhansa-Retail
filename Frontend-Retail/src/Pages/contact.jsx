@@ -86,7 +86,7 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({
     fullName: '',
     companyName: '',
-    email: '',
+    email: '',   
     phone: '',
     businessType: '',
     subject: '',

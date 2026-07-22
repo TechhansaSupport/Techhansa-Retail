@@ -1,207 +1,310 @@
-import React, { useEffect } from 'react';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
+import React, { useState } from 'react';
+import { Building2, Users, UserCheck, UploadCloud, MapPin, Phone, Mail, FileText, CreditCard, ArrowRight, Plus, Trash2, ChevronDown, Target, ShieldCheck } from 'lucide-react';
 
-/* 
-  Bhai, yahan par apni actual images import kar lena.
-*/
-import ChannelHero from '../../assets/Channel-hero.jpg';
-import ChannelContentImg from '../../assets/Channel-content.jpg';
+export default function ChannelForm({ showToast }) {
+  const emptyDirector = { name: '', email: '', contact: '', incomeAmount: '', incomeUnit: 'Lakhs', aadhar: '', pan: '', address: '' };
 
-import bulkImg from '../../assets/Bulk.jpg';
-import marginsImg from '../../assets/Better-Profit.jpg';
-import verifiedImg from '../../assets/Verified.jpg';
-import supplyImg from '../../assets/pan.jpg';
-import growthImg from '../../assets/Business-Growth.jpg';
-import supportImg from '../../assets/Dedicated-Support.jpg';
+  const [formData, setFormData] = useState({
+    companyName: '', cinGst: '', companyPan: '', companyTan: '', registeredAddress: '', companyContact: '',
+    authName: '', authContact: '', authEmail: '', documents: null,
+    businessDomain: '', currentTurnover: '', associatedBrands: '' // Channel specific
+  });
 
-export default function ChannelPartner() {
-  // Initialize AOS animations
-  useEffect(() => {
-    AOS.init({
-      duration: 800,
-      easing: 'ease-out-cubic',
-      once: true,
-      offset: 50,
-    });
-  }, []);
+  const [noOfDirOption, setNoOfDirOption] = useState('1');
+  const [directors, setDirectors] = useState([{ ...emptyDirector }]);
+  
+  const [errors, setErrors] = useState({});
+  const [dirErrors, setDirErrors] = useState([{}]);
+  const [formStatus, setFormStatus] = useState({ loading: false, message: '', isError: false });
 
-  // 6 Benefits Data with highly professional SVG Icons
-  const benefits = [
-    {
-      title: "Bulk Procurement",
-      desc: "Purchase enterprise IT hardware in large quantities with competitive business pricing.",
-      image: bulkImg
-    },
-    {
-      title: "Better Profit Margins",
-      desc: "Access special partner pricing that enables sustainable and scalable business growth.",
-      image: marginsImg
-    },
-    {
-      title: "Verified Products",
-      desc: "Receive genuine hardware directly from trusted OEMs and authorized distribution channels.",
-      image: verifiedImg
-    },
-    {
-      title: "Pan India Supply",
-      desc: "Reliable, insured logistics and timely deliveries across all regions in India.",
-      image: supplyImg
-    },
-    {
-      title: "Business Growth",
-      desc: "Expand your customer base with a wide portfolio of premium enterprise technology products.",
-      image: growthImg
-    },
-    {
-      title: "Dedicated Support",
-      desc: "Dedicated account managers to assist with procurement, quotations, and after-sales support.",
-      image: supportImg
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    let finalValue = value;
+    if (name === 'companyContact' || name === 'authContact') finalValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    if (name === 'companyPan' || name === 'companyTan' || name === 'cinGst') finalValue = value.toUpperCase();
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
+    setErrors(prev => ({...prev, [name]: null}));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext !== 'pdf' && ext !== 'zip') {
+        setErrors(prev => ({...prev, documents: "Only PDF or ZIP files are allowed"}));
+        setFormData(prev => ({ ...prev, documents: null }));
+        return;
+      }
     }
-  ];
+    setErrors(prev => ({...prev, documents: null}));
+    setFormData(prev => ({ ...prev, documents: file }));
+  };
+
+  const handleNoOfDirectorsChange = (e) => {
+    const val = e.target.value;
+    setNoOfDirOption(val);
+    let targetCount = val === '2' ? 2 : val === '3+' ? 3 : 1;
+
+    setDirectors(prev => {
+      const newArr = [...prev];
+      if (newArr.length > targetCount && val !== '3+') newArr.length = targetCount;
+      while (newArr.length < targetCount) newArr.push({ ...emptyDirector });
+      return newArr;
+    });
+    setDirErrors(prev => {
+      const newErr = [...prev];
+      if (newErr.length > targetCount && val !== '3+') newErr.length = targetCount;
+      while (newErr.length < targetCount) newErr.push({});
+      return newErr;
+    });
+  };
+
+  const handleDirectorChange = (index, field, value) => {
+    const updatedDirectors = [...directors];
+    let finalValue = value;
+    if (field === 'contact') finalValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    else if (field === 'incomeAmount') finalValue = value.replace(/[a-zA-Z]/g, '');
+    else if (field === 'aadhar') finalValue = value.replace(/[^0-9]/g, '').slice(0, 16);
+    else if (field === 'pan') finalValue = value.toUpperCase();
+
+    updatedDirectors[index][field] = finalValue;
+    setDirectors(updatedDirectors);
+    
+    const updatedErrors = [...dirErrors];
+    updatedErrors[index] = { ...updatedErrors[index], [field]: null };
+    setDirErrors(updatedErrors);
+  };
+
+  const handleAddDirector = () => {
+    setDirectors(prev => [...prev, { ...emptyDirector }]);
+    setDirErrors(prev => [...prev, {}]);
+  };
+  const handleRemoveDirector = (index) => {
+    setDirectors(prev => prev.filter((_, i) => i !== index));
+    setDirErrors(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const validateForm = () => {
+    let newErrors = {};
+    let newDirErrors = directors.map(() => ({}));
+    let isValid = true;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+    if (formData.companyContact.length !== 10) { newErrors.companyContact = "10 digits required"; isValid = false; }
+    if (!panRegex.test(formData.companyPan)) { newErrors.companyPan = "Invalid PAN"; isValid = false; }
+    if (!gstRegex.test(formData.cinGst)) { newErrors.cinGst = "Invalid GST"; isValid = false; }
+    if (formData.authContact.length !== 10) { newErrors.authContact = "10 digits required"; isValid = false; }
+    if (!emailRegex.test(formData.authEmail)) { newErrors.authEmail = "Invalid email"; isValid = false; }
+    if (!formData.documents) { newErrors.documents = "Upload required"; isValid = false; }
+    
+    if (!formData.businessDomain) { newErrors.businessDomain = "Domain is required"; isValid = false; }
+    if (!formData.currentTurnover) { newErrors.currentTurnover = "Select turnover"; isValid = false; }
+
+    directors.forEach((dir, i) => {
+      if (dir.contact.length !== 10) { newDirErrors[i].contact = "10 digits required"; isValid = false; }
+      if (!emailRegex.test(dir.email)) { newDirErrors[i].email = "Invalid email"; isValid = false; }
+      if (!panRegex.test(dir.pan)) { newDirErrors[i].pan = "Invalid PAN"; isValid = false; }
+      if (dir.aadhar.length < 12) { newDirErrors[i].aadhar = "12-16 digits required"; isValid = false; }
+    });
+
+    setErrors(newErrors);
+    setDirErrors(newDirErrors);
+    return isValid;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      showToast("Fix the errors before submitting.", "error");
+      return;
+    }
+    setFormStatus({ loading: true, message: '', isError: false });
+    
+    setTimeout(() => {
+      setFormStatus({ loading: false, message: 'Channel Partner application submitted!', isError: false });
+      showToast("Application submitted successfully!", "success");
+    }, 2000);
+  };
 
   return (
-    <div className="w-full min-h-screen bg-[var(--soft-bg)] pb-10">
+    <form onSubmit={handleSubmit} className="space-y-8">
       
-      {/* ================= 1. HERO SECTION ================= */}
-      <section className="relative w-full h-[250px] md:h-[300px] flex items-center justify-center overflow-hidden bg-slate-900">
-        <div 
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-60"
-          style={{ backgroundImage: `url(${ChannelHero})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 to-slate-900/70"></div>
+      {formStatus.message && (
+        <div className={`p-5 rounded-2xl text-base font-medium border shadow-sm ${formStatus.isError ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+          <div className="flex items-center gap-3"><ShieldCheck className="w-6 h-6" /> {formStatus.message}</div>
         </div>
+      )}
 
-        {/* Hero Content with AOS */}
-        <div className="relative z-10 text-center px-6" data-aos="fade-up">
-          <h1 className="text-5xl md:text-[4.5rem] font-black text-white mb-6 tracking-tight drop-shadow-md">
-            Our Channel Partners
-          </h1>
-          <div className="w-24 h-1.5 bg-[#D4A22E] mx-auto rounded-full shadow-lg" data-aos="zoom-in" data-aos-delay="200"></div>
-        </div>
-      </section>
-
-      {/* ================= 2. CONTENT & VALUE SECTION (UPDATED WITH IMAGE) ================= */}
-      <div className="relative max-w-[1300px] mx-auto px-6 pt-20 lg:pt-28 pb-10 overflow-hidden">
-        
-        {/* Subtle Background Glow */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--tech-blue)]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start relative z-10">
-          
-          {/* Left Side: Bold Statement & Nayi Image */}
-          <div className="lg:col-span-5 text-center lg:text-left flex flex-col" data-aos="fade-right">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-gray-100 mb-6 mx-auto lg:mx-0 w-max">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--tech-blue)] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--tech-blue)]"></span>
-              </span>
-              <span className="text-[12px] font-bold text-[var(--tech-blue)] uppercase tracking-widest">
-                The Channel Advantage
-              </span>
-            </div>
-            
-            <h2 className="text-3xl md:text-4xl lg:text-[2.75rem] font-extrabold text-[var(--text-dark)] leading-tight mb-6">
-              Expanding the Ecosystem <br className="hidden lg:block"/> 
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--tech-blue)] to-[var(--premium-gold)]">Together</span>
-            </h2>
-            <div className="hidden lg:block w-16 h-1.5 bg-[var(--tech-blue)] rounded-full mb-10"></div>
-
-            {/* ---> YAHAN IMAGE ADD KI GAYI HAI <--- */}
-            <div className="relative w-full rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(13,56,99,0.15)] group mt-4 lg:mt-0">
-              <img 
-                src={ChannelContentImg}
-                alt="Channel Partner Ecosystem" 
-                className="w-full h-[150px] md:h-[250px] object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
-              />
-              {/* Premium overlay jo hover pe dikhega */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a294b]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-            </div>
+      {/* 1. GENERAL COMPANY DETAILS */}
+      <div className="bg-white rounded-[2rem] p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+        <div className="flex items-center gap-4 mb-8 border-b border-gray-100 pb-6">
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-[#0d3863]"><Building2 className="w-7 h-7" /></div>
+          <div>
+            <h2 className="text-2xl font-bold text-[#0d3863]">Company Information</h2>
+            <p className="text-gray-500 text-sm mt-1">Basic details about your registered entity</p>
           </div>
-
-          {/* Right Side: Description */}
-          <div className="lg:col-span-7 flex flex-col justify-center h-full" data-aos="fade-left" data-aos-delay="100">
-            <p className="text-gray-600 text-[16.5px] md:text-[17.5px] leading-relaxed font-medium mb-6 text-justify">
-              Channel Partners play a vital role in expanding the Techhansa Retail ecosystem. They procure IT hardware in bulk through our procurement platform and distribute products to businesses, retailers, institutions, and end customers across different regions.
-            </p>
-            <p className="text-gray-600 text-[16.5px] md:text-[17.5px] leading-relaxed font-medium mb-6 text-justify">
-              Our Channel Partner program is designed for organizations looking to grow their business with competitive pricing, genuine products, and reliable supply chain support.
-            </p>
-            
-            {/* The 'Perfect Sentence' Highlight Box */}
-            <div className="relative pl-6 border-l-4 border-[var(--premium-gold)] bg-white p-6 rounded-r-xl shadow-sm mt-6 lg:mt-16">
-              <p className="text-[var(--tech-blue)] text-[16px] md:text-[17px] leading-relaxed font-bold italic">
-                "Channel Partners purchase IT hardware in bulk from Techhansa Retail and further distribute or resell these products to corporate clients, retailers, institutions, and regional markets while benefiting from competitive pricing and dedicated business support."
-              </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-bold text-gray-700 mb-2">Registered Company Name *</label>
+            <input type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Company Name" className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white outline-none" required />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">CIN / GST Number *</label>
+            <input type="text" name="cinGst" value={formData.cinGst} onChange={handleInputChange} placeholder="15 Digit GST" className={`w-full px-5 py-3.5 rounded-xl border ${errors.cinGst ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'} outline-none`} required />
+            {errors.cinGst && <p className="text-red-500 text-xs mt-1">{errors.cinGst}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Company Contact Number *</label>
+            <div className="relative">
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input type="tel" name="companyContact" value={formData.companyContact} onChange={handleInputChange} placeholder="Mobile No." className={`w-full pl-12 pr-5 py-3.5 rounded-xl border ${errors.companyContact ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'} outline-none`} required />
             </div>
+            {errors.companyContact && <p className="text-red-500 text-xs mt-1">{errors.companyContact}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Company PAN Card *</label>
+            <input type="text" name="companyPan" value={formData.companyPan} onChange={handleInputChange} placeholder="ABCDE1234F" className={`w-full px-5 py-3.5 rounded-xl border ${errors.companyPan ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'} outline-none`} required />
+            {errors.companyPan && <p className="text-red-500 text-xs mt-1">{errors.companyPan}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">TAN Card *</label>
+            <input type="text" name="companyTan" value={formData.companyTan} onChange={handleInputChange} placeholder="ABCD12345E" className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 outline-none" required />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-bold text-gray-700 mb-2">Registered Address *</label>
+            <textarea name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} rows="2" placeholder="Full address" className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 outline-none resize-none" required></textarea>
           </div>
         </div>
       </div>
 
-      {/* ================= 3. BENEFITS GRID SECTION ================= */}
-      <div className="relative max-w-[1300px] mx-auto px-6 pt-10 pb-24 z-10">
-        
-        <div className="text-center mb-16" data-aos="fade-up">
-          <h3 className="text-3xl font-extrabold text-[var(--text-dark)]">
-            Program <span className="text-[var(--premium-gold)]">Benefits</span>
-          </h3>
+      {/* 2. CHANNEL PARTNER SPECIFICATIONS */}
+      <div className="bg-white rounded-[2rem] p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[var(--premium-gold)]/40 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--premium-gold)] to-[#D4A22E]"></div>
+        <div className="flex items-center gap-4 mb-8 border-b border-gray-100 pb-6">
+          <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center text-[var(--premium-gold)]"><Target className="w-7 h-7" /></div>
+          <div>
+            <h2 className="text-2xl font-bold text-[#0d3863]">Business Operations</h2>
+            <p className="text-gray-500 text-sm mt-1">Details for Channel Partners</p>
+          </div>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-bold text-gray-700 mb-2">Primary Business Domain / Client Base *</label>
+            <input type="text" name="businessDomain" value={formData.businessDomain} onChange={handleInputChange} placeholder="e.g. Corporate Supply, Government Tender" className={`w-full px-5 py-3.5 rounded-xl border ${errors.businessDomain ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'} outline-none`} required />
+            {errors.businessDomain && <p className="text-red-500 text-xs mt-1">{errors.businessDomain}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Current Annual Turnover *</label>
+            <div className="relative">
+              <select name="currentTurnover" value={formData.currentTurnover} onChange={handleInputChange} className={`w-full px-5 py-3.5 rounded-xl border ${errors.currentTurnover ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'} outline-none cursor-pointer appearance-none`} required>
+                <option value="" disabled>Select Range</option>
+                <option value="Below 50 Lakhs">Below ₹50 Lakhs</option>
+                <option value="50 Lakhs - 2 Crores">₹50 Lakhs - ₹2 Crores</option>
+                <option value="2 Crores - 10 Crores">₹2 Crores - ₹10 Crores</option>
+                <option value="Above 10 Crores">Above ₹10 Crores</option>
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
+            {errors.currentTurnover && <p className="text-red-500 text-xs mt-1">{errors.currentTurnover}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Associated Brands (Optional)</label>
+            <input type="text" name="associatedBrands" value={formData.associatedBrands} onChange={handleInputChange} placeholder="e.g. Dell, HP, Lenovo" className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 outline-none" />
+          </div>
+        </div>
+      </div>
+
+      {/* 3. DIRECTOR DETAILS */}
+      <div className="bg-white rounded-[2rem] p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+        <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600"><Users className="w-7 h-7" /></div>
+            <div>
+              <h2 className="text-2xl font-bold text-[#0d3863]">Director Details</h2>
+            </div>
+          </div>
+          <select value={noOfDirOption} onChange={handleNoOfDirectorsChange} className="px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 outline-none cursor-pointer">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3+">3+</option>
+          </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          
-          {benefits.map((benefit, index) => (
-            <div 
-              key={index}
-              data-aos="fade-up" 
-              data-aos-delay={index * 100}
-              className="group h-[320px] md:h-[360px] perspective-1000 w-full"
-            >
-              <div 
-                className="relative w-full h-full rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:shadow-[0_20px_50px_rgba(10,41,75,0.3)] transition-all duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] transform-gpu hover:-translate-y-2"
-              >
+        <div className="space-y-12">
+          {directors.map((dir, index) => (
+            <div key={index} className="relative">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> Director {index + 1}</h3>
+                {noOfDirOption === '3+' && index >= 3 && (
+                  <button type="button" onClick={() => handleRemoveDirector(index)} className="text-red-500 p-2"><Trash2 className="w-5 h-5" /></button>
+                )}
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div><label className="block text-sm font-bold mb-2">Full Name *</label><input type="text" value={dir.name} onChange={(e) => handleDirectorChange(index, 'name', e.target.value)} className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 outline-none" required /></div>
+                <div><label className="block text-sm font-bold mb-2">Email *</label><input type="email" value={dir.email} onChange={(e) => handleDirectorChange(index, 'email', e.target.value)} className={`w-full px-5 py-3.5 rounded-xl border ${dirErrors[index]?.email ? 'border-red-400' : 'border-gray-200'} bg-gray-50 outline-none`} required />{dirErrors[index]?.email && <p className="text-red-500 text-xs">{dirErrors[index].email}</p>}</div>
+                <div><label className="block text-sm font-bold mb-2">Contact *</label><input type="tel" value={dir.contact} onChange={(e) => handleDirectorChange(index, 'contact', e.target.value)} className={`w-full px-5 py-3.5 rounded-xl border ${dirErrors[index]?.contact ? 'border-red-400' : 'border-gray-200'} bg-gray-50 outline-none`} required />{dirErrors[index]?.contact && <p className="text-red-500 text-xs">{dirErrors[index].contact}</p>}</div>
                 
-                {/* Background Image */}
-                <img 
-                  src={benefit.image} 
-                  alt={benefit.title} 
-                  className="absolute inset-0 w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-1000 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]" 
-                />
-                
-                {/* Deep Gradient Overlays for Text Readability & Aura */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a294b]/95 via-[#0a294b]/50 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-700"></div>
-                <div className="absolute inset-0 bg-[var(--tech-blue)]/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-
-                {/* Content Container (Bottom Aligned) */}
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  
-                  {/* Decorative Line that expands on hover */}
-                  <div className="w-8 h-1 bg-[var(--premium-gold)] mb-4 rounded-full transform origin-left group-hover:scale-x-150 transition-transform duration-500"></div>
-                  
-                  <div className="transform translate-y-8 group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]">
-                    <h4 className="text-[24px] font-extrabold text-white mb-3 tracking-tight leading-snug drop-shadow-md">
-                      {benefit.title}
-                    </h4>
-                    
-                    {/* Description - Reveals on Hover */}
-                    <div className="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-700 ease-in-out">
-                      <p className="text-[15.5px] text-gray-200 leading-relaxed font-medium pb-2">
-                        {benefit.desc}
-                      </p>
-                    </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Monthly Income *</label>
+                  <div className="flex gap-3">
+                    <input type="text" value={dir.incomeAmount} onChange={(e) => handleDirectorChange(index, 'incomeAmount', e.target.value)} placeholder="5-6" className="w-2/3 px-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-gray-50 outline-none text-gray-700" required />
+                    <select value={dir.incomeUnit} onChange={(e) => handleDirectorChange(index, 'incomeUnit', e.target.value)} className="w-1/3 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-gray-50 outline-none cursor-pointer">
+                      <option value="Thousands">Thousand</option><option value="Lakhs">Lakh</option><option value="Crores">Cr</option>
+                    </select>
                   </div>
-                  
                 </div>
 
-                {/* Ambient Sweep Shine */}
-                <div className="absolute top-0 -left-[100%] h-full w-[150%] z-20 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:left-[200%] transition-all duration-1000 ease-in-out pointer-events-none"></div>
-
+                <div><label className="block text-sm font-bold mb-2">Identification No. *</label><input type="text" value={dir.aadhar} onChange={(e) => handleDirectorChange(index, 'aadhar', e.target.value)} placeholder="[Redacted]" className={`w-full px-5 py-3.5 rounded-xl border ${dirErrors[index]?.aadhar ? 'border-red-400' : 'border-gray-200'} bg-gray-50 outline-none`} required />{dirErrors[index]?.aadhar && <p className="text-red-500 text-xs">{dirErrors[index].aadhar}</p>}</div>
+                <div><label className="block text-sm font-bold mb-2">PAN Card *</label><input type="text" value={dir.pan} onChange={(e) => handleDirectorChange(index, 'pan', e.target.value)} className={`w-full px-5 py-3.5 rounded-xl border ${dirErrors[index]?.pan ? 'border-red-400' : 'border-gray-200'} bg-gray-50 outline-none`} required />{dirErrors[index]?.pan && <p className="text-red-500 text-xs">{dirErrors[index].pan}</p>}</div>
+                <div className="md:col-span-2"><label className="block text-sm font-bold mb-2">Address *</label><textarea value={dir.address} onChange={(e) => handleDirectorChange(index, 'address', e.target.value)} rows="2" className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 outline-none resize-none" required></textarea></div>
               </div>
             </div>
           ))}
-          
+        </div>
+        {noOfDirOption === '3+' && (
+          <div className="mt-8 flex justify-center"><button type="button" onClick={handleAddDirector} className="px-6 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold hover:bg-indigo-100">Add Another Director</button></div>
+        )}
+      </div>
+
+      {/* 4. AUTHORIZED PERSON DETAILS */}
+      <div className="bg-white rounded-[2rem] p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+        <div className="flex items-center gap-4 mb-8 border-b border-gray-100 pb-6">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600"><UserCheck className="w-7 h-7" /></div>
+          <div><h2 className="text-2xl font-bold text-[#0d3863]">Authorized Contact Person</h2></div>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div><label className="block text-sm font-bold mb-2">Name *</label><input type="text" name="authName" value={formData.authName} onChange={handleInputChange} className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 outline-none" required /></div>
+          <div><label className="block text-sm font-bold mb-2">Email *</label><input type="email" name="authEmail" value={formData.authEmail} onChange={handleInputChange} className={`w-full px-5 py-3.5 rounded-xl border ${errors.authEmail ? 'border-red-400' : 'border-gray-200'} bg-gray-50 outline-none`} required /></div>
+          <div><label className="block text-sm font-bold mb-2">Mobile *</label><input type="tel" name="authContact" value={formData.authContact} onChange={handleInputChange} className={`w-full px-5 py-3.5 rounded-xl border ${errors.authContact ? 'border-red-400' : 'border-gray-200'} bg-gray-50 outline-none`} required /></div>
         </div>
       </div>
 
-    </div>
+      {/* 5. DOCUMENT UPLOAD */}
+      <div className="bg-white rounded-[2rem] p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+        <div className="flex items-center gap-4 mb-8 border-b border-gray-100 pb-6">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600"><FileText className="w-7 h-7" /></div>
+          <div><h2 className="text-2xl font-bold text-[#0d3863]">Document Upload *</h2></div>
+        </div>
+        <div className="relative">
+          <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleFileChange} accept=".zip,.pdf" required />
+          <div className={`w-full border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center ${formData.documents ? 'border-[#0d3863] bg-blue-50' : 'border-gray-300 bg-gray-50'}`}>
+            <UploadCloud className="w-12 h-12 mb-4 text-gray-400" />
+            <h3 className="text-lg font-bold text-gray-800 mb-1">{formData.documents ? formData.documents.name : 'Click to Upload (.pdf or .zip only)'}</h3>
+            {errors.documents && <p className="text-red-500 text-sm mt-2">{errors.documents}</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* SUBMIT BUTTON */}
+      <div className="flex justify-end pt-4">
+        <button type="submit" disabled={formStatus.loading} className="group relative px-12 py-5 bg-[#0d3863] text-white rounded-2xl font-bold text-lg hover:bg-[#154c82] transition-all disabled:opacity-70 flex items-center gap-3">
+          {formStatus.loading ? 'Submitting...' : 'Submit Channel Application'} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+        </button>
+      </div>
+
+    </form>
   );
 }
