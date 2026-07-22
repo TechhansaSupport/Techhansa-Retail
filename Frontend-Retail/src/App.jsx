@@ -11,7 +11,7 @@ import ChannelPartner from './Pages/Partners/Channel';
 import FranchisePartner from './Pages/Partners/Franchise';
 import Investers from './Pages/investers';
 import LoginPage from './Pages/LoginPage';
-import FranchiseForm from './Pages/Partners/FranchiseForm';
+import PartnerApplicationPage from './Pages/Partners/partnerpage';
 
 // --- Scroll To Hash / Top Component ---  
 // Yeh component route change hone par instantly page ko top par bhej dega, ya hash par scroll karega
@@ -58,10 +58,10 @@ function App() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/partners" element={<Partners />} />
                 <Route path="/partner/oem" element={<OemPartner />} />
+                <Route path="/partnerpage" element={<PartnerApplicationPage />} />
                 <Route path="/partner/channel" element={<ChannelPartner />} />
                 <Route path="/partner/franchise" element={<FranchisePartner />} />
                 <Route path="/investors" element={<Investers />} />
-                <Route path="/franchise/form" element={<FranchiseForm />} />
               </Routes>
             </main>
 
