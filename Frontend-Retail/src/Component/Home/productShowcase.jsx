@@ -93,7 +93,7 @@ export default function ProductShowcase() {
         }
       `}</style>
 
-      <div className="max-w-[1400px] mx-auto px-6 relative z-10">
+      <div id='bulkcatalog' className="max-w-[1400px] mx-auto px-6 relative z-10">
         
         {/* ================= HEADER SECTION ================= */}
         <div className="text-center max-w-3xl mx-auto mb-16" data-aos="fade-up">
@@ -180,7 +180,7 @@ export default function ProductShowcase() {
 
         </div>
 
-        {/* View Full Catalog CTA */}
+        {/* View Full Catalog CTA
         <div className="mt-12 text-center relative z-20" data-aos="fade-up" data-aos-delay="300">
           <Link 
             to="/catalog"
@@ -191,7 +191,7 @@ export default function ProductShowcase() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </Link>
-        </div>
+        </div> */}
 
       </div>
     </section>

@@ -177,7 +177,7 @@ export default function ContactPage() {
       </section>
 
       {/* --- CONTACT INFO & FORM SECTION --- */}
-      <section className="relative z-10 py-16 px-6 lg:px-12 max-w-7xl mx-auto">
+      <section id='contactform' className="relative z-10 py-16 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
           
           {/* LEFT: Contact Information Card */}

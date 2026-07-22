@@ -352,7 +352,7 @@ export default function AboutPage() {
       </section>
 
       {/* --- WHY CHOOSE US (WITH IMAGE BACKGROUNDS) --- */}
-      <section className="relative z-10 py-24 px-6 lg:px-12">
+      <section id='BuyBulk' className="relative z-10 py-24 px-6 lg:px-12">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-16">
             <span className="text-gray-600">Why Choose</span> <span className="text-[#0d3863]">Techhansa Retail</span>

@@ -13,15 +13,24 @@ import Investers from './Pages/investers';
 import LoginPage from './Pages/LoginPage';
 import PartnerApplicationPage from './Pages/Partners/partnerpage';
 
-// --- Scroll To Top Component ---  
-// Yeh component route change hone par instantly page ko top par bhej dega
+// --- Scroll To Hash / Top Component ---  
+// Yeh component route change hone par instantly page ko top par bhej dega, ya hash par scroll karega
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
 
   useEffect(() => {
-    // window.scrollTo(0, 0) instantly top par scroll karta hai (smooth scroll nahi karega)
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (hash) {
+      setTimeout(() => {
+        const id = hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100); // Small delay to let the page render first
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
 
   return null;
 }

@@ -80,18 +80,50 @@ export default function FranchiseForm({ showToast }) {
     return isValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
       showToast("Please fix the errors before submitting.", "error");
       return;
     }
     setFormStatus({ loading: true, message: '', isError: false });
+    
+    try {
+      const data = new FormData();
+      data.append('companyName', formData.companyName);
+      data.append('cinGst', formData.cinGst);
+      data.append('companyPan', formData.companyPan);
+      data.append('companyTan', formData.companyTan);
+      data.append('registeredAddress', formData.registeredAddress);
+      data.append('companyContact', formData.companyContact);
+      data.append('authName', formData.authName);
+      data.append('authContact', formData.authContact);
+      data.append('authEmail', formData.authEmail);
+      
+      if (formData.documents) {
+        data.append('documents', formData.documents);
+      }
+      
+      data.append('directors', JSON.stringify(directors));
 
-    setTimeout(() => {
-      setFormStatus({ loading: false, message: 'Franchise Partner application submitted successfully!', isError: false });
-      showToast("Application submitted successfully!", "success");
-    }, 2000);
+      const response = await fetch('http://localhost:5000/api/franchise/apply', {
+        method: 'POST',
+        body: data,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setFormStatus({ loading: false, message: 'Application submitted successfully! Our team will contact you soon.', isError: false });
+        showToast("Application submitted successfully!", "success");
+      } else {
+        throw new Error(result.message || 'Failed to submit application');
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      setFormStatus({ loading: false, message: error.message || 'An error occurred while submitting the form.', isError: true });
+      showToast("Submission failed. Please try again.", "error");
+    }
   };
 
   // Reusable input field component for cleaner code

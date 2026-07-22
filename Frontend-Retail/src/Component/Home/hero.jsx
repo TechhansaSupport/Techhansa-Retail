@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import HeroSec from '../../assets/Hero.mp4';
 
 export default function Hero() {
+  const heroRef = useRef(null);
+
   useEffect(() => {
     AOS.init({
       duration: 800,
@@ -13,9 +15,18 @@ export default function Hero() {
       offset: 50,
     });
   }, []);
-  
+  const handleScrollDown = () => {
+    if (heroRef.current) {
+      window.scrollTo({
+        top: heroRef.current.clientHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <section 
+      ref={heroRef}
       className="relative w-full h-[80vh] min-h-[500px] flex items-center justify-center overflow-hidden"
     >
       <video
@@ -78,7 +89,13 @@ export default function Hero() {
       </div>
 
       {/* ================= SCROLL DOWN INDICATOR ================= */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70 hover:opacity-100 cursor-pointer transition-opacity duration-300" data-aos="fade-in" data-aos-delay="500">
+      {/* Absolute bottom par reference ki tarah */}
+      <div 
+        onClick={handleScrollDown}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70 hover:opacity-100 cursor-pointer transition-opacity duration-300" 
+        data-aos="fade-in" 
+        data-aos-delay="500"
+      >
         <span className="text-white text-[11px] font-bold tracking-[0.2em] mb-2 uppercase">
           Scroll Down
         </span>
