@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import { Handshake, X, AlertCircle, ShieldCheck } from 'lucide-react';
 
 // --- IMPORT YOUR TWO FORM COMPONENTS ---
-import ChannelForm from './ChannelForm';
+import PartnerForm from './parntnerform';
 import FranchiseForm from './FranchiseForm';
 
 // --- IMAGE IMPORTS ---
@@ -12,9 +13,13 @@ import franchiseBannerImg from "../../assets/contact-banner.jpg";
 
 export default function PartnerApplicationPage() {
   const containerRef = useRef(null);
+  const location = useLocation();
 
   // --- PARTNER TYPE STATE (Tabs) ---
-  const [partnerType, setPartnerType] = useState('channel'); // 'channel' or 'franchise'
+  // Auto-select franchise tab if user arrives from /partner/franchise route
+  const [partnerType, setPartnerType] = useState(
+    location.pathname.includes('franchise') ? 'franchise' : 'partnerform'
+  );
 
   // --- TOAST NOTIFICATION STATE ---
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
@@ -72,7 +77,7 @@ export default function PartnerApplicationPage() {
           {/* ================= SMOOTH TAB SWITCHER ================= */}
           <div className="flex justify-center mb-10">
             <div className="relative flex bg-white rounded-full p-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100">
-              {['channel', 'franchise'].map((tab) => (
+              {['partnerform', 'franchise'].map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -81,7 +86,7 @@ export default function PartnerApplicationPage() {
                     partnerType === tab ? 'text-white' : 'text-gray-500 hover:text-[#0d3863]'
                   }`}
                 >
-                  {tab === 'channel' ? 'Channel Partner' : 'Franchise Partner'}
+                  {tab === 'partnerform' ? 'Channel Partner' : 'Franchise Partner'}
                   
                   {/* Sliding Blue Background Animation */}
                   {partnerType === tab && (
@@ -99,16 +104,16 @@ export default function PartnerApplicationPage() {
           {/* ================= DYNAMIC FORM RENDER WITH ANIMATION ================= */}
           <div className="w-full">
             <AnimatePresence mode="wait">
-              {partnerType === 'channel' ? (
+              {partnerType === 'partnerform' ? (
                 <motion.div 
-                  key="channel" 
+                  key="partnerform" 
                   initial={{ opacity: 0, y: 20 }} 
                   animate={{ opacity: 1, y: 0 }} 
                   exit={{ opacity: 0, y: -20 }} 
                   transition={{ duration: 0.3 }}
                 >
                   {/* Rendering the Component and passing the toast function */}
-                  <ChannelForm showToast={showToast} />
+                  <PartnerForm showToast={showToast} />
                 </motion.div>
               ) : (
                 <motion.div 
