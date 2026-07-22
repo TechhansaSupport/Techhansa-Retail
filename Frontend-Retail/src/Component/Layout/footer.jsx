@@ -39,7 +39,7 @@ const CircuitPattern = ({ id, color, opacity }) => (
 
 /* ---------- Data ---------- */
 const shopLinks = [
-  { name: "Bulk Catalog", path: "/#bulkcatalog" },     
+  { name: "Bulk Catalog", path: "/#bulkcatalog" },        
   { name: "Brands We Deal In", path: "/#brands" }, 
   { name: "Why Buy in Bulk", path: "/about#BuyBulk" }, 
  
