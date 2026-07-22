@@ -38,7 +38,7 @@ export default function BrandsSection() {
   ];
 
   return (
-    <section className="relative w-full py-24 bg-[var(--soft-bg)] overflow-hidden">
+    <section id="brands" className="relative w-full py-24 bg-[var(--soft-bg)] overflow-hidden">
       
       {/* --- In-built CSS for 3D Carousel Animation --- */}
       <style>{`

@@ -39,10 +39,10 @@ const CircuitPattern = ({ id, color, opacity }) => (
 
 /* ---------- Data ---------- */
 const shopLinks = [
-  { name: "Bulk Catalog", path: "#" }, 
-  { name: "Brands We Deal In", path: "#" }, 
-  { name: "Why Buy in Bulk", path: "#" }, 
-  { name: "Track Your Order", path: "#" }
+  { name: "Bulk Catalog", path: "/#bulkcatalog" }, 
+  { name: "Brands We Deal In", path: "/#brands" }, 
+  { name: "Why Buy in Bulk", path: "/about#BuyBulk" }, 
+ 
 ];
 const companyLinks = [
   { name: "Home", path: "/" }, 
@@ -54,9 +54,9 @@ const companyLinks = [
 
 const franchiseLinks = [
   { name: "Apply for Franchise", path: "/franchise/form" }, 
-  { name: "Franchise / Partner Login", path: "#" }, 
-  { name: "Store Setup Support", path: "#" }, 
-  { name: "Check Territory Availability", path: "#" }
+  { name: "Franchise / Partner Login", path: "/login" },
+  { name: "Store Setup Support", path: "/contact#contactform" }, 
+ 
 ];
 
 /* ================= EXACT LINK COLUMN MATCHING YOUR OLD FOOTER.JSX ================= */
