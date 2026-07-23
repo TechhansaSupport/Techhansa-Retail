@@ -55,45 +55,45 @@ export default function PartnerApplicationPage() {
       </AnimatePresence>
 
       {/* --- TOP BANNER SECTION --- */}
-      <section className="relative w-full h-[400px] flex items-center justify-center overflow-hidden bg-slate-900">
+      <section className="relative w-full h-[300px] flex items-center justify-center overflow-hidden bg-slate-900">
         <div className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-80" style={{ backgroundImage: `url(${franchiseBannerImg})` }}></div>
-        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto flex flex-col items-center pt-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md text-white font-medium text-sm mb-6 border border-white/20">
-            <Handshake className="w-4 h-4" /> Join The Network
-          </motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} className="text-4xl md:text-6xl font-extrabold text-[#fff] tracking-tight drop-shadow-sm">
+        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto flex flex-col items-center pb-24">
+          
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} className="text-4xl md:text-5xl font-extrabold text-[#fff] tracking-tight drop-shadow-sm">
             Partner Application
           </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8 }} className="mt-6 text-lg md:text-xl text-gray-300 max-w-2xl font-medium">
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8 }} className="mt-6 text-lg md:text-base text-gray-300 max-w-2xl font-medium">
             Select your partnership model below and fill out the comprehensive form to start your journey with Techhansa Retail.
           </motion.p>
         </div>
       </section>
 
       {/* --- TABS & FORM CONTAINER --- */}
-      <section className="relative z-10 pb-24 px-4 lg:px-12 -mt-16">
+      <section className="relative z-10 pb-24 px-4 lg:px-12 -mt-24">
         <div className="max-w-5xl mx-auto">
           
-          {/* ================= SMOOTH TAB SWITCHER ================= */}
-          <div className="flex justify-center mb-10">
-            <div className="relative flex bg-white rounded-full p-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100">
+          {/* ================= ULTRA PREMIUM TAB SWITCHER ================= */}
+          <div className="flex justify-center mb-12">
+            <div className="relative flex p-1.5 bg-white/80 backdrop-blur-xl rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white">
               {['partnerform', 'franchise'].map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setPartnerType(tab)}
-                  className={`relative px-8 py-3.5 rounded-full text-sm md:text-base font-bold z-10 transition-colors duration-300 ${
-                    partnerType === tab ? 'text-white' : 'text-gray-500 hover:text-[#0d3863]'
+                  className={`relative px-10 py-3.5 rounded-full text-[15px] font-bold z-10 transition-all duration-500 ease-out ${
+                    partnerType === tab 
+                      ? 'text-white drop-shadow-md' 
+                      : 'text-gray-500 hover:text-gray-900'
                   }`}
                 >
                   {tab === 'partnerform' ? 'Channel Partner' : 'Franchise Partner'}
                   
-                  {/* Sliding Blue Background Animation */}
+                  {/* Premium Sliding Background Animation */}
                   {partnerType === tab && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-[#0d3863] rounded-full -z-10 shadow-md"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      className="absolute inset-0 bg-gradient-to-b from-[#185392] to-[#0d3863] rounded-full -z-10 shadow-[0_4px_12px_rgba(13,56,99,0.4)] border border-[#2a6db4]/30"
+                      transition={{ type: "spring", stiffness: 500, damping: 35, mass: 1 }}
                     />
                   )}
                 </button>
