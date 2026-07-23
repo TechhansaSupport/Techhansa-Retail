@@ -143,6 +143,13 @@ export default function FranchiseForm({ showToast }) {
       if (response.ok && result.success) {
         setFormStatus({ loading: false, message: 'Application submitted successfully! Our team will contact you soon.', isError: false });
         showToast("Application submitted successfully!", "success");
+        setFormData({
+          name: '', dob: '', contactNumber: '', panCard: '', aadharCard: '', permanentAddress: '',
+          occupation: '', companyName: '', designation: '', experience: '',
+          message: '',
+          accountNumber: '', ifscCode: '', bankAddress: '', bankName: '',
+          documents: null
+        });
       } else {
         throw new Error(result.message || 'Failed to submit application');
       }

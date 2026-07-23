@@ -43,7 +43,8 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
       authContact, authEmail, directors
     } = req.body;
 
-    const documentPath = req.file ? req.file.path : null;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const documentPath = req.file ? `${baseUrl}/uploads/channel/${req.file.filename}` : null;
 
     // Start transaction
     await client.query('BEGIN');

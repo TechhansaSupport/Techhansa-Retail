@@ -44,7 +44,8 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
       accountNumber, ifscCode, bankAddress, bankName
     } = req.body;
 
-    const documentPath = req.file ? req.file.path : null;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const documentPath = req.file ? `${baseUrl}/uploads/franchise/${req.file.filename}` : null;
 
     // 1. Insert Franchise Partner Application
     const applicationQuery = `

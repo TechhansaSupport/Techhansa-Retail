@@ -147,6 +147,12 @@ export default function PartnerForm({ showToast }) {
       if (response.ok && result.success) {
         setFormStatus({ loading: false, message: 'Channel Partner application submitted successfully!', isError: false });
         showToast("Application submitted successfully!", "success");
+        setFormData({
+          companyName: '', cinGst: '', companyPan: '', companyTan: '', registeredAddress: '', companyContact: '',
+          authName: '', authContact: '', authEmail: '', documents: null
+        });
+        setNoOfDirOption('1');
+        setDirectors([{ name: '', email: '', contact: '', incomeAmount: '', incomeUnit: 'Lakhs', aadhar: '', pan: '', address: '' }]);
       } else {
         throw new Error(result.message || 'Failed to submit application');
       }
