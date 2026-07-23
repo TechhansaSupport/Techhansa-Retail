@@ -53,7 +53,7 @@ const companyLinks = [
 ];
 
 const franchiseLinks = [
-  { name: "Apply for Franchise", path: "/franchise/form" }, 
+  { name: "Apply for Franchise", path: "/partnerpage?franchise" }, 
   { name: "Franchise / Partner Login", path: "/login" },
   { name: "Store Setup Support", path: "/contact#contactform" }, 
  
@@ -123,7 +123,7 @@ export default function Footer() {
           <div className="flex flex-col sm:flex-row gap-4">
             {/*  Changed button to Link and added route */}
             <Link
-              to="/franchise/form"
+              to="/partnerpage?franchise"
               className="group relative px-7 py-3 rounded-xl font-semibold text-white
                          shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_6px_0_0_#c59942,0_18px_30px_-8px_rgba(0,0,0,0.5)]
                          transition-all duration-150 ease-out
