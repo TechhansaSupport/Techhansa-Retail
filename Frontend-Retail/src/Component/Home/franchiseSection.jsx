@@ -79,7 +79,7 @@ export default function FranchiseSection() {
             {/* CTA Button */}
             <div>
               <Link 
-                to="/franchise-apply"
+                to="/partnerpage?franchise"
                 className="group relative inline-flex items-center justify-center gap-3 px-9 py-4 bg-[var(--tech-blue)] rounded-xl font-bold text-white text-[16px] overflow-hidden shadow-[0_8px_20px_rgba(13,56,99,0.25)] hover:shadow-[0_15px_30px_rgba(13,56,99,0.4)] hover:-translate-y-1 transition-all duration-300"
               >
                 {/* Button Hover Sweep Effect */}
