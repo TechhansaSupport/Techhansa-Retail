@@ -1,6 +1,26 @@
 import React, { useState } from 'react';
 import { User, Briefcase, Building2, Landmark, UploadCloud, FileText, ArrowRight, Phone, CreditCard, MapPin, Calendar, MessageSquare, ShieldCheck, ChevronDown } from 'lucide-react';
 
+// Reusable input field component moved outside to prevent remounting/losing focus
+const InputField = ({ label, name, type = 'text', placeholder, icon: Icon, required = true, colSpan = false, formData, handleInputChange, errors }) => (
+  <div className={colSpan ? 'md:col-span-2' : ''}>
+    <label className="block text-sm font-bold text-gray-700 mb-2">{label} {required && '*'}</label>
+    <div className="relative">
+      {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />}
+      <input
+        type={type}
+        name={name}
+        value={formData[name]}
+        onChange={handleInputChange}
+        placeholder={placeholder}
+        className={`w-full ${Icon ? 'pl-12' : 'px-5'} pr-5 py-3.5 rounded-xl border ${errors[name] ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'} focus:bg-white outline-none transition-colors duration-200`}
+        required={required}
+      />
+    </div>
+    {errors[name] && <p className="text-red-500 text-xs mt-1.5">{errors[name]}</p>}
+  </div>
+);
+
 export default function FranchiseForm({ showToast }) {
 
   const [formData, setFormData] = useState({
@@ -90,21 +110,28 @@ export default function FranchiseForm({ showToast }) {
     
     try {
       const data = new FormData();
+      data.append('name', formData.name);
+      data.append('dob', formData.dob);
+      data.append('contactNumber', formData.contactNumber);
+      data.append('panCard', formData.panCard);
+      data.append('aadharCard', formData.aadharCard);
+      data.append('permanentAddress', formData.permanentAddress);
+      
+      data.append('occupation', formData.occupation);
       data.append('companyName', formData.companyName);
-      data.append('cinGst', formData.cinGst);
-      data.append('companyPan', formData.companyPan);
-      data.append('companyTan', formData.companyTan);
-      data.append('registeredAddress', formData.registeredAddress);
-      data.append('companyContact', formData.companyContact);
-      data.append('authName', formData.authName);
-      data.append('authContact', formData.authContact);
-      data.append('authEmail', formData.authEmail);
+      data.append('designation', formData.designation);
+      data.append('experience', formData.experience);
+      
+      data.append('message', formData.message);
+      
+      data.append('accountNumber', formData.accountNumber);
+      data.append('ifscCode', formData.ifscCode);
+      data.append('bankAddress', formData.bankAddress);
+      data.append('bankName', formData.bankName);
       
       if (formData.documents) {
         data.append('documents', formData.documents);
       }
-      
-      data.append('directors', JSON.stringify(directors));
 
       const response = await fetch('http://localhost:5000/api/franchise/apply', {
         method: 'POST',
@@ -126,25 +153,7 @@ export default function FranchiseForm({ showToast }) {
     }
   };
 
-  // Reusable input field component for cleaner code
-  const InputField = ({ label, name, type = 'text', placeholder, icon: Icon, required = true, colSpan = false }) => (
-    <div className={colSpan ? 'md:col-span-2' : ''}>
-      <label className="block text-sm font-bold text-gray-700 mb-2">{label} {required && '*'}</label>
-      <div className="relative">
-        {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />}
-        <input
-          type={type}
-          name={name}
-          value={formData[name]}
-          onChange={handleInputChange}
-          placeholder={placeholder}
-          className={`w-full ${Icon ? 'pl-12' : 'px-5'} pr-5 py-3.5 rounded-xl border ${errors[name] ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'} focus:bg-white outline-none transition-colors duration-200`}
-          required={required}
-        />
-      </div>
-      {errors[name] && <p className="text-red-500 text-xs mt-1.5">{errors[name]}</p>}
-    </div>
-  );
+  // Reusable input field component for cleaner code removed from here to prevent re-mounting
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -167,7 +176,7 @@ export default function FranchiseForm({ showToast }) {
           </div>
         </div>
         <div className="grid md:grid-cols-2 gap-6">
-          <InputField label="Full Name" name="name" placeholder="Enter your full name" icon={User} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="Full Name" name="name" placeholder="Enter your full name" icon={User} />
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Date of Birth *</label>
             <div className="relative">
@@ -183,9 +192,9 @@ export default function FranchiseForm({ showToast }) {
             </div>
             {errors.dob && <p className="text-red-500 text-xs mt-1.5">{errors.dob}</p>}
           </div>
-          <InputField label="Contact Number" name="contactNumber" type="tel" placeholder="10 digit mobile number" icon={Phone} />
-          <InputField label="PAN Card" name="panCard" placeholder="ABCDE1234F" icon={CreditCard} />
-          <InputField label="Aadhar Card" name="aadharCard" placeholder="12 digit Aadhar number" icon={CreditCard} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="Contact Number" name="contactNumber" type="tel" placeholder="10 digit mobile number" icon={Phone} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="PAN Card" name="panCard" placeholder="ABCDE1234F" icon={CreditCard} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="Aadhar Card" name="aadharCard" placeholder="12 digit Aadhar number" icon={CreditCard} />
           <div className="md:col-span-2">
             <label className="block text-sm font-bold text-gray-700 mb-2">Permanent Address *</label>
             <div className="relative">
@@ -217,10 +226,10 @@ export default function FranchiseForm({ showToast }) {
           </div>
         </div>
         <div className="grid md:grid-cols-2 gap-6">
-          <InputField label="Current Occupation" name="occupation" placeholder="e.g. Business Owner, Service, Self Employed" icon={Briefcase} />
-          <InputField label="Company / Business Name" name="companyName" placeholder="Your company or business name" icon={Building2} required={false} />
-          <InputField label="Designation / Role" name="designation" placeholder="e.g. Director, Manager, Proprietor" required={false} />
-          <InputField label="Years of Experience" name="experience" placeholder="e.g. 5 years" required={false} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="Current Occupation" name="occupation" placeholder="e.g. Business Owner, Service, Self Employed" icon={Briefcase} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="Company / Business Name" name="companyName" placeholder="Your company or business name" icon={Building2} required={false} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="Designation / Role" name="designation" placeholder="e.g. Director, Manager, Proprietor" required={false} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="Years of Experience" name="experience" placeholder="e.g. 5 years" required={false} />
         </div>
       </div>
 
@@ -259,9 +268,9 @@ export default function FranchiseForm({ showToast }) {
           </div>
         </div>
         <div className="grid md:grid-cols-2 gap-6">
-          <InputField label="Bank Name" name="bankName" placeholder="e.g. State Bank of India" icon={Landmark} />
-          <InputField label="Account Number" name="accountNumber" placeholder="Enter account number" icon={CreditCard} />
-          <InputField label="IFSC Code" name="ifscCode" placeholder="e.g. SBIN0001234" />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="Bank Name" name="bankName" placeholder="e.g. State Bank of India" icon={Landmark} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="Account Number" name="accountNumber" placeholder="Enter account number" icon={CreditCard} />
+          <InputField formData={formData} handleInputChange={handleInputChange} errors={errors} label="IFSC Code" name="ifscCode" placeholder="e.g. SBIN0001234" />
           <div className="md:col-span-2">
             <label className="block text-sm font-bold text-gray-700 mb-2">Bank Branch Address *</label>
             <div className="relative">

@@ -79,7 +79,7 @@ export default function Hero() {
           {/* Secondary CTA (Outline White - Keeps focus on the primary button) */}
           {/* Isko bhi aap chahein toh "/partner" par bhej sakte hain kyunki us page par dono forms hain */}
           <Link 
-            to="/partner"
+            to="/partnerpage?franchise"
             className="group bg-transparent border-2 border-white/70 hover:bg-white hover:text-[var(--text-dark)] text-white px-8 py-3.5 rounded-[4px] text-[13px] md:text-[14px] font-bold uppercase tracking-wider flex items-center justify-center transition-all duration-300"
           >
             Apply for Franchise

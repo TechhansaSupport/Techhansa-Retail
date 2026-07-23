@@ -6,8 +6,7 @@ export default function PartnerForm({ showToast }) {
 
   const [formData, setFormData] = useState({
     companyName: '', cinGst: '', companyPan: '', companyTan: '', registeredAddress: '', companyContact: '',
-    authName: '', authContact: '', authEmail: '', documents: null,
-    businessDomain: '', currentTurnover: '', associatedBrands: '' // Channel specific
+    authName: '', authContact: '', authEmail: '', documents: null
   });
 
   const [noOfDirOption, setNoOfDirOption] = useState('1');
@@ -97,10 +96,8 @@ export default function PartnerForm({ showToast }) {
     if (!gstRegex.test(formData.cinGst)) { newErrors.cinGst = "Invalid GST"; isValid = false; }
     if (formData.authContact.length !== 10) { newErrors.authContact = "10 digits required"; isValid = false; }
     if (!emailRegex.test(formData.authEmail)) { newErrors.authEmail = "Invalid email"; isValid = false; }
-    if (!formData.documents) { newErrors.documents = "Upload required"; isValid = false; }
-    
-    if (!formData.businessDomain) { newErrors.businessDomain = "Domain is required"; isValid = false; }
-    if (!formData.currentTurnover) { newErrors.currentTurnover = "Select turnover"; isValid = false; }
+    if (!formData.authContact) { newErrors.authContact = "Mobile is required"; isValid = false; }
+    if (!formData.documents) { newErrors.documents = "Document is required"; isValid = false; }
 
     directors.forEach((dir, i) => {
       if (dir.contact.length !== 10) { newDirErrors[i].contact = "10 digits required"; isValid = false; }
@@ -114,7 +111,7 @@ export default function PartnerForm({ showToast }) {
     return isValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
       showToast("Fix the errors before submitting.", "error");
@@ -122,10 +119,42 @@ export default function PartnerForm({ showToast }) {
     }
     setFormStatus({ loading: true, message: '', isError: false });
     
-    setTimeout(() => {
-      setFormStatus({ loading: false, message: 'Channel Partner application submitted!', isError: false });
-      showToast("Application submitted successfully!", "success");
-    }, 2000);
+    try {
+      const data = new FormData();
+      data.append('companyName', formData.companyName);
+      data.append('cinGst', formData.cinGst);
+      data.append('companyPan', formData.companyPan);
+      data.append('companyTan', formData.companyTan);
+      data.append('registeredAddress', formData.registeredAddress);
+      data.append('companyContact', formData.companyContact);
+      data.append('authName', formData.authName);
+      data.append('authContact', formData.authContact);
+      data.append('authEmail', formData.authEmail);
+      
+      if (formData.documents) {
+        data.append('documents', formData.documents);
+      }
+      
+      data.append('directors', JSON.stringify(directors));
+
+      const response = await fetch('http://localhost:5000/api/channel/apply', {
+        method: 'POST',
+        body: data,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setFormStatus({ loading: false, message: 'Channel Partner application submitted successfully!', isError: false });
+        showToast("Application submitted successfully!", "success");
+      } else {
+        throw new Error(result.message || 'Failed to submit application');
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      setFormStatus({ loading: false, message: error.message || 'An error occurred while submitting the form.', isError: true });
+      showToast("Submission failed. Please try again.", "error");
+    }
   };
 
   return (

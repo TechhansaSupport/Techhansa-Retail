@@ -16,9 +16,9 @@ export default function PartnerApplicationPage() {
   const location = useLocation();
 
   // --- PARTNER TYPE STATE (Tabs) ---
-  // Auto-select franchise tab if user arrives from /partner/franchise route
+  // Auto-select franchise tab if user arrives from /partner/franchise route or ?franchise query param
   const [partnerType, setPartnerType] = useState(
-    location.pathname.includes('franchise') ? 'franchise' : 'partnerform'
+    location.pathname.includes('franchise') || location.search.includes('franchise') ? 'franchise' : 'partnerform'
   );
 
   // --- TOAST NOTIFICATION STATE ---
