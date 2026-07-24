@@ -177,43 +177,72 @@ export default function ContactPage() {
       </section>
 
       {/* --- CONTACT INFO & FORM SECTION --- */}
-      <section id='contactform' className="relative z-10 py-16 px-6 lg:px-12 max-w-7xl mx-auto">
+      <section id="contactform" className="relative z-10 py-16 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
-          
-          {/* LEFT: Contact Information Card */}
-          <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="lg:col-span-1 bg-[#0d3863] rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden flex flex-col justify-between">
+         {/* LEFT: Contact Information Card (Fixed Selection Colors) */}
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }} 
+            whileInView={{ opacity: 1, x: 0 }} 
+            viewport={{ once: true }} 
+            transition={{ duration: 0.6 }} 
+            className="lg:col-span-1 bg-[#0d3863] rounded-[2.5rem] p-8 lg:p-10 text-white shadow-2xl relative overflow-hidden flex flex-col justify-between selection:bg-white selection:text-[#0d3863]"
+          >
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
             <div className="relative z-10">
-              <h3 className="text-3xl font-bold mb-8">Contact Info</h3>
-              <div className="space-y-8">
+              <h3 className="text-3xl font-bold mb-6">Contact Info</h3>
+              <div className="space-y-6">
+                
+                {/* Registered Office */}
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0"><MapPin className="w-6 h-6 text-blue-300" /></div>
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-1"><MapPin className="w-5 h-5 text-blue-300" /></div>
                   <div>
-                    <p className="font-bold text-lg mb-1">Corporate Office</p>
-                    <p className="text-blue-100/80 leading-relaxed font-light text-sm">Techhansa Retail<br />SHI 8/27 A K-3 Gilat Bazaar<br />Bypass Shivpur Varanasi<br />Uttar Pradesh, India 221002</p>
+                    <p className="font-bold text-base mb-1 text-white">Registered Office</p>
+                    <p className="text-blue-100/80 leading-relaxed font-light text-xs">Techhansa Retail<br />SHI 8/27 A K-3 Gilat Bazaar<br />Bypass Shivpur Varanasi<br />Uttar Pradesh, India 221002</p>
                   </div>
                 </div>
+
+                {/* Subtle Divider */}
+                <hr className="border-white/10 my-2" />
+
+                {/* Corporate Office */}
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0"><Clock className="w-6 h-6 text-blue-300" /></div>
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-1"><MapPin className="w-5 h-5 text-blue-300" /></div>
                   <div>
-                    <p className="font-bold text-lg mb-1">Business Hours</p>
-                    <p className="text-blue-100/80 font-light text-sm">Monday–Saturday:<br />09:30 AM – 06:30 PM</p>
+                    <p className="font-bold text-base mb-1 text-white">Corporate Office</p>
+                    <p className="text-blue-100/80 leading-relaxed font-light text-xs">A3-401, The Plaza at 106<br />Sector 106, Gurgaon<br />Haryana, India 122006</p>
                   </div>
                 </div>
+
+                {/* Subtle Divider */}
+                <hr className="border-white/10 my-2" />
+
+                {/* Business Hours */}
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0"><Phone className="w-6 h-6 text-blue-300" /></div>
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0"><Clock className="w-5 h-5 text-blue-300" /></div>
                   <div>
-                    <p className="font-bold text-lg mb-1">Phone</p>
-                    <p className="text-blue-100/80 font-light text-sm">+91 9711888951</p>
+                    <p className="font-bold text-base mb-1 text-white">Business Hours</p>
+                    <p className="text-blue-100/80 font-light text-xs">Monday–Saturday:<br />09:30 AM – 06:30 PM</p>
                   </div>
                 </div>
+
+                {/* Phone */}
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0"><Mail className="w-6 h-6 text-blue-300" /></div>
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0"><Phone className="w-5 h-5 text-blue-300" /></div>
                   <div>
-                    <p className="font-bold text-lg mb-1">Support</p>
-                    <p className="text-blue-100/80 font-light text-sm">support@techhansaretail.com</p>
+                    <p className="font-bold text-base mb-1 text-white">Phone</p>
+                    <p className="text-blue-100/80 font-light text-xs">+91 9711888951</p>
                   </div>
                 </div>
+
+                {/* Support Email */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0"><Mail className="w-5 h-5 text-blue-300" /></div>
+                  <div>
+                    <p className="font-bold text-base mb-1 text-white">Support</p>
+                    <p className="text-blue-100/80 font-light text-xs break-all">support@techhansaretail.com</p>
+                  </div>
+                </div>
+
               </div>
             </div>
           </motion.div>
