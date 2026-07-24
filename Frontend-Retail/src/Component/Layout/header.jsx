@@ -5,11 +5,10 @@ import logo from '../../assets/logo.png';
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMobilePartnersOpen, setIsMobilePartnersOpen] = useState(false); // Mobile dropdown state
+  const [isMobilePartnersOpen, setIsMobilePartnersOpen] = useState(false); 
 
   const searchContainerRef = useRef(null);
 
-  // NavLinks me Partners ke andar subLinks add kiye hain aur description/icons bhi
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'About Us', path: '/about' },
@@ -85,7 +84,6 @@ export default function Header() {
                 </Link>
 
                 {/* === DROPDOWN MENU === */}
-                {/* pt-4 bridge creates hover area so mouse doesn't fall off */}
                 <div className="absolute top-full left-0 w-[300px] pt-1 opacity-0 invisible translate-y-4 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out z-50">
                   <div className="bg-white border border-gray-100 rounded-2xl p-3 shadow-[0_20px_40px_rgba(13,56,99,0.12)] relative">
                     

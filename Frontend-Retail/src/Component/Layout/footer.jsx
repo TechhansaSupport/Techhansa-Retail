@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from 'react-router-dom'; // Added Link for routing
+import { Link } from 'react-router-dom'; 
 import logo from "../../assets/logo.png";
 
 /* ---------- Inline icons (zero extra dependency) ---------- */
@@ -154,13 +154,10 @@ export default function Footer() {
       <div className="relative pt-12 pb-8 border-t border-gray-200" style={{ background: "linear-gradient(to bottom,var(--soft-bg),#ffffff)" }}>
         <CircuitPattern id="circuit-body" color="var(--tech-blue)" opacity={0.05} />
 
-        {/* Strict padding to match perfectly */}
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
           
-          {/* Main Footer Grid Layout EXACTLY matching 4-column old file */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
             
-            {/* COLUMN 1: Brand Logo & Information (Using exact old margins/sizing) */}
             <div className="flex flex-col pr-4">
               <a href="/" className="flex items-center mb-4 ml-6 md:ml-8 cursor-pointer">
                 <div className="w-24 h-24 lg:w-26 lg:h-26 bg-transparent border-0 -mt-2 lg:-mt-6 rounded-full flex items-center justify-center shadow-none overflow-hidden">

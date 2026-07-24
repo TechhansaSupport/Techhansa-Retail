@@ -145,7 +145,6 @@ export default function ProductShowcase() {
             </svg>
           </button>
 
-          {/* White Fade Masks (Edges par fade effect lane ke liye taaki text achanak se na kate) */}
           <div className="absolute top-0 left-0 h-full w-16 md:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
           <div className="absolute top-0 right-0 h-full w-16 md:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
 
@@ -165,7 +164,6 @@ export default function ProductShowcase() {
                   <img 
                     src={cat.imageSrc} 
                     alt={cat.name} 
-                    // mix-blend-multiply images ka white background hata kar usko clean dikhata hai
                     className="w-full h-full object-contain mix-blend-multiply group-hover/card:scale-110 transition-transform duration-300"
                   />
                 </div>

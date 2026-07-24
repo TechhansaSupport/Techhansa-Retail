@@ -115,7 +115,6 @@ export default function BrandsSection() {
                       {/* Subtle Inner Glow on Hover */}
                       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--premium-gold)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                      {/* FULL COLOR LOGO: Adding 3D Drop Shadow & Scale on Hover */}
                       <img
                         src={brand.logoSrc}
                         alt={brand.name}

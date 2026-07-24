@@ -9,7 +9,6 @@ const AnimatedCounter = ({ endValue, duration = 2000 }) => {
   const counterRef = useRef(null);
 
   useEffect(() => {
-    // Ye observer check karega ki element screen par aaya ya nahi
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

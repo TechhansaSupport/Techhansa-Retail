@@ -14,7 +14,7 @@ export default function AboutSection() {
     });
   }, []);
   return (
-    // Padding py-28 se kam karke py-12/16 kar di hai taaki screen me fit aaye
+
     <section className="relative w-full py-12 lg:py-16 bg-[var(--soft-bg)] overflow-hidden">
       
       {/* Background Decorative Elements */}
@@ -22,7 +22,7 @@ export default function AboutSection() {
       <div className="absolute -left-20 top-10 w-48 h-48 bg-[var(--tech-blue)] opacity-5 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
-        {/* Gap kam karke 10 kar diya hai taaki text aur image paas rahein */}
+      
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           
           {/* ================= LEFT COLUMN: TEXT CONTENT ================= */}
@@ -35,13 +35,13 @@ export default function AboutSection() {
               </span>
             </div>
 
-            {/* Heading size thoda compact kiya (text-3xl se text-4xl ke beech) */}
+           
             <h2 className="text-3xl lg:text-[2.2rem] font-extrabold text-[var(--text-dark)] leading-tight mb-4">
               Building India's Trusted <br />
               <span className="text-[var(--tech-blue)]">IT Hardware Supply Network</span>
             </h2>
 
-            {/* Text size 15px/16px for a cleaner corporate read */}
+          
             <p className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed mb-4 font-medium">
               Techhansa Retail is a technology-driven B2B hardware distribution platform built to simplify how businesses purchase and manage IT infrastructure. We connect corporates, educational institutions, system integrators, and retailers with genuine hardware from leading global brands.
             </p>
@@ -50,7 +50,7 @@ export default function AboutSection() {
               Alongside enterprise procurement, we empower entrepreneurs through our franchise ecosystem—providing access to factory pricing, dedicated business support, and exclusive territory opportunities.
             </p>
 
-            {/* Mission Box - Made more compact (p-4 instead of p-6) */}
+        
             <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mb-6" data-aos="fade-up" data-aos-delay="100">
               <h4 className="text-[14px] font-bold text-[var(--tech-blue)] uppercase tracking-wider mb-3">Our Mission</h4>
               <ul className="space-y-2">

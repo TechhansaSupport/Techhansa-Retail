@@ -56,7 +56,6 @@ export default function Hero() {
           Your Growth
         </h1>
 
-        {/* 3. Tagline with Serif Golden Highlight (Matching the "Digital Transformation" style) */}
         <p className="text-white text-2xl md:text-4xl lg:text-[2.5rem] font-light mb-12 drop-shadow-md" data-aos="fade-up" data-aos-delay="200">
           powered by our <span className="text-[var(--premium-gold)] font-serif font-medium italic">IT Hardware</span> ecosystem
         </p>
@@ -77,7 +76,6 @@ export default function Hero() {
           </Link>
 
           {/* Secondary CTA (Outline White - Keeps focus on the primary button) */}
-          {/* Isko bhi aap chahein toh "/partner" par bhej sakte hain kyunki us page par dono forms hain */}
           <Link 
             to="/partnerpage?franchise"
             className="group bg-transparent border-2 border-white/70 hover:bg-white hover:text-[var(--text-dark)] text-white px-8 py-3.5 rounded-[4px] text-[13px] md:text-[14px] font-bold uppercase tracking-wider flex items-center justify-center transition-all duration-300"
@@ -89,7 +87,6 @@ export default function Hero() {
       </div>
 
       {/* ================= SCROLL DOWN INDICATOR ================= */}
-      {/* Absolute bottom par reference ki tarah */}
       <div 
         onClick={handleScrollDown}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70 hover:opacity-100 cursor-pointer transition-opacity duration-300" 

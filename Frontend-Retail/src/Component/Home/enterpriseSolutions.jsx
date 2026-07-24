@@ -94,10 +94,7 @@ export default function EnterpriseSolutions() {
                  {/* Standard dark gradient overlay */}
                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
 
-                 {/* =========================================
-                     CENTER-OUT SHUTTER EFFECT (The Magic)
-                     Starts from the center (scale-x-0) and expands to left/right on hover (scale-x-100).
-                     ========================================= */}
+                 
                  <div className="absolute inset-0 bg-white/20 scale-x-0 group-hover:scale-x-100 origin-center transition-transform duration-500 ease-in-out pointer-events-none"></div>
               </div>
               
