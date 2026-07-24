@@ -274,7 +274,7 @@ export default function AboutPage() {
                 <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white mb-6">
                   <Eye className="w-10 h-10" />
                 </div>
-                {/* <h3 className="text-3xl font-bold text-white">Our Vision</h3> */}
+
               </div>
 
               {/* Hover View Slide Up */}
