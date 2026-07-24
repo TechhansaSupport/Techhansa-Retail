@@ -1,10 +1,6 @@
 import React, { useEffect } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-
-/* 
-  Bhai, yahan par apni actual images import kar lena.
-*/
 import ChannelHero from '../../assets/Channel-hero.jpg';
 import ChannelContentImg from '../../assets/Channel-content.jpg';
 
@@ -107,14 +103,12 @@ export default function ChannelPartner() {
             </h2>
             <div className="hidden lg:block w-16 h-1.5 bg-[var(--tech-blue)] rounded-full mb-10"></div>
 
-            {/* ---> YAHAN IMAGE ADD KI GAYI HAI <--- */}
             <div className="relative w-full rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(13,56,99,0.15)] group mt-4 lg:mt-0">
               <img 
                 src={ChannelContentImg}
                 alt="Channel Partner Ecosystem" 
                 className="w-full h-[150px] md:h-[250px] object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
               />
-              {/* Premium overlay jo hover pe dikhega */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a294b]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
             </div>
           </div>

@@ -3,12 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { Handshake, X, AlertCircle, ShieldCheck } from 'lucide-react';
 
-// --- IMPORT YOUR TWO FORM COMPONENTS ---
 import PartnerForm from './parntnerform';
 import FranchiseForm from './FranchiseForm';
 
-// --- IMAGE IMPORTS ---
-// Make sure this path is correct according to your folder structure
+
 import franchiseBannerImg from "../../assets/contact-banner.jpg";
 
 export default function PartnerApplicationPage() {
@@ -16,7 +14,6 @@ export default function PartnerApplicationPage() {
   const location = useLocation();
 
   // --- PARTNER TYPE STATE (Tabs) ---
-  // Auto-select franchise tab if user arrives from /partner/franchise route or ?franchise query param
   const [partnerType, setPartnerType] = useState(
     location.pathname.includes('franchise') || location.search.includes('franchise') ? 'franchise' : 'partnerform'
   );
@@ -24,10 +21,8 @@ export default function PartnerApplicationPage() {
   // --- TOAST NOTIFICATION STATE ---
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
 
-  // Ye function hum child form components ko as a prop pass karenge
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
-    // Auto hide after 3.5 seconds
     setTimeout(() => setToast({ visible: false, message: '', type: 'success' }), 3500);
   };
 

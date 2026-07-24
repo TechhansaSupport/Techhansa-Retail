@@ -104,7 +104,7 @@ export default function OemPartner() {
     AOS.init({
       duration: 800,
       easing: 'ease-out-cubic',
-      once: true, // Animation happens only once while scrolling down
+      once: true,
       offset: 50,
     });
   }, []);
@@ -131,7 +131,6 @@ export default function OemPartner() {
       </section>
 
       {/* ================= 2. CONTENT & VALUE SECTION ================= */}
-      {/* Gap fix: Changed py-20 lg:py-28 to pt-20 lg:pt-28 pb-10 to reduce bottom space */}
       <div className="relative max-w-[1300px] mx-auto px-6 pt-20 lg:pt-28 pb-10 overflow-hidden">
         
         {/* Subtle Background Glow */}
@@ -214,7 +213,6 @@ export default function OemPartner() {
       </div>
 
       {/* ================= 3. 3D CAROUSEL SECTION ================= */}
-      {/* Gap fix: Changed py-20 to pt-8 pb-20 to reduce top space, bringing it closer to the badges */}
       <section className="relative w-full pt-8 pb-20 bg-[var(--soft-bg)] overflow-hidden">
         
         {/* --- In-built CSS for 3D Carousel Animation --- */}

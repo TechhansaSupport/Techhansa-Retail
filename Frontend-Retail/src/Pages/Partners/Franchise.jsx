@@ -23,7 +23,6 @@ export default function FranchisePartner() {
     });
   }, []);
 
-  // 8 Benefits Data mapped with highly professional SVG Icons
   const benefits = [
     {
       title: "Business Setup Assistance",
