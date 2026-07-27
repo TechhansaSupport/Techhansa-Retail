@@ -10,6 +10,7 @@ import OemPartner from './Pages/Partners/OEM';
 import ChannelPartner from './Pages/Partners/Channel';
 import FranchisePartner from './Pages/Partners/Franchise';
 import Investers from './Pages/investers';
+import Policies from './Pages/Policies';
 import LoginPage from './Pages/LoginPage';
 import PartnerApplicationPage from './Pages/Partners/partnerpage';
 
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/partner/channel" element={<ChannelPartner />} />
                 <Route path="/partner/franchise" element={<FranchisePartner />} />
                 <Route path="/investors" element={<Investers />} />
+                <Route path="/policies" element={<Policies />} />
               </Routes>
             </main>
 

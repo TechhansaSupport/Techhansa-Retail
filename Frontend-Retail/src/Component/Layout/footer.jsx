@@ -196,7 +196,10 @@ export default function Footer() {
           
           <div className="flex items-center space-x-6 mt-3 md:mt-0">
             <div className="flex space-x-4 border-r border-gray-300 pr-6">
-               <a href="https://www.linkedin.com/company/techhansa-solutions/" target="_blank" rel="noopener noreferrer" className="font-medium transition-colors" style={{ color: "var(--text-dark)", hover: { color: "var(--premium-gold)"} }}>LinkedIn</a>
+               <a href="https://www.linkedin.com/company/techhansa-solutions/" target="_blank" rel="noopener noreferrer" className="font-medium transition-colors hover:text-[var(--premium-gold)]" style={{ color: "var(--text-dark)" }}>LinkedIn</a>
+            </div>
+            <div className="flex space-x-4">
+               <Link to="/policies" className="font-medium transition-colors hover:text-[var(--premium-gold)]" style={{ color: "var(--text-dark)" }}>Privacy & Policy</Link>
             </div>
           </div>
         </div>
