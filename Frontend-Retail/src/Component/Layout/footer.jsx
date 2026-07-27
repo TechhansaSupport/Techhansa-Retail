@@ -199,7 +199,7 @@ export default function Footer() {
                <a href="https://www.linkedin.com/company/techhansa-solutions/" target="_blank" rel="noopener noreferrer" className="font-medium transition-colors hover:text-[var(--premium-gold)]" style={{ color: "var(--text-dark)" }}>LinkedIn</a>
             </div>
             <div className="flex space-x-4">
-               <Link to="/policies" className="font-medium transition-colors hover:text-[var(--premium-gold)]" style={{ color: "var(--text-dark)" }}>Privacy & Policy</Link>
+               <Link to="/policies" className="font-medium transition-colors hover:text-[var(--premium-gold)]" style={{ color: "var(--text-dark)" }}>Legal & Policies</Link>
             </div>
           </div>
         </div>
