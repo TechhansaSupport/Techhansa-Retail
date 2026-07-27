@@ -4,6 +4,9 @@ const pool = require('../db');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, '../uploads/franchise');
@@ -63,6 +66,45 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
 
     const appResult = await client.query(applicationQuery, applicationValues);
     const applicationId = appResult.rows[0].id;
+
+    // Send Email Notification
+    try {
+      let attachments = [];
+      if (req.file && fs.existsSync(req.file.path)) {
+        attachments.push({
+          filename: req.file.originalname,
+          content: fs.readFileSync(req.file.path)
+        });
+      }
+
+      await resend.emails.send({
+        from: 'Techhansa Notifications <onboarding@resend.dev>',
+        to: 'customer.support@techhansha.com',
+        subject: 'Notification from Franchise Partner Form',
+        html: `
+          <h2>New Franchise Partner Application</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>DOB:</strong> ${dob}</p>
+          <p><strong>Contact Number:</strong> ${contactNumber}</p>
+          <p><strong>PAN:</strong> ${panCard}</p>
+          <p><strong>Aadhar:</strong> ${aadharCard}</p>
+          <p><strong>Address:</strong> ${permanentAddress}</p>
+          <p><strong>Occupation:</strong> ${occupation}</p>
+          <p><strong>Company:</strong> ${companyName || 'N/A'}</p>
+          <p><strong>Designation:</strong> ${designation || 'N/A'}</p>
+          <p><strong>Experience:</strong> ${experience || 'N/A'}</p>
+          <p><strong>Bank Name:</strong> ${bankName}</p>
+          <p><strong>Account Number:</strong> ${accountNumber}</p>
+          <p><strong>IFSC:</strong> ${ifscCode}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message}</p>
+        `,
+        attachments
+      });
+      console.log("✅ Franchise Email sent successfully");
+    } catch (emailError) {
+      console.error("❌ Failed to send franchise email:", emailError);
+    }
 
     res.status(201).json({ 
       success: true, 
