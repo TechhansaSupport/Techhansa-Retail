@@ -147,7 +147,6 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-
     res.status(500).json({ 
       success: false, 
       message: 'Server error while submitting application',
