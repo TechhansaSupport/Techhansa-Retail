@@ -34,6 +34,11 @@ export default function PartnerForm({ showToast }) {
         setFormData(prev => ({ ...prev, documents: null }));
         return;
       }
+      if (file.size > 10 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, documents: "File must be below 10 MB" }));
+        setFormData(prev => ({ ...prev, documents: null }));
+        return;
+      }
     }
     setErrors(prev => ({...prev, documents: null}));
     setFormData(prev => ({ ...prev, documents: file }));
@@ -292,7 +297,7 @@ export default function PartnerForm({ showToast }) {
           <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={handleFileChange} accept=".zip,.pdf" required />
           <div className={`w-full border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center ${formData.documents ? 'border-[#0d3863] bg-blue-50' : 'border-gray-300 bg-gray-50'}`}>
             <UploadCloud className="w-12 h-12 mb-4 text-gray-400" />
-            <h3 className="text-lg font-bold text-gray-800 mb-1">{formData.documents ? formData.documents.name : 'Click to Upload (.pdf or .zip only)'}</h3>
+            <h3 className="text-lg font-bold text-gray-800 mb-1">{formData.documents ? formData.documents.name : 'Click to Upload (.pdf or .zip only, below 10 MB)'}</h3>
             {errors.documents && <p className="text-red-500 text-sm mt-2">{errors.documents}</p>}
           </div>
         </div>

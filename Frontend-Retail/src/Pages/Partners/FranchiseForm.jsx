@@ -63,6 +63,11 @@ export default function FranchiseForm({ showToast }) {
         setFormData(prev => ({ ...prev, documents: null }));
         return;
       }
+      if (file.size > 10 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, documents: "File must be below 10 MB" }));
+        setFormData(prev => ({ ...prev, documents: null }));
+        return;
+      }
     }
     setErrors(prev => ({ ...prev, documents: null }));
     setFormData(prev => ({ ...prev, documents: file }));
@@ -305,7 +310,7 @@ export default function FranchiseForm({ showToast }) {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-[#0d3863]">Document Upload *</h2>
-            <p className="text-gray-500 text-sm mt-1">Upload supporting documents (PDF or ZIP)</p>
+            <p className="text-gray-500 text-sm mt-1">Upload supporting documents (PDF or ZIP, below 10 MB)</p>
           </div>
         </div>
         <div className="relative">
