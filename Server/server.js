@@ -18,11 +18,13 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const contactRoute = require('./routes/contact');
 const franchiseRoute = require('./routes/franchise');
 const channelRoute = require('./routes/channel');
+const submissionsRoute = require('./routes/submissions');
 
 // Use Routes
 app.use('/api/contact', contactRoute);
 app.use('/api/franchise', franchiseRoute);
 app.use('/api/channel', channelRoute);
+app.use('/api/submissions', submissionsRoute);
 
 // Initialize Database & Start Server
 async function startServer() {
@@ -46,6 +48,19 @@ async function startServer() {
       );
     `);
     console.log('✅ Contacts table is ready');
+
+    // Create form_submissions table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS form_submissions (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          message TEXT NOT NULL,
+          attachments_metadata JSONB DEFAULT '[]'::JSONB,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ Form Submissions table is ready');
 
     // Drop old tables if they exist
     await pool.query(`DROP TABLE IF EXISTS franchise_directors CASCADE;`);
