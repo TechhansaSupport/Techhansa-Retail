@@ -25,16 +25,22 @@ router.post('/', upload.array('documents', 5), async (req, res) => {
     return res.status(400).json({ error: 'Please provide name, email, and message.' });
   }
 
+  const sanitizedName = (name || 'submission').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+
   // Extract file metadata for the database
-  const attachmentsMetadata = files.map(file => ({
-    filename: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size
-  }));
+  const attachmentsMetadata = files.map(file => {
+    const originalExt = file.originalname.substring(file.originalname.lastIndexOf('.'));
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    return {
+      filename: `${sanitizedName}-${uniqueSuffix}${originalExt}`,
+      mimetype: file.mimetype,
+      size: file.size
+    };
+  });
 
   // Prepare attachments for Resend (requires filename and content buffer)
-  const emailAttachments = files.map(file => ({
-    filename: file.originalname,
+  const emailAttachments = files.map((file, index) => ({
+    filename: attachmentsMetadata[index].filename,
     content: file.buffer // Send the raw buffer directly
   }));
 
