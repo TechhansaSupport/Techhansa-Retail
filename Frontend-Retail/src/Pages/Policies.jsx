@@ -11,7 +11,7 @@ const Disclaimer = () => (
         This website and its contents herein are provided as a convenience to you on "as is" basis in good faith. Techhansa Retail does not warrant that its website shall either be error-free or that it shall be available on uninterrupted basis. Techhansa Retail does not accept any warranty or claims whatsoever whether explicit or implied for the material presented or for the usage of or reference to the material presented on this website. Techhansa Retail reserves the right to revise the pages or withdraw access to them at any time.
       </p>
     </div>
-    
+
     <div className="space-y-4 mt-8">
       <h3 className="text-xl font-bold text-gray-800 border-l-4 border-[#0d3863] pl-3">Products and services</h3>
       <p className="text-gray-600 leading-relaxed text-[15px]">
@@ -32,11 +32,11 @@ const Disclaimer = () => (
 const Copyright = () => (
   <div className="space-y-6">
     <h2 className="text-3xl font-extrabold text-[#0d3863] mb-6 tracking-tight">Copyright</h2>
-    
+
     <p className="text-gray-600 leading-relaxed text-[15px] font-medium text-lg text-gray-800">
       By accessing Techhansa Retail website you agree to the following copyright requirements. If you do not agree to the following terms, you may be liable to remedies for infringement of Techhansa Retail copyrights.
     </p>
-    
+
     <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
       <p className="text-gray-600 leading-relaxed text-[15px]">
         The contents of Techhansa Retail website are the copyright of Techhansa Retail as created in 2002. Any rights not expressly granted herein are reserved. Reproduction, transfer, distribution, or storage of part or all of the contents in any form without the prior written permission of Techhansa Retail is prohibited except in accordance with the following terms:
@@ -63,7 +63,7 @@ const Copyright = () => (
 const PrivacyPolicy = () => (
   <div className="space-y-6">
     <h2 className="text-3xl font-extrabold text-[#0d3863] mb-6 tracking-tight">Privacy Policy</h2>
-    
+
     <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100/50">
       <h3 className="text-lg font-bold text-gray-800 mb-2">Welcome to the Techhansa Retail website.</h3>
       <p className="text-gray-600 leading-relaxed text-[15px]">
@@ -73,7 +73,7 @@ const PrivacyPolicy = () => (
 
     <div className="space-y-4 mt-8">
       <h3 className="text-xl font-bold text-gray-800 border-l-4 border-[#0d3863] pl-3">At this website</h3>
-      
+
       <p className="text-gray-600 leading-relaxed text-[15px]">
         Techhansa Retail does not actively initiate any collection of any visitor's individual information. We passively receive information that is automatically sent to us by your web browser. This information typically includes your domain name (the site after the @ in your e-mail address). It may also contain your user name (the name before the @ in your e-mail address). The amount of information sent depends on the settings you have on your web browser; please refer to your browser if you want to learn what information it sends. We however do not actively seek to identify any individual visitor, with the exception of investigating security breaches or cooperating with authorities pursuant to a legal matter.
       </p>
@@ -98,7 +98,7 @@ const PrivacyPolicy = () => (
         </div>
         <div>
           <p className="text-gray-700 leading-relaxed text-[15px] font-medium">
-            If you require any clarifications on the use of your Personal Information by Techhansa Retail, please contact us at <a href="mailto:dscl@dscl.com" className="text-blue-600 hover:underline">dscl@dscl.com</a>, with the subject line, "privacy."
+            If you require any clarifications on the use of your Personal Information by Techhansa Retail, please contact us at <a href="mailto:[EMAIL_ADDRESS]" className="text-blue-600 hover:underline">legalteam@techhansa.com</a>, with the subject line, "privacy."
           </p>
         </div>
       </div>
@@ -128,7 +128,7 @@ const Policies = () => {
           <div className="absolute -top-[30%] -right-[10%] w-[70%] h-[130%] rounded-full bg-gradient-to-br from-[#15538e] to-[#0a2745] opacity-50 blur-3xl" />
           <div className="absolute -bottom-[20%] -left-[10%] w-[50%] h-[80%] rounded-full bg-gradient-to-tr from-[#1a5b9c] to-transparent opacity-40 blur-2xl" />
         </div>
-        
+
         <div className="container relative z-10 mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight drop-shadow-sm">
             Legal &amp; Policies
@@ -142,12 +142,12 @@ const Policies = () => {
       {/* Main Content Area */}
       <div className="container mx-auto px-4 max-w-6xl -mt-16 mb-20 relative z-20">
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col md:flex-row min-h-[650px]">
-          
+
           {/* Sidebar */}
           <div className="w-full md:w-80 bg-gray-50/80 p-6 md:p-8 flex flex-col space-y-3 border-r border-gray-100 shrink-0">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">Select a Policy</h3>
-            
-            <button 
+
+            <button
               onClick={() => setActiveTab('privacy')}
               className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 font-semibold group ${activeTab === 'privacy' ? 'bg-[#0d3863] text-white shadow-lg shadow-blue-900/20 transform scale-[1.02]' : 'text-gray-600 hover:bg-white hover:shadow-md'}`}
             >
@@ -155,7 +155,7 @@ const Policies = () => {
               Privacy Policy
             </button>
 
-            <button 
+            <button
               onClick={() => setActiveTab('disclaimer')}
               className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 font-semibold group ${activeTab === 'disclaimer' ? 'bg-[#0d3863] text-white shadow-lg shadow-blue-900/20 transform scale-[1.02]' : 'text-gray-600 hover:bg-white hover:shadow-md'}`}
             >
@@ -163,7 +163,7 @@ const Policies = () => {
               Disclaimer
             </button>
 
-            <button 
+            <button
               onClick={() => setActiveTab('copyright')}
               className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 font-semibold group ${activeTab === 'copyright' ? 'bg-[#0d3863] text-white shadow-lg shadow-blue-900/20 transform scale-[1.02]' : 'text-gray-600 hover:bg-white hover:shadow-md'}`}
             >
@@ -171,7 +171,7 @@ const Policies = () => {
               Copyright
             </button>
           </div>
-          
+
           {/* Content Area */}
           <div className="flex-1 p-8 md:p-12 lg:p-16 bg-white overflow-y-auto relative">
             {/* Fade in transition wrapper */}
