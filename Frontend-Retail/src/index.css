@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+ 
+    --tech-blue: #0d3863;
+    --techgolden-hover: #D4A22E;
+    --premium-gold: #DDA73C;
+    --soft-bg: #ffffff;
+    --text-dark: #6b6b6b;
+  }
+
+  body {
+    background-color: var(--soft-bg);
+    color: var(--text-dark);
+    font-family: 'Inter', sans-serif;
+  }
+}
