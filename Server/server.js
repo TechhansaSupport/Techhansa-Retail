@@ -26,6 +26,19 @@ app.use('/api/franchise', franchiseRoute);
 app.use('/api/channel', channelRoute);
 app.use('/api/submissions', submissionsRoute);
 
+// /* =========================================
+//    FRONTEND SERVING 
+//    ========================================= */
+// // Serve Vite build folder (Frontend-Retail/dist)
+// const clientBuildPath = path.join(__dirname, "../Frontend-Retail/dist");
+// app.use(express.static(clientBuildPath));
+
+// // Catch-all route to handle React Router navigation
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(clientBuildPath, "index.html"));
+// });
+
+
 // Initialize Database & Start Server
 async function startServer() {
   try {
