@@ -142,7 +142,7 @@ export default function PartnerForm({ showToast }) {
       
       data.append('directors', JSON.stringify(directors));
 
-      const response = await fetch('http://localhost:5000/api/channel/apply', {
+      const response = await fetch('https://techhansaretail.com/api/channel/apply', {
         method: 'POST',
         body: data,
       });

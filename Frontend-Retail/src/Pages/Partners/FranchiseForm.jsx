@@ -138,7 +138,7 @@ export default function FranchiseForm({ showToast }) {
         data.append('documents', formData.documents);
       }
 
-      const response = await fetch('http://localhost:5000/api/franchise/apply', {
+      const response = await fetch('https://techhansaretail.com/api/franchise/apply', {
         method: 'POST',
         body: data,
       });

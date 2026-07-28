@@ -41,7 +41,7 @@ export default function FormSubmission() {
 
       // 4. Send via Fetch (DO NOT set Content-Type header manually!)
       // Ensure the endpoint matches your backend route
-      const response = await fetch('http://localhost:5000/api/submissions', {
+      const response = await fetch('https://techhansaretail.com/api/submissions', {
         method: 'POST',
         body: payload,
       });
