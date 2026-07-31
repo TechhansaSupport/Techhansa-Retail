@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+// const pool = require('../db');
+const FranchisePartner = require('../models/FranchisePartner');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -39,6 +40,7 @@ const upload = multer({
 });
 
 router.post('/apply', upload.single('documents'), async (req, res) => {
+  /* POSTGRES LOGIC COMMENTED OUT
   const client = await pool.connect();
 
   try {
@@ -68,6 +70,27 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
 
     const appResult = await client.query(applicationQuery, applicationValues);
     const applicationId = appResult.rows[0].id;
+  */
+
+  try {
+    const {
+      name, dob, contactNumber, panCard, aadharCard, permanentAddress,
+      occupation, companyName, designation, experience,
+      message,
+      accountNumber, ifscCode, bankAddress, bankName
+    } = req.body;
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const documentPath = req.file ? `${baseUrl}/uploads/franchise/${req.file.filename}` : null;
+
+    // 1. Insert Franchise Partner Application using MongoDB
+    const newApplication = await FranchisePartner.create({
+      name, dob, contactNumber, panCard, aadharCard, permanentAddress,
+      occupation, companyName, designation, experience,
+      message,
+      accountNumber, ifscCode, bankAddress, bankName, documentPath
+    });
+    const applicationId = newApplication._id;
 
     // Send Email Notification
     try {
@@ -126,9 +149,12 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
       message: 'Server error while submitting application',
       error: error.message
     });
-  } finally {
+  }
+  /* POSTGRES FINALLY LOGIC COMMENTED OUT
+  finally {
     client.release();
   }
+  */
 });
 
 module.exports = router;

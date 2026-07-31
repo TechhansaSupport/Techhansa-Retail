@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+// const pool = require('../db');
+const ChannelPartner = require('../models/ChannelPartner');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -39,6 +40,7 @@ const upload = multer({
 });
 
 router.post('/apply', upload.single('documents'), async (req, res) => {
+  /* POSTGRES LOGIC COMMENTED OUT
   const client = await pool.connect();
 
   try {
@@ -98,6 +100,32 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
 
     // Commit transaction
     await client.query('COMMIT');
+  */
+
+  try {
+    const {
+      companyName, cinGst, companyPan, companyTan, 
+      registeredAddress, companyContact, authName, 
+      authContact, authEmail, directors
+    } = req.body;
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const documentPath = req.file ? `${baseUrl}/uploads/channel/${req.file.filename}` : null;
+
+    // Parse directors if it's a JSON string
+    let parsedDirectors = [];
+    if (directors) {
+      parsedDirectors = JSON.parse(directors);
+    }
+
+    // 1. Insert Channel Partner Application and Directors (MongoDB embeds them)
+    const newApplication = await ChannelPartner.create({
+      companyName, cinGst, companyPan, companyTan, 
+      registeredAddress, companyContact, authName, 
+      authContact, authEmail, documentPath,
+      directors: parsedDirectors
+    });
+    const applicationId = newApplication._id;
 
     // Send Email Notification
     try {
@@ -141,8 +169,10 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
     });
 
   } catch (error) {
+    /* POSTGRES ROLLBACK LOGIC COMMENTED OUT
     // Rollback on error
     await client.query('ROLLBACK');
+    */
     console.error('Error submitting channel partner application:', error);
     
     // Clean up uploaded file if DB insertion failed
@@ -154,9 +184,12 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
       message: 'Server error while submitting application',
       error: error.message
     });
-  } finally {
+  }
+  /* POSTGRES FINALLY LOGIC COMMENTED OUT
+  finally {
     client.release();
   }
+  */
 });
 
 module.exports = router;

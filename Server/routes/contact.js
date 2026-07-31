@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+// const pool = require('../db');
+const Contact = require('../models/Contact');
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -15,6 +16,7 @@ router.post('/', async (req, res) => {
   }
 
   try {
+    /* POSTGRES LOGIC COMMENTED OUT
     const insertQuery = `
       INSERT INTO contacts (full_name, company_name, email, phone, business_type, subject, message)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -24,6 +26,19 @@ router.post('/', async (req, res) => {
     
     const newContact = await pool.query(insertQuery, dbValues);
     console.log("✅ Saved to DB:", newContact.rows[0]);
+    */
+
+    // MongoDB Logic
+    const newContact = await Contact.create({
+      fullName,
+      companyName,
+      email,
+      phone,
+      businessType,
+      subject,
+      message
+    });
+    console.log("✅ Saved to DB:", newContact);
 
     // Send email notification
     try {

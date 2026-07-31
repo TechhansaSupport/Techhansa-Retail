@@ -1,6 +1,8 @@
-const { Pool } = require('pg');
+// const { Pool } = require('pg');
 require('dotenv').config();
+const mongoose = require('mongoose');
 
+/* POSTGRES LOGIC COMMENTED OUT
 // Pool automatically database connections ko manage karta hai
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -20,3 +22,19 @@ pool.on('error', (err) => {
 });
 
 module.exports = pool;
+*/
+
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/techhansa', {
+      serverSelectionTimeoutMS: 5000,
+      family: 4 // Force IPv4, which can resolve some DNS SRV issues in Node.js
+    });
+    console.log(`✅ MongoDB connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`❌ Error connecting to MongoDB: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+module.exports = connectDB;

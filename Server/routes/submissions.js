@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { Resend } = require('resend');
-const pool = require('../db'); 
+// const pool = require('../db'); 
+const FormSubmission = require('../models/FormSubmission');
 
 // Initialize Resend SDK (uses HTTP port 443, bypassing SMTP blocks)
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -44,6 +45,7 @@ router.post('/', upload.array('documents', 5), async (req, res) => {
     content: file.buffer // Send the raw buffer directly
   }));
 
+  /* POSTGRES TRANSACTION LOGIC COMMENTED OUT
   // Acquire a dedicated client for transaction handling
   const client = await pool.connect();
 
@@ -65,19 +67,19 @@ router.post('/', upload.array('documents', 5), async (req, res) => {
     const emailResponse = await resend.emails.send({
       from: 'Acme Corp <onboarding@resend.dev>', // Replace with your verified sender domain
       to: ['team@yourcompany.com'], // The destination for the internal team notification
-      subject: `New Form Submission from ${name}`,
-      html: `
+      subject: \`New Form Submission from \${name}\`,
+      html: \`
         <h2>New Submission Details</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Name:</strong> \${name}</p>
+        <p><strong>Email:</strong> \${email}</p>
         <p><strong>Message:</strong></p>
-        <p>${message}</p>
-      `,
+        <p>\${message}</p>
+      \`,
       attachments: emailAttachments
     });
 
     if (emailResponse.error) {
-      throw new Error(`Email sending failed: ${emailResponse.error.message}`);
+      throw new Error(\`Email sending failed: \${emailResponse.error.message}\`);
     }
 
     // 4. Commit Database Transaction (Only if DB insert AND Email succeed)
@@ -101,6 +103,52 @@ router.post('/', upload.array('documents', 5), async (req, res) => {
   } finally {
     // Release the client back to the pool
     client.release();
+  }
+  */
+
+  // MongoDB Logic
+  try {
+    // 1. Insert into MongoDB
+    const savedSubmission = await FormSubmission.create({
+      name,
+      email,
+      message,
+      attachmentsMetadata
+    });
+
+    // 2. Send Email via Resend HTTP API
+    const emailResponse = await resend.emails.send({
+      from: 'Acme Corp <onboarding@resend.dev>', // Replace with your verified sender domain
+      to: ['team@yourcompany.com'], // The destination for the internal team notification
+      subject: `New Form Submission from ${name}`,
+      html: `
+        <h2>New Submission Details</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message}</p>
+      `,
+      attachments: emailAttachments
+    });
+
+    if (emailResponse.error) {
+      // Note: In MongoDB, without a replica set, standard transactions aren't always available.
+      // If email fails, we might want to delete the submission, but we'll just throw the error here.
+      await FormSubmission.findByIdAndDelete(savedSubmission._id);
+      throw new Error(`Email sending failed: ${emailResponse.error.message}`);
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Submission saved and team notified successfully!',
+      data: savedSubmission
+    });
+  } catch (error) {
+    console.error('Submission Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'An error occurred while processing your submission. Please try again.' 
+    });
   }
 });
 

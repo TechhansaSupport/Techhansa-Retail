@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const pool = require('./db');
+// const pool = require('./db'); // PostgreSQL connection
+const connectDB = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -42,6 +43,10 @@ app.use('/api/submissions', submissionsRoute);
 // Initialize Database & Start Server
 async function startServer() {
   try {
+    // Connect to MongoDB
+    await connectDB();
+
+    /* POSTGRES TABLE CREATION LOGIC COMMENTED OUT
     // Test DB connection
     const result = await pool.query('SELECT NOW()');
     console.log('✅ PostgreSQL connected successfully at:', result.rows[0].now);
@@ -142,6 +147,7 @@ async function startServer() {
       );
     `);
     console.log('✅ Franchise Partner table is ready');
+    */
 
     // Start server only after DB is confirmed
     app.listen(PORT, () => {
@@ -149,8 +155,7 @@ async function startServer() {
     });
 
   } catch (error) {
-    console.error('❌ Failed to connect to PostgreSQL:', error.message);
-    console.error('   Check your .env file and make sure PostgreSQL is running.');
+    console.error('❌ Failed to start server:', error.message);
     process.exit(1);
   }
 }
