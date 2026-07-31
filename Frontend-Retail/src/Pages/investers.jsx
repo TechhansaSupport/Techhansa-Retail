@@ -5,45 +5,56 @@ import {
   Globe, LineChart, Shield, Zap, Briefcase
 } from 'lucide-react';
 
+import shaatikaLogo from '../assets/shaatika-vastram.png';
+import mainLogo from '../assets/logo.png';
+import longTermImg from '../assets/Long-Term.jpg';
+import businessExpansionImg from '../assets/Business Expansion.jpg';
+import techInnovationImg from '../assets/Technology-Innovation.jpg';
+import financialStabilityImg from '../assets/Financial-Stability.jpg';
+import strategicLeadershipImg from '../assets/Strategic-Leadership.jpg';
+import nationwideGrowthImg from '../assets/Nationwide-Growth.jpg';
+import investorBannerImg from '../assets/investor-banner.png';
+import investersVideo from '../assets/investers-video.mp4';
+
 // --- DATA ARRAYS ---
 const investors = [
   {
     name: "Shaatika Vastram",
     role: "Strategic Investor",
     desc: "A valued strategic investor committed to supporting innovation and long-term business development. With a vision focused on sustainable growth and operational excellence, they contribute to strengthening Techhansa Retail's expansion and future-ready initiatives.",
-    logo: "/src/assets/shaatika-vastram.png", 
+    logo: shaatikaLogo, 
     link: "https://www.shaatikavastram.in/" // 
   },
   {
     name: "Techhansa Private Limited",
     role: "Enterprise Growth Partner",
     desc: "Plays a vital role in strengthening our business foundation through strategic guidance and long-term investment. Their commitment to innovation and business excellence enables us to continuously enhance technology, infrastructure, and customer experience.",
-    logo: "/src/assets/logo.png", 
+    logo: mainLogo, 
     link: "https://techhansa.com/" //
   },
   {
     name: "Techhansa Solutions Pvt. Ltd.",
     role: "Digital Transformation Partner",
     desc: "Brings deep expertise in digital transformation, enterprise technology, and business solutions. Their support enables us to build scalable digital platforms, optimize operations, and deliver seamless experiences for our ecosystem.",
-    logo: "/src/assets/logo.png", 
+    logo: mainLogo, 
     link: "https://techhansa.com" // 
   },
   {
     name: "Techhansa IT Private Limited",
     role: "Technology & Infrastructure Partner",
     desc: "Strengthens our technological capabilities by supporting innovation, IT infrastructure, and enterprise-grade digital solutions. Their expertise helps maintain a secure, scalable, and high-performance platform across India.",
-    logo: "/src/assets/logo.png", 
+    logo: mainLogo, 
     link: "https://techhansait.com/" // 
   }
 ];
 
 const investorMatters = [
-  { title: "Long-Term Vision", img: "/src/assets/Long-Term.jpg" },
-  { title: "Business Expansion", img: "/src/assets/Business Expansion.jpg" },
-  { title: "Technology Innovation", img: "/src/assets/Technology-Innovation.jpg" },
-  { title: "Financial Stability", img: "/src/assets/Financial-Stability.jpg" },
-  { title: "Strategic Leadership", img: "/src/assets/Strategic-Leadership.jpg" },
-  { title: "Nationwide Growth", img: "/src/assets/Nationwide-Growth.jpg" }
+  { title: "Long-Term Vision", img: longTermImg },
+  { title: "Business Expansion", img: businessExpansionImg },
+  { title: "Technology Innovation", img: techInnovationImg },
+  { title: "Financial Stability", img: financialStabilityImg },
+  { title: "Strategic Leadership", img: strategicLeadershipImg },
+  { title: "Nationwide Growth", img: nationwideGrowthImg }
 ];
 
 const investmentHighlights = [
@@ -78,7 +89,7 @@ export default function InvestorsPage() {
       <section className="relative w-full h-[300px] flex items-center justify-center overflow-hidden bg-slate-900">
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('./src/assets/investor-banner.png')" }}
+          style={{ backgroundImage: `url(${investorBannerImg})` }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 to-slate-900/70"></div>
         </div>
@@ -169,7 +180,7 @@ export default function InvestorsPage() {
               
               {/* VIDEO TAG */}
               <video 
-                src="/src/assets/investers-video.mp4" 
+                src={investersVideo} 
                 autoPlay 
                 loop 
                 muted 
