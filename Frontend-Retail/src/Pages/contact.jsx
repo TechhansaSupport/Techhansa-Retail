@@ -8,15 +8,21 @@ import {
 
 // --- IMAGE IMPORTS ---
 import contactBannerImg from '../assets/contact-banner.jpg'; 
+import fastResponseImg from '../assets/fastreponse.avif';
+import expertConsultationImg from '../assets/expertconsulation.avif';
+import nationwideServiceImg from '../assets/nationwideservice.avif';
+import genuineProductImg from '../assets/genuineproduct.jpg';
+import customizedSolutionsImg from '../assets/customisesolutions.jpg';
+import longTermPartnershipImg from '../assets/longtermpartnership.avif';
 
 // --- DATA ARRAYS ---
 const whyContactUs = [
-  { title: "Fast Response", icon: Zap, image: "src/assets/fastreponse.avif" },
-  { title: "Expert Consultation", icon: HeadphonesIcon, image: "src/assets/expertconsulation.avif" },
-  { title: "Nationwide Service", icon: Map, image: "src/assets/nationwideservice.avif" },
-  { title: "Genuine Products", icon: ShieldCheck, image: "src/assets/genuineproduct.jpg" },
-  { title: "Customized Solutions", icon: Settings, image: "src/assets/customisesolutions.jpg" },
-  { title: "Long-Term Partnership", icon: HeartHandshake, image: "src/assets/longtermpartnership.avif" }
+  { title: "Fast Response", icon: Zap, image: fastResponseImg },
+  { title: "Expert Consultation", icon: HeadphonesIcon, image: expertConsultationImg },
+  { title: "Nationwide Service", icon: Map, image: nationwideServiceImg },
+  { title: "Genuine Products", icon: ShieldCheck, image: genuineProductImg },
+  { title: "Customized Solutions", icon: Settings, image: customizedSolutionsImg },
+  { title: "Long-Term Partnership", icon: HeartHandshake, image: longTermPartnershipImg }
 ];
 
 const faqs = [
