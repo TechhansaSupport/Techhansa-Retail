@@ -26,7 +26,10 @@ module.exports = pool;
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/techhansa', {
+    if (!process.env.MONGO_URI) {
+      throw new Error("MONGO_URI environment variable is not defined.");
+    }
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
       serverSelectionTimeoutMS: 5000,
       family: 4 // Force IPv4, which can resolve some DNS SRV issues in Node.js
     });
