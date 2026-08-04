@@ -21,8 +21,10 @@ import PartnerApplicationPage from './Pages/Partners/partnerpage';
 
 // --- Portal Dashboard Pages ---
 import AdminDashboard from './portal/Admin/Components/Admin';
-import FranchiseDashboard from './portal/franchiseportal/franchiseowner';
-import ChannelDashboard from './portal/chnnelportal/channelportal';
+import FranchiseDashboard from './portal/franchiseportal/Components/Layout/franchiseowner';
+import ChannelLayout from './portal/chnnelportal/Layout';
+import ChannelDashboard from './portal/chnnelportal/Dashboard';
+import CreateRFP from './portal/chnnelportal/CreateRFP';
 
 
 // --- Scroll To Hash / Top Component ---  
@@ -105,10 +107,11 @@ function App() {
         {/* Channel Partner Portal */}
         <Route path="/channel" element={
           <ProtectedRoute allowedRole="channel">
-            <Outlet />
+            <ChannelLayout />
           </ProtectedRoute>
         }>
           <Route index element={<ChannelDashboard />} />
+          <Route path="rfp/create" element={<CreateRFP />} />
         </Route>
 
 
