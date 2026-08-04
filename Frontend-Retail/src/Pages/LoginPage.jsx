@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './LoginPage.css';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import logo from '../assets/logo.png';
 
 export default function LoginPage() {
@@ -44,15 +46,65 @@ export default function LoginPage() {
     setTimeout(() => ripple.remove(), 600);
   };
 
-  const handleSubmit = (e) => {
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   if (!userId.trim() || !password.trim()) return;
+  //   setIsSubmitting(true);
+  //   setTimeout(() => {
+  //     setIsSubmitting(false);
+  //     alert('Login submitted successfully!');
+  //     navigate('/');
+  //   }, 1500);
+  // };
+
+  const { login } = useContext(AuthContext);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userId.trim() || !password.trim()) return;
+    
     setIsSubmitting(true);
-    setTimeout(() => {
+
+    try {
+      // Connect to your Node.js backend
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Save user data to context
+        login(data.user, data.token);
+        
+        // Route dynamically based on the role
+        switch (data.user.role) {
+          case 'admin':
+            navigate('/admin');
+            break;
+          case 'franchise':
+            navigate('/franchise');
+            break;
+          case 'channel':
+            navigate('/channel');
+            break;
+          default:
+            alert('Unknown user role.');
+            navigate('/');
+        }
+      } else {
+        alert(data.message || 'Login failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+      alert('Unable to connect to the server.');
+    } finally {
       setIsSubmitting(false);
-      alert('Login submitted successfully!');
-      navigate('/');
-    }, 1500);
+    }
   };
 
   return (
