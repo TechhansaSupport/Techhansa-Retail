@@ -25,6 +25,14 @@ import FranchiseDashboard from './portal/franchiseportal/Components/Layout/franc
 import ChannelLayout from './portal/chnnelportal/Layout';
 import ChannelDashboard from './portal/chnnelportal/Dashboard';
 import CreateRFP from './portal/chnnelportal/CreateRFP';
+import RfpManagement from './portal/chnnelportal/Pages/RfpManagement';
+import Quotations from './portal/chnnelportal/Pages/Quotations';
+import Orders from './portal/chnnelportal/Pages/Orders';
+import DeliveryTracking from './portal/chnnelportal/Pages/DeliveryTracking';
+import Invoices from './portal/chnnelportal/Pages/Invoices';
+import Reports from './portal/chnnelportal/Pages/Reports';
+import SupportCenter from './portal/chnnelportal/Pages/SupportCenter';
+import Profile from './portal/chnnelportal/Pages/Profile';
 
 
 // --- Scroll To Hash / Top Component ---  
@@ -111,7 +119,15 @@ function App() {
           </ProtectedRoute>
         }>
           <Route index element={<ChannelDashboard />} />
+          <Route path="rfp" element={<RfpManagement />} />
           <Route path="rfp/create" element={<CreateRFP />} />
+          <Route path="quotations" element={<Quotations />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="tracking" element={<DeliveryTracking />} />
+          <Route path="invoices" element={<Invoices />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="support" element={<SupportCenter />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
 
