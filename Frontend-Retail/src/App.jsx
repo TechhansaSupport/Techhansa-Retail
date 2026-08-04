@@ -1,5 +1,10 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useEffect, useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+
+// --- Auth Context ---
+import { AuthContext } from './context/AuthContext';
+
+// --- Public Website Layout & Pages ---
 import Header from './Component/Layout/header';
 import Footer from './Component/Layout/footer';
 import Homepage from './Pages/homepage';
@@ -14,8 +19,18 @@ import Policies from './Pages/Policies';
 import LoginPage from './Pages/LoginPage';
 import PartnerApplicationPage from './Pages/Partners/partnerpage';
 
+// --- Portal Layouts ---
+import AdminLayout from './portals/Admin/layouts/AdminLayout';
+import FranchiseLayout from './portals/Franchise/layouts/FranchiseLayout';
+import ChannelLayout from './portals/ChannelPartner/layouts/ChannelLayout';
+
+// --- Portal Dashboard Pages ---
+import AdminDashboard from './portals/Admin/pages/Dashboard';
+import FranchiseDashboard from './portals/Franchise/pages/Dashboard';
+import ChannelDashboard from './portals/ChannelPartner/pages/Dashboard';
+
+
 // --- Scroll To Hash / Top Component ---  
-// Yeh component route change hone par instantly page ko top par bhej dega, ya hash par scroll karega
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
 
@@ -27,7 +42,7 @@ function ScrollToTop() {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
         }
-      }, 100); // Small delay to let the page render first
+      }, 100); 
     } else {
       window.scrollTo(0, 0);
     }
@@ -36,17 +51,74 @@ function ScrollToTop() {
   return null;
 }
 
+// --- Role-Based Protection Wrapper ---
+const ProtectedRoute = ({ children, allowedRole }) => {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  
+  // If not logged in, redirect to login page
+  if (!user) return <Navigate to="/login" replace />;
+  
+  // If logged in but trying to access the wrong portal
+  if (user.role !== allowedRole) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <h2 className="text-2xl font-bold text-red-600">Unauthorized: You do not have permission to view this portal.</h2>
+      </div>
+    );
+  }
+
+  return children;
+};
+
 function App() {
   return (
     <Router>
-      {/* ScrollToTop component ko yahan Router ke andar add kiya gaya hai */}
       <ScrollToTop />
 
       <Routes>
-        {/* Login page — standalone, no header/footer */}
+        {/* ==========================================
+            1. STANDALONE ROUTES (No Headers/Footers)
+            ========================================== */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* All other pages with header & footer */}
+        {/* ==========================================
+            2. SECURE PORTAL ROUTES (Role Protected)
+            ========================================== */}
+        
+        {/* Admin Portal */}
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRole="admin">
+            <AdminLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<AdminDashboard />} />
+          {/* Add more admin routes here later: <Route path="users" element={<UsersPage />} /> */}
+        </Route>
+
+        {/* Franchise Portal */}
+        <Route path="/franchise" element={
+          <ProtectedRoute allowedRole="franchise">
+            <FranchiseLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<FranchiseDashboard />} />
+        </Route>
+
+        {/* Channel Partner Portal */}
+        <Route path="/channel" element={
+          <ProtectedRoute allowedRole="channel">
+            <ChannelLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<ChannelDashboard />} />
+        </Route>
+
+
+        {/* ==========================================
+            3. PUBLIC WEBSITE ROUTES (With Header & Footer)
+            ========================================== */}
         <Route path="*" element={
           <div className="app-container relative z-10 bg-transparent min-h-screen flex flex-col">
             <Header />
