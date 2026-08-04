@@ -21,7 +21,14 @@ import PartnerApplicationPage from './Pages/Partners/partnerpage';
 
 // --- Portal Dashboard Pages ---
 import AdminDashboard from './portal/Admin/Components/Admin';
-import FranchiseDashboard from './portal/franchiseportal/Components/Layout/franchiseowner';
+import FranchiseLayout from './portal/franchiseportal/Layout/FranchiseLayout';
+import FranchiseDashboard from './portal/franchiseportal/Pages/Dashboard';
+import FranchiseProfile from './portal/franchiseportal/Pages/StoreProfile';
+import FranchiseInventory from './portal/franchiseportal/Pages/Inventory';
+import FranchiseOrders from './portal/franchiseportal/Pages/Orders';
+import FranchiseSales from './portal/franchiseportal/Pages/Sales';
+import FranchiseBilling from './portal/franchiseportal/Pages/Billing';
+import { FranchiseProvider } from './portal/franchiseportal/context/FranchiseContext';
 import ChannelLayout from './portal/chnnelportal/Layout';
 import ChannelDashboard from './portal/chnnelportal/Dashboard';
 import CreateRFP from './portal/chnnelportal/CreateRFP';
@@ -98,10 +105,17 @@ function App() {
         {/* Franchise Portal */}
         <Route path="/franchise" element={
           <ProtectedRoute allowedRole="franchise">
-            <Outlet />
+            <FranchiseProvider>
+              <FranchiseLayout />
+            </FranchiseProvider>
           </ProtectedRoute>
         }>
           <Route index element={<FranchiseDashboard />} />
+          <Route path="billing" element={<FranchiseBilling />} />
+          <Route path="profile" element={<FranchiseProfile />} />
+          <Route path="inventory" element={<FranchiseInventory />} />
+          <Route path="orders" element={<FranchiseOrders />} />
+          <Route path="sales" element={<FranchiseSales />} />
         </Route>
 
         {/* Channel Partner Portal */}

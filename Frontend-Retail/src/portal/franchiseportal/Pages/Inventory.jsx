@@ -1,0 +1,115 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useFranchise } from '../context/FranchiseContext';
+import { Search, Filter, AlertTriangle } from 'lucide-react';
+
+export default function Inventory() {
+  const { inventory } = useFranchise();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredData = inventory.filter(item => 
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Inventory Management</h1>
+          <p className="text-slate-500">View and track your current stock levels. (Read Only)</p>
+        </div>
+        <div className="flex gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search SKU or Name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64 shadow-sm"
+            />
+          </div>
+          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm hover:bg-slate-50 transition-colors shadow-sm">
+            <Filter size={16} />
+            Filter
+          </button>
+        </div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
+                <th className="px-6 py-4 font-medium">SKU / Product</th>
+                <th className="px-6 py-4 font-medium">Category</th>
+                <th className="px-6 py-4 font-medium text-right">Buying Price</th>
+                <th className="px-6 py-4 font-medium text-right">Selling Price</th>
+                <th className="px-6 py-4 font-medium text-center">Available Stock</th>
+                <th className="px-6 py-4 font-medium text-center">Reserved Stock</th>
+                <th className="px-6 py-4 font-medium text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredData.map((item) => {
+                const isLowStock = item.availableStock <= item.lowStockAlert;
+                
+                return (
+                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-slate-800">{item.name}</div>
+                      <div className="text-xs text-slate-500 font-mono">{item.sku}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">
+                        {item.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right font-medium text-slate-700">
+                      ₹{item.buyingPrice.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 text-right font-medium text-indigo-600">
+                      ₹{item.sellingPrice.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`font-bold text-lg ${isLowStock ? 'text-red-500' : 'text-slate-700'}`}>
+                        {item.availableStock}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center text-slate-500">
+                      {item.reservedStock}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {isLowStock ? (
+                        <div className="flex items-center justify-center gap-1 text-red-500 text-xs font-bold bg-red-50 py-1 px-2 rounded-lg">
+                          <AlertTriangle size={14} /> Low Stock
+                        </div>
+                      ) : (
+                        <div className="text-emerald-500 text-xs font-bold bg-emerald-50 py-1 px-2 rounded-lg inline-block">
+                          In Stock
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              
+              {filteredData.length === 0 && (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center text-slate-500">
+                    No products found matching your search.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+    </div>
+  );
+}

@@ -1,0 +1,85 @@
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { inventoryData as initialInventory, salesData as initialSales, summaryMetrics as initialMetrics, orderData } from '../mockData';
+
+export const FranchiseContext = createContext();
+
+export function FranchiseProvider({ children }) {
+  const [inventory, setInventory] = useState(initialInventory);
+  const [salesHistory, setSalesHistory] = useState(initialSales);
+  const [metrics, setMetrics] = useState(initialMetrics);
+  const [invoices, setInvoices] = useState([]);
+
+  // Automated Inventory Update & Sales Processing
+  const processSale = (cartItems, customerDetails, totalAmount) => {
+    // 1. Update Inventory (decrement available stock)
+    const updatedInventory = inventory.map(item => {
+      const cartItem = cartItems.find(c => c.id === item.id);
+      if (cartItem) {
+        return {
+          ...item,
+          availableStock: item.availableStock - cartItem.quantity
+        };
+      }
+      return item;
+    });
+
+    setInventory(updatedInventory);
+
+    // 2. Update Sales History (Assuming today's date for simplicity)
+    const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const todayIndex = salesHistory.findIndex(s => s.date === todayStr);
+    
+    let updatedSalesHistory = [...salesHistory];
+    
+    if (todayIndex >= 0) {
+      updatedSalesHistory[todayIndex].sales += totalAmount;
+      updatedSalesHistory[todayIndex].orders += 1;
+    } else {
+      updatedSalesHistory.push({
+        date: todayStr,
+        sales: totalAmount,
+        orders: 1
+      });
+    }
+    
+    setSalesHistory(updatedSalesHistory);
+
+    // 3. Update Metrics
+    const totalItemsSold = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+    setMetrics(prev => ({
+      ...prev,
+      availableStock: prev.availableStock - totalItemsSold,
+      todaysSales: prev.todaysSales + totalAmount,
+      monthlySales: prev.monthlySales + totalAmount,
+      completedOrders: prev.completedOrders + 1
+    }));
+
+    // 4. Save Invoice
+    const newInvoice = {
+      id: `INV-${Date.now()}`,
+      date: new Date().toLocaleString(),
+      customer: customerDetails,
+      items: cartItems,
+      total: totalAmount
+    };
+    
+    setInvoices(prev => [newInvoice, ...prev]);
+
+    return newInvoice;
+  };
+
+  return (
+    <FranchiseContext.Provider value={{
+      inventory,
+      salesHistory,
+      metrics,
+      orders: orderData,
+      invoices,
+      processSale
+    }}>
+      {children}
+    </FranchiseContext.Provider>
+  );
+}
+
+export const useFranchise = () => useContext(FranchiseContext);
