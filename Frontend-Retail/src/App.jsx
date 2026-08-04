@@ -1,8 +1,8 @@
 import React, { useEffect, useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 
 // --- Auth Context ---
-import { AuthContext } from './context/AuthContext';
+import { AuthContext, AuthProvider } from './context/AuthContext';
 
 // --- Public Website Layout & Pages ---
 import Header from './Component/Layout/header';
@@ -19,15 +19,10 @@ import Policies from './Pages/Policies';
 import LoginPage from './Pages/LoginPage';
 import PartnerApplicationPage from './Pages/Partners/partnerpage';
 
-// --- Portal Layouts ---
-import AdminLayout from './portals/Admin/layouts/AdminLayout';
-import FranchiseLayout from './portals/Franchise/layouts/FranchiseLayout';
-import ChannelLayout from './portals/ChannelPartner/layouts/ChannelLayout';
-
 // --- Portal Dashboard Pages ---
-import AdminDashboard from './portals/Admin/pages/Dashboard';
-import FranchiseDashboard from './portals/Franchise/pages/Dashboard';
-import ChannelDashboard from './portals/ChannelPartner/pages/Dashboard';
+import AdminDashboard from './portal/Admin/Components/Admin';
+import FranchiseDashboard from './portal/franchiseportal/franchiseowner';
+import ChannelDashboard from './portal/chnnelportal/channelportal';
 
 
 // --- Scroll To Hash / Top Component ---  
@@ -74,8 +69,9 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
+    <AuthProvider>
+      <Router>
+        <ScrollToTop />
 
       <Routes>
         {/* ==========================================
@@ -90,7 +86,7 @@ function App() {
         {/* Admin Portal */}
         <Route path="/admin" element={
           <ProtectedRoute allowedRole="admin">
-            <AdminLayout />
+            <Outlet />
           </ProtectedRoute>
         }>
           <Route index element={<AdminDashboard />} />
@@ -100,7 +96,7 @@ function App() {
         {/* Franchise Portal */}
         <Route path="/franchise" element={
           <ProtectedRoute allowedRole="franchise">
-            <FranchiseLayout />
+            <Outlet />
           </ProtectedRoute>
         }>
           <Route index element={<FranchiseDashboard />} />
@@ -109,7 +105,7 @@ function App() {
         {/* Channel Partner Portal */}
         <Route path="/channel" element={
           <ProtectedRoute allowedRole="channel">
-            <ChannelLayout />
+            <Outlet />
           </ProtectedRoute>
         }>
           <Route index element={<ChannelDashboard />} />
@@ -144,6 +140,7 @@ function App() {
         } />
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }
 
