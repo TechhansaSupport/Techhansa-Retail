@@ -33,6 +33,7 @@ import Invoices from './portal/chnnelportal/Pages/Invoices';
 import Reports from './portal/chnnelportal/Pages/Reports';
 import SupportCenter from './portal/chnnelportal/Pages/SupportCenter';
 import Profile from './portal/chnnelportal/Pages/Profile';
+import Settings from './portal/chnnelportal/Pages/Settings';
 
 
 // --- Scroll To Hash / Top Component ---  
@@ -128,6 +129,7 @@ function App() {
           <Route path="reports" element={<Reports />} />
           <Route path="support" element={<SupportCenter />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
 

@@ -1,12 +1,110 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { Search, Filter, Truck, CheckCircle, Package, Download } from 'lucide-react';
+import { exportToCSV } from '../../../utils/exportUtils';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+};
 
 export default function Orders() {
+  const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+  
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/procurement/orders');
+      const data = await res.json();
+      setOrders(data);
+    } catch (err) {
+      console.error('Failed to fetch orders', err);
+    }
+  };
+
+  const filteredOrders = orders.filter(o => {
+    const orderId = o.orderNumber || o.orderId || '';
+    return orderId.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Orders</h1>
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <p className="text-gray-600">View and manage your procurement orders here.</p>
-      </div>
-    </div>
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
+      <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Orders</h1>
+          <p className="text-slate-500 text-sm mt-1">Track and manage your procurement orders.</p>
+        </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by Order ID..."
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+            />
+          </div>
+          <button onClick={() => exportToCSV('orders.csv', filteredOrders, [
+            { key: 'orderNumber', label: 'Order ID' },
+            { key: 'status', label: 'Status' },
+            { key: 'totalAmount', label: 'Total Amount' },
+            { key: 'createdAt', label: 'Order Date' }
+          ])} className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors shrink-0">
+            <Download className="w-4 h-4" /> Export
+          </button>
+        </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="space-y-3">
+        {filteredOrders.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-12 text-center text-slate-500">
+            No orders found.
+          </div>
+        ) : (
+          filteredOrders.map((order) => (
+            <motion.div key={order._id} variants={itemVariants} className="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="font-bold text-blue-600 text-sm cursor-pointer hover:underline">{order.orderNumber || order.orderId}</span>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${order.status === 'Pending' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700'}`}>
+                    {order.status === 'Pending' ? 'Pending Admin Approval' : order.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => navigate('/channel/tracking', { state: { order } })} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Track Delivery">
+                    <Truck className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 mt-4">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium">Value:</span>
+                  <span className="text-slate-700 font-semibold">₹{order.totalAmount?.toLocaleString('en-IN') || 0}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium">Date:</span>
+                  <span className="text-slate-700">{new Date(order.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </motion.div>
+          ))
+        )}
+      </motion.div>
+    </motion.div>
   );
 }

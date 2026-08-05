@@ -37,6 +37,20 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 };
 
+const renderCustomLegend = (props) => {
+  const { payload } = props;
+  return (
+    <ul className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[13px] text-slate-600 mt-4">
+      {payload.map((entry, index) => (
+        <li key={`item-${index}`} className="flex items-center gap-1.5 whitespace-nowrap">
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }}></span>
+          {entry.value}
+        </li>
+      ))}
+    </ul>
+  );
+};
+
 export default function SmartAnalytics() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
@@ -100,10 +114,7 @@ export default function SmartAnalytics() {
                 itemStyle={{ color: '#1e293b', fontWeight: 500 }}
               />
               <Legend 
-                verticalAlign="bottom" 
-                height={60} 
-                iconType="circle" 
-                wrapperStyle={{ fontSize: '13px', color: '#475569' }} 
+                content={renderCustomLegend}
               />
             </PieChart>
           </ResponsiveContainer>

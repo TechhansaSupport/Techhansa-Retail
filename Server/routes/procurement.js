@@ -45,6 +45,36 @@ router.post('/rfp', async (req, res) => {
   try {
     const newRFP = new RFP(req.body);
     await newRFP.save();
+
+    // Create placeholder Quotation
+    const newQuotation = new Quotation({
+      quotationNo: `QT-${newRFP.rfpId}`,
+      rfpReference: newRFP._id,
+      vendor: 'TBD',
+      amount: 0,
+      validUntil: newRFP.expectedDeliveryDate,
+      status: 'Pending'
+    });
+    await newQuotation.save();
+
+    // Create placeholder Order
+    const newOrder = new Order({
+      orderNumber: `ORD-${newRFP.rfpId}`,
+      quotationReference: newQuotation._id,
+      expectedDelivery: newRFP.expectedDeliveryDate,
+      status: 'Pending'
+    });
+    await newOrder.save();
+
+    // Create placeholder Invoice
+    const newInvoice = new Invoice({
+      invoiceNumber: `INV-${newRFP.rfpId}`,
+      orderReference: newOrder._id,
+      amount: 0,
+      paymentStatus: 'Unpaid'
+    });
+    await newInvoice.save();
+
     res.status(201).json(newRFP);
   } catch (error) {
     console.error('Error creating RFP:', error);
@@ -78,6 +108,34 @@ router.get('/invoices', async (req, res) => {
     const invoices = await Invoice.find().populate('orderReference').sort({ createdAt: -1 });
     res.json(invoices);
   } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT update RFP
+router.put('/rfp/:id', async (req, res) => {
+  try {
+    const updatedRFP = await RFP.findOneAndUpdate({ rfpId: req.params.id }, req.body, { new: true });
+    if (!updatedRFP) {
+      return res.status(404).json({ error: 'RFP not found' });
+    }
+    res.json(updatedRFP);
+  } catch (error) {
+    console.error('Error updating RFP:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE RFP
+router.delete('/rfp/:id', async (req, res) => {
+  try {
+    const deletedRFP = await RFP.findOneAndDelete({ rfpId: req.params.id });
+    if (!deletedRFP) {
+      return res.status(404).json({ error: 'RFP not found' });
+    }
+    res.json({ message: 'RFP deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting RFP:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

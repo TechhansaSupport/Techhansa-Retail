@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Plus, DownloadCloud, Sparkles } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
+import { exportToCSV } from '../../utils/exportUtils';
 
 // Components
 import KPIGrid from './components/KPIGrid';
@@ -29,6 +30,25 @@ const itemVariants = {
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
 
+  const handleExport = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/procurement/dashboard-stats');
+      const data = await res.json();
+      const exportData = [
+        { 
+          'Pending RFPs': data.pendingRFPs, 
+          'Approved Orders': data.approvedOrders, 
+          'Delivered Orders': data.deliveredOrders, 
+          'Total Invoices': data.totalInvoices, 
+          'Total Spending (INR)': data.totalSpending 
+        }
+      ];
+      exportToCSV('dashboard_summary.csv', exportData);
+    } catch (err) {
+      console.error('Failed to export', err);
+    }
+  };
+
   return (
     <motion.div 
       variants={containerVariants}
@@ -46,7 +66,7 @@ export default function Dashboard() {
         </div>
         
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-all shadow-sm">
+          <button onClick={handleExport} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-all shadow-sm">
             <DownloadCloud className="w-4 h-4" /> Export Report
           </button>
           

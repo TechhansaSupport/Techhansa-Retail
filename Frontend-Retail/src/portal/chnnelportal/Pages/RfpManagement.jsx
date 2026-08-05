@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { exportToCSV } from '../../../utils/exportUtils';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -21,88 +22,15 @@ import {
   ArrowUpDown
 } from 'lucide-react';
 
-const RFP_DATA = [
-  {
-    id: 'RFP-2024-089',
-    title: 'Q3 Office Laptops Procurement',
-    category: 'Laptops',
-    priority: 'High',
-    status: 'Approved',
-    createdDate: '2024-10-15',
-    deliveryDate: '2024-11-30',
-    totalQty: 50,
-    totalItems: 3,
-    estimatedValue: '₹22,50,000',
-  },
-  {
-    id: 'RFP-2024-088',
-    title: 'Network Infrastructure Upgrade',
-    category: 'Networking',
-    priority: 'Medium',
-    status: 'Under Review',
-    createdDate: '2024-10-12',
-    deliveryDate: '2024-12-15',
-    totalQty: 25,
-    totalItems: 5,
-    estimatedValue: '₹8,75,000',
-  },
-  {
-    id: 'RFP-2024-087',
-    title: 'Monitor Refresh Program',
-    category: 'Monitors',
-    priority: 'Low',
-    status: 'Draft',
-    createdDate: '2024-10-10',
-    deliveryDate: '2024-12-01',
-    totalQty: 100,
-    totalItems: 2,
-    estimatedValue: '₹15,00,000',
-  },
-  {
-    id: 'RFP-2024-086',
-    title: 'Server Room Expansion',
-    category: 'Servers',
-    priority: 'High',
-    status: 'Submitted',
-    createdDate: '2024-10-08',
-    deliveryDate: '2024-11-20',
-    totalQty: 10,
-    totalItems: 4,
-    estimatedValue: '₹45,00,000',
-  },
-  {
-    id: 'RFP-2024-085',
-    title: 'Printer Fleet Replacement',
-    category: 'Printers',
-    priority: 'Medium',
-    status: 'Quotation Received',
-    createdDate: '2024-10-05',
-    deliveryDate: '2024-11-25',
-    totalQty: 30,
-    totalItems: 2,
-    estimatedValue: '₹6,00,000',
-  },
-  {
-    id: 'RFP-2024-084',
-    title: 'Desktop Workstations',
-    category: 'Desktops',
-    priority: 'Low',
-    status: 'Rejected',
-    createdDate: '2024-09-28',
-    deliveryDate: '2024-11-10',
-    totalQty: 20,
-    totalItems: 1,
-    estimatedValue: '₹12,00,000',
-  },
-];
+
 
 const STATUS_CONFIG = {
   'Draft': { bg: 'bg-slate-100', text: 'text-slate-700', icon: FileText },
-  'Submitted': { bg: 'bg-blue-50', text: 'text-blue-700', icon: Send },
-  'Under Review': { bg: 'bg-amber-50', text: 'text-amber-700', icon: Clock },
+  'Submitted': { bg: 'bg-amber-50', text: 'text-amber-700', icon: Clock, label: 'Pending Admin Approval' },
+  'Under Review': { bg: 'bg-indigo-50', text: 'text-indigo-700', icon: Clock },
   'Approved': { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: CheckCircle },
-  'Quotation Received': { bg: 'bg-violet-50', text: 'text-violet-700', icon: FileText },
   'Rejected': { bg: 'bg-red-50', text: 'text-red-700', icon: XCircle },
+  'Quotation Received': { bg: 'bg-blue-50', text: 'text-blue-700', icon: FileText },
 };
 
 const PRIORITY_CONFIG = {
@@ -125,20 +53,66 @@ export default function RfpManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [rfps, setRfps] = useState([]);
+  const [selectedRfp, setSelectedRfp] = useState(null);
+
+  useEffect(() => {
+    fetchRfps();
+  }, []);
+
+  const fetchRfps = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/procurement/rfp');
+      const data = await res.json();
+      setRfps(data);
+    } catch (err) {
+      console.error('Failed to fetch RFPs', err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this RFP?')) return;
+    try {
+      await fetch(`http://localhost:5000/api/procurement/rfp/${id}`, { method: 'DELETE' });
+      fetchRfps();
+    } catch (err) {
+      console.error('Failed to delete RFP', err);
+    }
+  };
+
+  const handleEdit = (rfp) => {
+    if (rfp.status !== 'Draft') {
+      alert("Editing is restricted. Only Draft RFPs can be edited.");
+      return;
+    }
+    alert("Edit form coming soon for drafts.");
+  };
 
   const statuses = ['All', 'Draft', 'Submitted', 'Under Review', 'Approved', 'Quotation Received', 'Rejected'];
 
-  const filteredRFPs = RFP_DATA.filter(rfp => {
-    const matchesSearch = rfp.title.toLowerCase().includes(searchQuery.toLowerCase()) || rfp.id.toLowerCase().includes(searchQuery.toLowerCase());
+  const handleExport = () => {
+    exportToCSV('rfps.csv', filteredRFPs, [
+      { key: 'rfpId', label: 'RFP ID' },
+      { key: 'title', label: 'Title' },
+      { key: 'status', label: 'Status' },
+      { key: 'priority', label: 'Priority' },
+      { key: 'expectedDeliveryDate', label: 'Delivery Date' }
+    ]);
+  };
+
+  const filteredRFPs = rfps.filter(rfp => {
+    const title = rfp.title || '';
+    const rfpId = rfp.rfpId || '';
+    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) || rfpId.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'All' || rfp.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   // Summary stats
-  const totalRFPs = RFP_DATA.length;
-  const draftCount = RFP_DATA.filter(r => r.status === 'Draft').length;
-  const activeCount = RFP_DATA.filter(r => ['Submitted', 'Under Review', 'Quotation Received'].includes(r.status)).length;
-  const approvedCount = RFP_DATA.filter(r => r.status === 'Approved').length;
+  const totalRFPs = rfps.length;
+  const draftCount = rfps.filter(r => r.status === 'Draft').length;
+  const activeCount = rfps.filter(r => ['Submitted', 'Under Review', 'Quotation Received'].includes(r.status)).length;
+  const approvedCount = rfps.filter(r => r.status === 'Approved').length;
 
   return (
     <motion.div
@@ -224,7 +198,7 @@ export default function RfpManagement() {
           </div>
 
           {/* Export */}
-          <button className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+          <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
             <Download className="w-4 h-4" /> Export
           </button>
         </div>
@@ -246,17 +220,17 @@ export default function RfpManagement() {
 
             return (
               <motion.div
-                key={rfp.id}
+                key={rfp._id || rfp.rfpId}
                 variants={itemVariants}
                 className="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5 group"
               >
                 {/* Top Row: ID + Status + Priority + Actions */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="font-bold text-blue-600 text-sm cursor-pointer hover:underline">{rfp.id}</span>
+                    <span className="font-bold text-blue-600 text-sm cursor-pointer hover:underline">{rfp.rfpId}</span>
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${statusCfg.bg} ${statusCfg.text}`}>
-                      <StatusIcon className="w-3 h-3" />
-                      {rfp.status}
+                      {StatusIcon && <StatusIcon className="w-3 h-3" />}
+                      {statusCfg.label || rfp.status}
                     </span>
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${priorityCfg.bg} ${priorityCfg.text}`}>
                       {rfp.priority}
@@ -264,13 +238,13 @@ export default function RfpManagement() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
+                    <button onClick={() => setSelectedRfp(rfp)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
                       <Eye className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit">
+                    <button onClick={() => handleEdit(rfp)} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit">
                       <Edit3 className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                    <button onClick={() => handleDelete(rfp.rfpId)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -282,30 +256,22 @@ export default function RfpManagement() {
                 {/* Details Row */}
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-400 font-medium">Category:</span>
-                    <span className="text-slate-700">{rfp.category}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
                     <span className="text-slate-400 font-medium">Items:</span>
-                    <span className="text-slate-700">{rfp.totalItems}</span>
+                    <span className="text-slate-700">{rfp.products ? rfp.products.length : 0}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-slate-400 font-medium">Qty:</span>
-                    <span className="text-slate-700">{rfp.totalQty}</span>
+                    <span className="text-slate-700">{rfp.products ? rfp.products.reduce((acc, p) => acc + (p.quantity || 0), 0) : 0}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
                     <span className="text-slate-400 font-medium">Created:</span>
-                    <span className="text-slate-700">{rfp.createdDate}</span>
+                    <span className="text-slate-700">{new Date(rfp.createdAt).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
                     <span className="text-slate-400 font-medium">Delivery:</span>
-                    <span className="text-slate-700">{rfp.deliveryDate}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-slate-400 font-medium">Est. Value:</span>
-                    <span className="text-slate-900 font-semibold">{rfp.estimatedValue}</span>
+                    <span className="text-slate-700">{new Date(rfp.expectedDeliveryDate).toLocaleDateString()}</span>
                   </div>
                 </div>
               </motion.div>
@@ -313,6 +279,78 @@ export default function RfpManagement() {
           })
         )}
       </motion.div>
+
+      {/* View RFP Modal */}
+      {selectedRfp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">{selectedRfp.title}</h2>
+                <p className="text-sm text-slate-500 mt-1">RFP ID: {selectedRfp.rfpId}</p>
+              </div>
+              <button onClick={() => setSelectedRfp(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Expected Delivery Date</p>
+                  <p className="text-slate-900 font-semibold">{new Date(selectedRfp.expectedDeliveryDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Priority</p>
+                  <p className="text-slate-900 font-semibold">{selectedRfp.priority}</p>
+                </div>
+                {selectedRfp.remarks && (
+                  <div className="col-span-2">
+                    <p className="text-sm font-medium text-slate-500 mb-1">Remarks</p>
+                    <p className="text-slate-900 bg-slate-50 p-4 rounded-xl text-sm border border-slate-100">{selectedRfp.remarks}</p>
+                  </div>
+                )}
+              </div>
+
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Product Requirements</h3>
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700">Category</th>
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700">Brand</th>
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700">Model</th>
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700">Configuration</th>
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center">Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {selectedRfp.products?.map((p, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 text-sm text-slate-900">{p.category}</td>
+                        <td className="px-4 py-3 text-sm text-slate-900">{p.brand}</td>
+                        <td className="px-4 py-3 text-sm text-slate-900">{p.model}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600 max-w-[200px] truncate" title={p.configuration}>{p.configuration}</td>
+                        <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{p.quantity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button onClick={() => setSelectedRfp(null)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-colors">
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 }

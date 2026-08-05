@@ -12,7 +12,7 @@ export default function CreateRFP() {
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
   const [remarks, setRemarks] = useState('');
   const [products, setProducts] = useState([
-    { id: 1, category: '', brand: '', model: '', config: '', qty: 1, unit: 'Nos', remarks: '' }
+    { id: 1, category: '', brand: '', model: '', config: '', qty: 1, remarks: '' }
   ]);
 
   // UI state
@@ -22,7 +22,7 @@ export default function CreateRFP() {
   const [submitSuccess, setSubmitSuccess] = useState('');
 
   const addRow = () => {
-    setProducts([...products, { id: Date.now(), category: '', brand: '', model: '', config: '', qty: 1, unit: 'Nos', remarks: '' }]);
+    setProducts([...products, { id: Date.now(), category: '', brand: '', model: '', config: '', qty: 1, remarks: '' }]);
   };
 
   const removeRow = (id) => {
@@ -80,7 +80,6 @@ export default function CreateRFP() {
         model: p.model.trim(),
         configuration: p.config.trim(),
         quantity: Number(p.qty),
-        unit: p.unit,
         remarks: p.remarks.trim()
       }))
     };
@@ -144,8 +143,7 @@ export default function CreateRFP() {
         brand: p.brand || 'TBD',
         model: p.model || 'TBD',
         configuration: p.configuration || 'TBD',
-        quantity: p.quantity || 1,
-        unit: p.unit || 'Nos'
+        quantity: p.quantity || 1
       }));
 
       const response = await fetch('http://localhost:5000/api/procurement/rfp', {
@@ -302,7 +300,6 @@ export default function CreateRFP() {
                     <th className="px-4 py-3 font-semibold w-40">Model</th>
                     <th className="px-4 py-3 font-semibold min-w-[200px]">Configuration</th>
                     <th className="px-4 py-3 font-semibold w-24">Qty</th>
-                    <th className="px-4 py-3 font-semibold w-24">Unit</th>
                     <th className="px-4 py-3 font-semibold"></th>
                   </tr>
                 </thead>
@@ -361,17 +358,6 @@ export default function CreateRFP() {
                           onChange={(e) => updateProduct(i, 'qty', e.target.value)}
                           className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
                         />
-                      </td>
-                      <td className="p-2 align-top">
-                        <select
-                          value={p.unit}
-                          onChange={(e) => updateProduct(i, 'unit', e.target.value)}
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        >
-                          <option>Nos</option>
-                          <option>Box</option>
-                          <option>Set</option>
-                        </select>
                       </td>
                       <td className="p-2 align-top text-center">
                         <button

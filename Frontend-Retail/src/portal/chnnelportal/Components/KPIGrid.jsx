@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -29,15 +29,43 @@ const itemVariants = {
 };
 
 const NumberCounter = ({ value }) => {
-  // A simple counter for integers, could be extended for strings like ₹1.2M
   if (typeof value === 'string') return <span>{value}</span>;
-  return <span>{value}</span>; // Placeholder for actual animated counter if needed
+  return <span>{value}</span>;
 };
 
 export default function KPIGrid() {
+  const [stats, setStats] = useState(null);
+  
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/procurement/dashboard-stats');
+        const data = await res.json();
+        setStats(data);
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats:', err);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const formatCurrency = (amount) => {
+    if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)}Cr`;
+    if (amount >= 100000) return `₹${(amount / 100000).toFixed(2)}L`;
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
+
+  const displayCards = stats ? [
+    { title: 'Pending RFP', value: stats.pendingRFPs || 0, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100', trend: 2, trendLabel: 'vs last week' },
+    { title: 'Approved Orders', value: stats.approvedOrders || 0, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', trend: 5, trendLabel: 'vs last week' },
+    { title: 'Delivered Orders', value: stats.deliveredOrders || 0, icon: Truck, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', trend: 12, trendLabel: 'on time' },
+    { title: 'Invoices', value: stats.totalInvoices || 0, icon: Receipt, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100', trend: -3, trendLabel: 'pending' },
+    { title: 'Total Spending', value: formatCurrency(stats.totalSpending || 0), icon: IndianRupee, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', trend: 12, trendLabel: 'YTD' },
+  ] : KPI_CARDS;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
-      {KPI_CARDS.map((kpi, i) => (
+      {displayCards.map((kpi, i) => (
         <motion.div
           key={i}
           variants={itemVariants}
