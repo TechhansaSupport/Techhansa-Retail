@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Package, TrendingUp, Clock, CheckCircle, AlertTriangle, Monitor, Cpu, Server, MousePointer2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
@@ -9,6 +10,8 @@ import {
 
 export default function Dashboard() {
   const { metrics, salesHistory, orders, inventory } = useFranchise();
+  const navigate = useNavigate();
+  const [activeRevenueRange, setActiveRevenueRange] = useState('7 Days');
 
   // Calculate low stock items count
   const lowStockCount = inventory.filter(item => item.availableStock <= item.lowStockAlert).length;
@@ -96,8 +99,18 @@ export default function Dashboard() {
               <p className="text-slate-500 text-sm">Last 7 Days Performance</p>
             </div>
             <div className="flex gap-2">
-              <button className="px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 font-semibold rounded-lg">7 Days</button>
-              <button className="px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-50 font-medium rounded-lg transition-colors">30 Days</button>
+              <button 
+                onClick={() => setActiveRevenueRange('7 Days')}
+                className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors ${activeRevenueRange === '7 Days' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                7 Days
+              </button>
+              <button 
+                onClick={() => setActiveRevenueRange('30 Days')}
+                className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors ${activeRevenueRange === '30 Days' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                30 Days
+              </button>
             </div>
           </div>
           <div className="h-[300px] w-full">
@@ -185,7 +198,7 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-800">Action Required: Low Stock</h2>
-            <button className="text-indigo-600 text-sm font-semibold hover:text-indigo-800">View All</button>
+            <button onClick={() => navigate('/franchise/inventory')} className="text-indigo-600 text-sm font-semibold hover:text-indigo-800">View All</button>
           </div>
           
           <div className="space-y-4">
@@ -227,7 +240,7 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-800">Recent Admin Orders</h2>
-            <button className="text-indigo-600 text-sm font-semibold hover:text-indigo-800">Order History</button>
+            <button onClick={() => navigate('/franchise/orders')} className="text-indigo-600 text-sm font-semibold hover:text-indigo-800">Order History</button>
           </div>
           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
             {orders.slice(0, 4).map((order) => (

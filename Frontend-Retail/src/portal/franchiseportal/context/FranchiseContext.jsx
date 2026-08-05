@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { inventoryData as initialInventory, salesData as initialSales, summaryMetrics as initialMetrics, orderData } from '../mockData';
+import { inventoryData as initialInventory, salesData as initialSales, summaryMetrics as initialMetrics, orderData as initialOrders, storeProfile as initialStoreProfile } from '../mockData';
 
 export const FranchiseContext = createContext();
 
@@ -8,6 +8,24 @@ export function FranchiseProvider({ children }) {
   const [salesHistory, setSalesHistory] = useState(initialSales);
   const [metrics, setMetrics] = useState(initialMetrics);
   const [invoices, setInvoices] = useState([]);
+  const [orders, setOrders] = useState(initialOrders);
+  const [storeProfileData, setStoreProfileData] = useState(initialStoreProfile);
+
+  const updateStoreProfile = (newProfile) => {
+    setStoreProfileData(newProfile);
+  };
+
+  const requestNewStock = (items, totalAmount) => {
+    const newOrder = {
+      id: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
+      date: new Date().toLocaleDateString('en-CA'),
+      items: items.reduce((acc, item) => acc + item.quantity, 0),
+      total: totalAmount,
+      status: 'Pending',
+      expectedDelivery: 'TBD'
+    };
+    setOrders([newOrder, ...orders]);
+  };
 
   // Automated Inventory Update & Sales Processing
   const processSale = (cartItems, customerDetails, totalAmount) => {
@@ -73,9 +91,12 @@ export function FranchiseProvider({ children }) {
       inventory,
       salesHistory,
       metrics,
-      orders: orderData,
+      orders,
       invoices,
-      processSale
+      storeProfileData,
+      processSale,
+      updateStoreProfile,
+      requestNewStock
     }}>
       {children}
     </FranchiseContext.Provider>

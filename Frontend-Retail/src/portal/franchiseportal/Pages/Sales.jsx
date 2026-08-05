@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -6,6 +6,44 @@ import { Download, IndianRupee, TrendingUp, Calendar } from 'lucide-react';
 
 export default function Sales() {
   const { metrics, salesHistory } = useFranchise();
+  const [timeRange, setTimeRange] = useState('Last 7 Days');
+
+  const chartData = useMemo(() => {
+    if (timeRange === 'Last 7 Days') return salesHistory;
+    // Mocking other ranges
+    if (timeRange === 'This Month') {
+      return Array.from({ length: 15 }, (_, i) => ({
+        date: `Aug ${i + 1}`,
+        sales: Math.floor(Math.random() * 100000) + 50000,
+        orders: Math.floor(Math.random() * 10) + 5
+      }));
+    }
+    if (timeRange === 'Last Month') {
+      return Array.from({ length: 30 }, (_, i) => ({
+        date: `Jul ${i + 1}`,
+        sales: Math.floor(Math.random() * 100000) + 50000,
+        orders: Math.floor(Math.random() * 10) + 5
+      }));
+    }
+    return salesHistory;
+  }, [timeRange, salesHistory]);
+
+  const exportReport = () => {
+    const headers = ['Date', 'Sales (INR)', 'Orders'];
+    const csvContent = [
+      headers.join(','),
+      ...chartData.map(row => `${row.date},${row.sales},${row.orders}`)
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `sales_report_${timeRange.replace(/\s+/g, '_').toLowerCase()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6">
@@ -14,7 +52,7 @@ export default function Sales() {
           <h1 className="text-2xl font-bold text-slate-800">Sales & Reports</h1>
           <p className="text-slate-500">Analyze your store's performance and sales metrics.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm">
+        <button onClick={exportReport} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm">
           <Download size={16} />
           Export Report
         </button>
@@ -74,16 +112,20 @@ export default function Sales() {
         className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-bold text-slate-800">Revenue & Orders (Last 7 Days)</h2>
-          <select className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option>Last 7 Days</option>
-            <option>This Month</option>
-            <option>Last Month</option>
+          <h2 className="text-lg font-bold text-slate-800">Revenue & Orders ({timeRange})</h2>
+          <select 
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="Last 7 Days">Last 7 Days</option>
+            <option value="This Month">This Month</option>
+            <option value="Last Month">Last Month</option>
           </select>
         </div>
         <div className="h-96 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={salesHistory} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
               <YAxis yAxisId="left" orientation="left" stroke="#6366f1" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} tickFormatter={(value) => `₹${value/1000}k`} />

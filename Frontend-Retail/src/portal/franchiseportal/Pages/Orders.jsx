@@ -1,11 +1,51 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { orderData } from '../mockData';
-import { PackagePlus, ChevronRight, CheckCircle2, Truck, PackageCheck, Clock } from 'lucide-react';
+import { PackagePlus, ChevronRight, CheckCircle2, Truck, PackageCheck, Clock, Plus, Minus, Trash2 } from 'lucide-react';
+import { useFranchise } from '../context/FranchiseContext';
 
 export default function Orders() {
+  const { orders, inventory, requestNewStock } = useFranchise();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isRequesting, setIsRequesting] = useState(false);
+  const [requestCart, setRequestCart] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState('');
+
+  const addToRequest = () => {
+    if (!selectedProduct) return;
+    const product = inventory.find(i => i.id === Number(selectedProduct));
+    if (!product) return;
+    
+    setRequestCart(prev => {
+      const existing = prev.find(i => i.id === product.id);
+      if (existing) {
+        return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const updateRequestQty = (id, delta) => {
+    setRequestCart(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = item.quantity + delta;
+        return newQty < 1 ? item : { ...item, quantity: newQty };
+      }
+      return item;
+    }));
+  };
+
+  const removeFromRequest = (id) => {
+    setRequestCart(prev => prev.filter(item => item.id !== id));
+  };
+
+  const submitRequest = () => {
+    if (requestCart.length === 0) return;
+    const total = requestCart.reduce((acc, item) => acc + (item.buyingPrice * item.quantity), 0);
+    requestNewStock(requestCart, total);
+    setIsRequesting(false);
+    setRequestCart([]);
+    setSelectedProduct('');
+  };
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -53,8 +93,8 @@ export default function Orders() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Orders List */}
-        <div className="lg:col-span-1 space-y-4">
-          {orderData.map((order, idx) => (
+        <div className="lg:col-span-1 space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+          {orders.map((order, idx) => (
             <motion.div
               key={order.id}
               initial={{ opacity: 0, x: -20 }}
@@ -159,7 +199,7 @@ export default function Orders() {
         </div>
       </div>
       
-      {/* Mock Modal for Requesting Stock */}
+      {/* Functional Modal for Requesting Stock */}
       <AnimatePresence>
         {isRequesting && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -167,7 +207,7 @@ export default function Orders() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
+              className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]"
             >
               <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="font-bold text-lg text-slate-800">Request New Stock</h3>
@@ -175,16 +215,65 @@ export default function Orders() {
                   ✕
                 </button>
               </div>
-              <div className="p-6">
-                <p className="text-slate-600 mb-4">Select items to request from the Central Warehouse.</p>
-                <div className="bg-amber-50 text-amber-700 p-4 rounded-xl text-sm border border-amber-100 flex gap-3">
-                  <Clock className="shrink-0" size={18} />
-                  <p>This is a mock interaction. In production, this will open a form to select SKUs and quantities which will be sent to the Admin for approval.</p>
+              
+              <div className="p-6 flex-1 overflow-y-auto bg-slate-50">
+                <div className="flex gap-3 mb-6">
+                  <select 
+                    className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={selectedProduct}
+                    onChange={e => setSelectedProduct(e.target.value)}
+                  >
+                    <option value="">Select a product...</option>
+                    {inventory.map(item => (
+                      <option key={item.id} value={item.id}>{item.name} - ₹{item.buyingPrice.toLocaleString()}</option>
+                    ))}
+                  </select>
+                  <button onClick={addToRequest} className="px-4 py-2 bg-indigo-100 text-indigo-700 font-bold rounded-xl hover:bg-indigo-200">
+                    Add
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {requestCart.length === 0 ? (
+                     <div className="text-center text-slate-400 py-8">No items added to request.</div>
+                  ) : (
+                    requestCart.map(item => (
+                      <div key={item.id} className="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-sm">{item.name}</h4>
+                          <p className="text-xs text-slate-500">Buying Price: ₹{item.buyingPrice.toLocaleString()}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+                            <button onClick={() => updateRequestQty(item.id, -1)} className="px-2 py-1 text-slate-500 hover:bg-slate-200"><Minus size={14} /></button>
+                            <span className="px-3 text-sm font-bold text-slate-700">{item.quantity}</span>
+                            <button onClick={() => updateRequestQty(item.id, 1)} className="px-2 py-1 text-slate-500 hover:bg-slate-200"><Plus size={14} /></button>
+                          </div>
+                          <p className="font-bold text-slate-700 w-24 text-right">₹{(item.buyingPrice * item.quantity).toLocaleString()}</p>
+                          <button onClick={() => removeFromRequest(item.id)} className="text-red-400 hover:text-red-600">
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
-              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                <button onClick={() => setIsRequesting(false)} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-xl transition-colors">Cancel</button>
-                <button onClick={() => setIsRequesting(false)} className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200">Submit Request</button>
+
+              <div className="p-4 bg-white border-t border-slate-100 flex justify-between items-center">
+                <div className="text-slate-500 font-medium">
+                  Total: <span className="text-xl font-bold text-indigo-700">₹{requestCart.reduce((a, b) => a + (b.buyingPrice * b.quantity), 0).toLocaleString()}</span>
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => setIsRequesting(false)} className="px-5 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+                  <button 
+                    onClick={submitRequest}
+                    disabled={requestCart.length === 0}
+                    className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 disabled:opacity-50 disabled:shadow-none"
+                  >
+                    Submit Request
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
