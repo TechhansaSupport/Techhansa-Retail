@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, Bell, User, Receipt } from 'lucide-react';
+import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, Bell, User, Receipt, Truck } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/logo.png';
@@ -20,23 +20,25 @@ export default function FranchiseLayout() {
     { name: 'Store Profile', path: '/franchise/profile', icon: <Store size={20} /> },
     { name: 'Inventory', path: '/franchise/inventory', icon: <Package size={20} /> },
     { name: 'Orders', path: '/franchise/orders', icon: <ShoppingCart size={20} /> },
+    { name: 'Delivery Tracking', path: '/franchise/tracking', icon: <Truck size={20} /> },
     { name: 'Sales & Reports', path: '/franchise/sales', icon: <BarChart3 size={20} /> },
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-800 font-sans overflow-hidden">
+    <div className="flex h-screen bg-slate-100 p-4 gap-4 text-slate-800 font-sans overflow-hidden">
       
       {/* Sidebar */}
       <motion.aside 
         initial={{ x: -250 }}
         animate={{ x: 0 }}
-        className="w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm z-20"
+        className="w-80 bg-white rounded-2xl flex flex-col shadow-sm z-20 overflow-hidden shrink-0"
       >
-        <div className="h-28 flex items-center px-4 border-b border-slate-100">
-          <img src={logo} alt="Techhansa Retail" className="h-20 w-auto mr-4 object-contain" />
-          <div className="flex flex-col leading-tight">
-            <span className="text-xl font-black text-[var(--premium-gold)] tracking-tight uppercase">Techhansa</span>
-            <span className="text-lg font-bold text-[var(--premium-gold)] tracking-wider uppercase">Retail</span>
+        <div className="h-28 flex items-center px-6 border-b border-slate-100">
+          <img src={logo} alt="Techhansa Retail" className="h-24 w-auto -ml-4 object-contain shrink-0" />
+          <div className="flex items-center overflow-hidden">
+            <span className="text-lg font-black ml-2 text-[var(--premium-gold)] tracking-tight uppercase whitespace-nowrap truncate">
+              Techhansa Retail
+            </span>
           </div>
         </div>
 
@@ -72,10 +74,10 @@ export default function FranchiseLayout() {
       </motion.aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-sm overflow-hidden relative">
         
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-10 shadow-sm">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-10 shrink-0">
           <h2 className="text-xl font-semibold text-slate-800">
             Welcome back, {user?.userId || 'Partner'}
           </h2>
@@ -98,7 +100,7 @@ export default function FranchiseLayout() {
         </header>
 
         {/* Scrollable Content View */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50/50 p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

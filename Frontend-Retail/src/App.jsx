@@ -26,6 +26,8 @@ import FranchiseDashboard from './portal/franchiseportal/Pages/Dashboard';
 import FranchiseProfile from './portal/franchiseportal/Pages/StoreProfile';
 import FranchiseInventory from './portal/franchiseportal/Pages/Inventory';
 import FranchiseOrders from './portal/franchiseportal/Pages/Orders';
+import FranchiseDeliveryTracking from './portal/franchiseportal/Pages/DeliveryTracking';
+import FranchiseCart from './portal/franchiseportal/Pages/Cart';
 import FranchiseSales from './portal/franchiseportal/Pages/Sales';
 import FranchiseBilling from './portal/franchiseportal/Pages/Billing';
 import { FranchiseProvider } from './portal/franchiseportal/context/FranchiseContext';
@@ -112,9 +114,11 @@ function App() {
         }>
           <Route index element={<FranchiseDashboard />} />
           <Route path="billing" element={<FranchiseBilling />} />
+          <Route path="cart" element={<FranchiseCart />} />
           <Route path="profile" element={<FranchiseProfile />} />
           <Route path="inventory" element={<FranchiseInventory />} />
           <Route path="orders" element={<FranchiseOrders />} />
+          <Route path="tracking" element={<FranchiseDeliveryTracking />} />
           <Route path="sales" element={<FranchiseSales />} />
         </Route>
 

@@ -10,6 +10,39 @@ export function FranchiseProvider({ children }) {
   const [invoices, setInvoices] = useState([]);
   const [orders, setOrders] = useState(initialOrders);
   const [storeProfileData, setStoreProfileData] = useState(initialStoreProfile);
+  const [globalCart, setGlobalCart] = useState([]);
+
+  const addToGlobalCart = (item) => {
+    setGlobalCart(prev => {
+      const existing = prev.find(i => i.id === item.id);
+      if (existing) {
+        if (existing.quantity >= item.availableStock) return prev;
+        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
+  };
+
+  const updateGlobalCartQuantity = (id, delta) => {
+    setGlobalCart(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = item.quantity + delta;
+        const inventoryItem = inventory.find(i => i.id === id);
+        if (inventoryItem && newQty > inventoryItem.availableStock) return item;
+        if (newQty < 1) return item;
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    }));
+  };
+
+  const removeGlobalCartItem = (id) => {
+    setGlobalCart(prev => prev.filter(item => item.id !== id));
+  };
+
+  const clearGlobalCart = () => {
+    setGlobalCart([]);
+  };
 
   const updateStoreProfile = (newProfile) => {
     setStoreProfileData(newProfile);
@@ -94,9 +127,14 @@ export function FranchiseProvider({ children }) {
       orders,
       invoices,
       storeProfileData,
+      globalCart,
       processSale,
       updateStoreProfile,
-      requestNewStock
+      requestNewStock,
+      addToGlobalCart,
+      updateGlobalCartQuantity,
+      removeGlobalCartItem,
+      clearGlobalCart
     }}>
       {children}
     </FranchiseContext.Provider>
