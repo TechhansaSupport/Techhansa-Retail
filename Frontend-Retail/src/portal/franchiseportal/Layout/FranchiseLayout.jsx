@@ -45,9 +45,7 @@ export default function FranchiseLayout() {
       />
 
       {/* Sidebar */}
-      <motion.aside 
-        initial={{ x: -250 }}
-        animate={{ x: 0 }}
+      <aside 
         className={`fixed md:relative inset-y-0 left-0 z-50 w-72 md:w-80 bg-white md:rounded-2xl flex flex-col shadow-2xl md:shadow-sm overflow-hidden shrink-0 transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
         <div className="h-20 md:h-28 flex items-center px-4 md:px-6 border-b border-slate-100 justify-between">
@@ -62,7 +60,7 @@ export default function FranchiseLayout() {
           </button>
         </div>
 
-        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {navItems.map((item) => (
             <NavLink
               key={item.name}
@@ -91,7 +89,7 @@ export default function FranchiseLayout() {
             <span className="font-medium">Sign Out</span>
           </button>
         </div>
-      </motion.aside>
+      </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col bg-white md:rounded-2xl shadow-sm overflow-hidden relative w-full">
