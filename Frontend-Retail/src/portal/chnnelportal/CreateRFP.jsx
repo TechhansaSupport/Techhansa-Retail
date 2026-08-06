@@ -1,21 +1,36 @@
 import React, { useState, useContext } from 'react';
 import { Plus, Trash2, FileUp, Save, Send, Calendar, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 
 export default function CreateRFP() {
   const { user } = useContext(AuthContext) || { user: null };
   const navigate = useNavigate();
+  const location = useLocation();
+  const rfp = location.state?.rfp;
 
   // Form state
-  const [title, setTitle] = useState('');
-  const [requirementName, setRequirementName] = useState('');
-  const [priority, setPriority] = useState('Medium');
-  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
-  const [remarks, setRemarks] = useState('');
-  const [products, setProducts] = useState([
-    { id: 1, category: '', brand: '', model: '', config: '', qty: 1, remarks: '' }
-  ]);
+  const [title, setTitle] = useState(rfp?.title || '');
+  const [requirementName, setRequirementName] = useState(rfp?.requirementName || '');
+  const [priority, setPriority] = useState(rfp?.priority || 'Medium');
+  
+  const formattedDate = rfp?.expectedDeliveryDate ? new Date(rfp.expectedDeliveryDate).toISOString().split('T')[0] : '';
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(formattedDate);
+  
+  const [remarks, setRemarks] = useState(rfp?.remarks || '');
+  const [products, setProducts] = useState(
+    rfp?.products?.length ? 
+      rfp.products.map((p, index) => ({
+        id: index + 1,
+        category: p.category || '',
+        brand: p.brand || '',
+        model: p.model || '',
+        config: p.configuration || '',
+        qty: p.quantity || 1,
+        remarks: p.remarks || ''
+      })) : 
+      [{ id: 1, category: '', brand: '', model: '', config: '', qty: 1, remarks: '' }]
+  );
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +58,7 @@ export default function CreateRFP() {
 
   // Generate unique RFP ID
   const generateRfpId = () => {
+    if (rfp?.rfpId) return rfp.rfpId;
     const year = new Date().getFullYear();
     const randomNum = Math.floor(Math.random() * 900) + 100;
     return `RFP-${year}-${randomNum}`;
@@ -102,8 +118,12 @@ export default function CreateRFP() {
     setIsSubmitting(true);
     try {
       const payload = buildPayload('Submitted');
-      const response = await fetch('http://localhost:5000/api/procurement/rfp', {
-        method: 'POST',
+      const isEdit = !!rfp;
+      const url = isEdit ? `http://localhost:5000/api/procurement/rfp/${rfp.rfpId}` : 'http://localhost:5000/api/procurement/rfp';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -149,8 +169,12 @@ export default function CreateRFP() {
         quantity: p.quantity || 1
       }));
 
-      const response = await fetch('http://localhost:5000/api/procurement/rfp', {
-        method: 'POST',
+      const isEdit = !!rfp;
+      const url = isEdit ? `http://localhost:5000/api/procurement/rfp/${rfp.rfpId}` : 'http://localhost:5000/api/procurement/rfp';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -176,8 +200,8 @@ export default function CreateRFP() {
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <Link to="/channel/rfp" className="text-sm text-blue-600 hover:underline mb-2 block">&larr; Back to RFP Management</Link>
-          <h1 className="text-2xl font-bold text-gray-900">Create New RFP</h1>
-          <p className="text-gray-500 text-sm mt-1">Submit a new procurement request for quotation.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{rfp ? 'Edit Draft RFP' : 'Create New RFP'}</h1>
+          <p className="text-gray-500 text-sm mt-1">{rfp ? 'Update your draft procurement request.' : 'Submit a new procurement request for quotation.'}</p>
         </div>
         <div className="flex gap-3">
           <button

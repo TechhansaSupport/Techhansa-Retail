@@ -167,11 +167,14 @@ export default function Invoices() {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="px-4 py-3 text-sm font-semibold text-slate-700">Item</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700">Item / Category</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700">Brand</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700">Model</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700">Configuration</th>
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center">HSN</th>
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center">Qty</th>
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Rate</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">GST (18%)</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">GST Amount</th>
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Total Amount</th>
                         </tr>
                       </thead>
@@ -187,15 +190,18 @@ export default function Invoices() {
 
                           return (
                             <tr key={i} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || `${item.brand} ${item.category} (${item.model})`}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || item.category || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900">{item.brand || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900">{item.model || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-slate-500 whitespace-pre-wrap">{item.configuration || item.specs || item.details || '-'}</td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-center">{hsn}</td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{qty}</td>
-                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{rate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium text-slate-500">
-                                ₹{gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                ₹{gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-right font-bold text-emerald-600">
-                                ₹{totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                             </tr>
                           );
@@ -203,19 +209,102 @@ export default function Invoices() {
                       </tbody>
                       <tfoot className="bg-slate-50 border-t border-slate-200">
                         <tr>
-                          <td colSpan="5" className="px-4 py-3 text-sm font-bold text-slate-700 text-right">Grand Total:</td>
+                          <td colSpan="5" className="px-4 py-3 text-sm font-bold text-slate-700 text-right">TOTAL</td>
+                          <td className="px-4 py-3 text-sm font-bold text-slate-900 text-center">{selectedInvoice.totalQuantity || invoiceItems.reduce((acc, item) => acc + (item.quantity || 0), 0)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-slate-900 text-right">₹{(selectedInvoice.subtotalAmount || invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0)), 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-slate-700 text-right"></td>
                           <td className="px-4 py-3 text-sm font-bold text-emerald-700 text-right">
-                            ₹{invoiceItems.reduce((acc, item) => {
-                               const r = item.rate || item.unitPrice || 0;
-                               const q = item.quantity || 0;
-                               const gRate = item.taxRate || 18;
-                               const tVal = r * q;
-                               return acc + tVal + (tVal * (gRate / 100));
-                            }, 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            ₹{(selectedInvoice.amount || invoiceItems.reduce((acc, item) => {
+                              const r = item.rate || item.unitPrice || 0;
+                              const q = item.quantity || 0;
+                              const gRate = item.taxRate || 18;
+                              const tVal = r * q;
+                              return acc + tVal + (tVal * (gRate / 100));
+                            }, 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
                       </tfoot>
                     </table>
+                  </div>
+
+                  {/* Payment Summary */}
+                  <div className="flex flex-col md:flex-row justify-between mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div className="space-y-1">
+                      <p className="text-sm text-slate-500 font-medium">RECEIVED AMOUNT</p>
+                      <p className="text-xl font-bold text-emerald-600">₹{(selectedInvoice.receivedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                    <div className="space-y-1 mt-4 md:mt-0 text-left md:text-right">
+                      <p className="text-sm text-slate-500 font-medium">BALANCE AMOUNT</p>
+                      <p className="text-xl font-bold text-amber-600">₹{(selectedInvoice.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+
+                  {/* Tax Breakdown */}
+                  {selectedInvoice.taxBreakdown && selectedInvoice.taxBreakdown.length > 0 && (
+                    <div className="mb-6">
+                      <div className="border border-slate-200 rounded-xl overflow-hidden">
+                        <table className="w-full text-left border-collapse text-xs md:text-sm">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-200">
+                              <th className="px-4 py-2 font-semibold text-slate-700">HSN/SAC</th>
+                              <th className="px-4 py-2 font-semibold text-slate-700 text-right">Taxable Value</th>
+                              <th className="px-4 py-2 font-semibold text-slate-700 text-right">CGST Rate</th>
+                              <th className="px-4 py-2 font-semibold text-slate-700 text-right">CGST Amt</th>
+                              <th className="px-4 py-2 font-semibold text-slate-700 text-right">SGST Rate</th>
+                              <th className="px-4 py-2 font-semibold text-slate-700 text-right">SGST Amt</th>
+                              <th className="px-4 py-2 font-semibold text-slate-700 text-right">Total Tax Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {selectedInvoice.taxBreakdown.map((tax, i) => (
+                              <tr key={i}>
+                                <td className="px-4 py-2 text-slate-900 font-medium">{tax.hsn}</td>
+                                <td className="px-4 py-2 text-slate-900 text-right">₹{tax.taxableValue?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td className="px-4 py-2 text-slate-600 text-right">{tax.cgstRate}%</td>
+                                <td className="px-4 py-2 text-slate-600 text-right">₹{tax.cgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td className="px-4 py-2 text-slate-600 text-right">{tax.sgstRate}%</td>
+                                <td className="px-4 py-2 text-slate-600 text-right">₹{tax.sgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td className="px-4 py-2 font-bold text-slate-900 text-right">₹{tax.totalTaxAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Amount in words */}
+                  {selectedInvoice.totalAmountInWords && (
+                    <div className="mb-6 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                      <p className="text-sm font-semibold text-blue-900 mb-1">Total Amount (in words)</p>
+                      <p className="text-sm text-blue-800 font-medium">{selectedInvoice.totalAmountInWords}</p>
+                    </div>
+                  )}
+
+                  {/* Bank Details & Terms */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {selectedInvoice.bankDetails && selectedInvoice.bankDetails.name && (
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 className="text-sm font-bold text-slate-900 mb-3">Bank Details</h3>
+                        <div className="space-y-1.5 text-sm text-slate-600">
+                          <p><span className="font-medium text-slate-700 inline-block w-24">Name:</span> {selectedInvoice.bankDetails.name}</p>
+                          <p><span className="font-medium text-slate-700 inline-block w-24">IFSC Code:</span> {selectedInvoice.bankDetails.ifscCode}</p>
+                          <p><span className="font-medium text-slate-700 inline-block w-24">Account No:</span> {selectedInvoice.bankDetails.accountNo}</p>
+                          <p><span className="font-medium text-slate-700 inline-block w-24">Bank:</span> {selectedInvoice.bankDetails.bankName}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedInvoice.termsAndConditions && selectedInvoice.termsAndConditions.length > 0 && (
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 className="text-sm font-bold text-slate-900 mb-3">Terms and Conditions</h3>
+                        <ol className="list-decimal list-inside space-y-1.5 text-sm text-slate-600">
+                          {selectedInvoice.termsAndConditions.map((term, i) => (
+                            <li key={i}>{term}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
                   </div>
                 </>
               )}

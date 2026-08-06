@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { exportToCSV } from '../../../utils/exportUtils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Plus,
@@ -55,6 +55,7 @@ export default function RfpManagement() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [rfps, setRfps] = useState([]);
   const [selectedRfp, setSelectedRfp] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.userId) fetchRfps();
@@ -77,7 +78,7 @@ export default function RfpManagement() {
       alert("Editing is restricted. Only Draft RFPs can be edited.");
       return;
     }
-    alert("Edit form coming soon for drafts.");
+    navigate('/channel/rfp/create', { state: { rfp } });
   };
 
   const statuses = ['All', 'Draft', 'Submitted', 'Under Review', 'Approved', 'Quotation Received', 'Rejected'];

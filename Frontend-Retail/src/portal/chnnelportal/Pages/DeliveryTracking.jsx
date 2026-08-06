@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { Truck, CheckCircle, Package, MapPin, Clock, FileCheck } from 'lucide-react';
+import { AuthContext } from '../../../context/AuthContext';
 
 export default function DeliveryTracking() {
+  const { user } = useContext(AuthContext) || { user: null };
   const location = useLocation();
   const passedOrder = location.state?.order;
 
@@ -16,9 +18,10 @@ export default function DeliveryTracking() {
     e.preventDefault();
     if (trackingId.trim()) {
       try {
-        const res = await fetch('http://localhost:5000/api/procurement/orders');
+        const url = user?.userId ? `http://localhost:5000/api/procurement/orders?userId=${user.userId}` : 'http://localhost:5000/api/procurement/orders';
+        const res = await fetch(url);
         const data = await res.json();
-        const found = data.find(o => (o.orderNumber === trackingId || o.orderId === trackingId));
+        const found = data.find(o => (o.orderNumber === trackingId.trim() || o.orderId === trackingId.trim()));
         if (found) {
           setOrder(found);
           setSearched(true);
