@@ -92,24 +92,28 @@ export default function Billing() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 ml-32" // Adjusted left to center given the sidebar is ~64w (256px) so ml-32 roughly centers it in main view
+            className="fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-50 md:ml-32 w-[90%] md:w-auto" // Center on mobile, offset on desktop
           >
             <button 
               onClick={() => navigate('/franchise/cart')}
-              className="flex items-center gap-4 bg-indigo-600 text-white px-8 py-4 rounded-full shadow-2xl hover:bg-indigo-700 hover:shadow-indigo-500/30 transition-all hover:-translate-y-1"
+              className="flex w-full md:w-auto items-center justify-between md:justify-center gap-2 md:gap-4 bg-indigo-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-full shadow-2xl hover:bg-indigo-700 hover:shadow-indigo-500/30 transition-all hover:-translate-y-1"
             >
-              <div className="relative">
-                <ShoppingCart size={24} />
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-indigo-600">
-                  {globalCart.length}
-                </span>
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="relative">
+                  <ShoppingCart size={24} />
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-indigo-600">
+                    {globalCart.length}
+                  </span>
+                </div>
+                <span className="font-bold text-base md:text-lg hidden xs:inline">View Cart</span>
               </div>
-              <span className="font-bold text-lg">View Cart</span>
-              <div className="w-px h-6 bg-indigo-400/50 mx-1"></div>
-              <span className="font-black text-xl">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="w-px h-6 bg-indigo-400/50 mx-1 hidden md:block"></div>
+                <span className="font-black text-lg md:text-xl">
                 ₹{globalCart.reduce((a, b) => a + (b.sellingPrice * b.quantity), 0).toLocaleString()}
               </span>
               <ArrowRight size={20} className="ml-2" />
+              </div>
             </button>
           </motion.div>
         )}

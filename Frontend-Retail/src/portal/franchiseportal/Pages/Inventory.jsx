@@ -25,21 +25,21 @@ export default function Inventory() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-end">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Inventory Management</h1>
           <p className="text-slate-500">View and track your current stock levels. (Read Only)</p>
         </div>
-        <div className="flex gap-3">
-          <div className="relative">
+        <div className="flex w-full md:w-auto gap-3">
+          <div className="relative flex-1 md:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
               placeholder="Search SKU or Name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64 shadow-sm"
+              className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64 shadow-sm"
             />
           </div>
           <div className="relative">
@@ -88,7 +88,8 @@ export default function Inventory() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
       >
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
@@ -154,6 +155,69 @@ export default function Inventory() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filteredData.map((item) => {
+            const isLowStock = item.availableStock <= item.lowStockAlert;
+            return (
+              <div key={item.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-bold text-slate-800 text-lg">{item.name}</div>
+                    <div className="text-xs text-slate-500 font-mono mt-0.5">{item.sku}</div>
+                  </div>
+                  <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">
+                    {item.category}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-xl p-3">
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Buying Price</p>
+                    <p className="font-semibold text-slate-700">₹{item.buyingPrice.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Selling Price</p>
+                    <p className="font-bold text-indigo-600">₹{item.sellingPrice.toLocaleString()}</p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center pt-2">
+                  <div className="flex gap-4">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Available</p>
+                      <p className={`font-black text-xl ${isLowStock ? 'text-red-500' : 'text-slate-800'}`}>
+                        {item.availableStock}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Reserved</p>
+                      <p className="font-bold text-slate-500 text-xl">{item.reservedStock}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    {isLowStock ? (
+                      <div className="flex items-center justify-center gap-1 text-red-500 text-xs font-bold bg-red-50 py-1.5 px-3 rounded-lg">
+                        <AlertTriangle size={14} /> Low Stock
+                      </div>
+                    ) : (
+                      <div className="text-emerald-500 text-xs font-bold bg-emerald-50 py-1.5 px-3 rounded-lg inline-block">
+                        In Stock
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {filteredData.length === 0 && (
+            <div className="p-8 text-center text-slate-500">
+              No products found matching your search.
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, Bell, User, Receipt, Truck } from 'lucide-react';
+import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, Bell, User, Receipt, Truck, Menu, X } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/logo.png';
@@ -10,11 +10,14 @@ export default function FranchiseLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const mainRef = useRef(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (mainRef.current) {
       mainRef.current.scrollTo(0, 0);
     }
+    // Close sidebar on mobile when route changes
+    setIsSidebarOpen(false);
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -33,21 +36,30 @@ export default function FranchiseLayout() {
   ];
 
   return (
-    <div className="flex h-screen bg-slate-100 p-4 gap-4 text-slate-800 font-sans overflow-hidden">
+    <div className="flex h-screen bg-slate-100 md:p-4 md:gap-4 text-slate-800 font-sans overflow-hidden">
       
+      {/* Mobile Overlay */}
+      <div 
+        className={`fixed inset-0 bg-slate-900/50 z-40 md:hidden transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        onClick={() => setIsSidebarOpen(false)} 
+      />
+
       {/* Sidebar */}
       <motion.aside 
         initial={{ x: -250 }}
         animate={{ x: 0 }}
-        className="w-80 bg-white rounded-2xl flex flex-col shadow-sm z-20 overflow-hidden shrink-0"
+        className={`fixed md:relative inset-y-0 left-0 z-50 w-72 md:w-80 bg-white md:rounded-2xl flex flex-col shadow-2xl md:shadow-sm overflow-hidden shrink-0 transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
-        <div className="h-28 flex items-center px-6 border-b border-slate-100">
-          <img src={logo} alt="Techhansa Retail" className="h-24 w-auto -ml-4 object-contain shrink-0" />
-          <div className="flex items-center overflow-hidden">
-            <span className="text-lg font-black ml-2 text-[var(--premium-gold)] tracking-tight uppercase whitespace-nowrap truncate">
+        <div className="h-20 flex items-center px-4 md:px-6 border-b border-slate-100 justify-between">
+          <div className="flex items-center min-w-0">
+            <img src={logo} alt="Techhansa Retail" className="h-12 w-auto -ml-2 object-contain shrink-0" />
+            <span className="text-base md:text-lg font-black ml-2 text-[var(--premium-gold)] tracking-tight uppercase whitespace-nowrap truncate">
               Techhansa Retail
             </span>
           </div>
+          <button className="md:hidden text-slate-400 hover:text-slate-600 p-2 shrink-0 ml-1" onClick={() => setIsSidebarOpen(false)}>
+            <X size={24} />
+          </button>
         </div>
 
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
@@ -82,15 +94,20 @@ export default function FranchiseLayout() {
       </motion.aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-sm overflow-hidden relative">
+      <div className="flex-1 flex flex-col bg-white md:rounded-2xl shadow-sm overflow-hidden relative w-full">
         
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-10 shrink-0">
-          <h2 className="text-xl font-semibold text-slate-800">
-            Welcome back, {user?.userId || 'Partner'}
-          </h2>
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-50 rounded-xl">
+              <Menu size={24} />
+            </button>
+            <h2 className="text-lg md:text-xl font-semibold text-slate-800 hidden sm:block">
+              Welcome back, {user?.userId || 'Partner'}
+            </h2>
+          </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <button className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
@@ -108,7 +125,7 @@ export default function FranchiseLayout() {
         </header>
 
         {/* Scrollable Content View */}
-        <main ref={mainRef} className="flex-1 overflow-x-hidden overflow-y-auto p-8">
+        <main ref={mainRef} className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

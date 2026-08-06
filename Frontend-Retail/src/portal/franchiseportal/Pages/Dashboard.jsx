@@ -49,7 +49,7 @@ export default function Dashboard() {
   }, [activeRevenueRange, salesHistory]);
 
   return (
-    <div className="space-y-8 pb-8">
+    <div className="space-y-6 md:space-y-8 pb-4 md:pb-8">
       
       {/* Header section */}
       <div>
@@ -161,7 +161,7 @@ export default function Dashboard() {
             <h2 className="text-xl font-bold text-slate-800">Inventory Distribution</h2>
             <p className="text-slate-500 text-sm">Stock by Category</p>
           </div>
-          <div className="flex-1 h-[250px] relative">
+          <div className="w-full h-[250px] min-h-[250px] relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

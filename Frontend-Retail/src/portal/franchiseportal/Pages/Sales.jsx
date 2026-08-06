@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import { Download, IndianRupee, TrendingUp, Calendar } from 'lucide-react';
 
 export default function Sales() {
@@ -28,6 +28,48 @@ export default function Sales() {
     return salesHistory;
   }, [timeRange, salesHistory]);
 
+  const salesStatCards = [
+    { 
+      title: "Monthly Revenue", 
+      value: `₹${metrics.monthlySales.toLocaleString()}`, 
+      subText: "+12% from last month", 
+      icon: <IndianRupee size={24} />, 
+      color: "text-indigo-600", 
+      bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50", 
+      iconBg: "bg-indigo-100/50", 
+      stroke: "#4f46e5", 
+      fill: "#c7d2fe", 
+      id: "colorRevenue", 
+      data: [{v:30},{v:40},{v:45},{v:50},{v:49},{v:60},{v:70}] 
+    },
+    { 
+      title: "Avg. Daily Sales", 
+      value: `₹${(metrics.monthlySales / 30).toFixed(0).toLocaleString()}`, 
+      subText: "Based on 30 days rolling", 
+      icon: <Calendar size={24} />, 
+      color: "text-blue-600", 
+      bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50", 
+      iconBg: "bg-blue-100/50", 
+      stroke: "#2563eb", 
+      fill: "#bfdbfe", 
+      id: "colorDaily", 
+      data: [{v:40},{v:30},{v:45},{v:35},{v:50},{v:40},{v:60}] 
+    },
+    { 
+      title: "Total Items Sold (Month)", 
+      value: "342", 
+      subText: "Across all categories", 
+      icon: <TrendingUp size={24} />, 
+      color: "text-emerald-600", 
+      bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", 
+      iconBg: "bg-emerald-100/50", 
+      stroke: "#10b981", 
+      fill: "#a7f3d0", 
+      id: "colorItems", 
+      data: [{v:10},{v:15},{v:12},{v:20},{v:18},{v:25},{v:22}] 
+    }
+  ];
+
   const exportReport = () => {
     const headers = ['Date', 'Sales (INR)', 'Orders'];
     const csvContent = [
@@ -46,64 +88,57 @@ export default function Sales() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-end">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Sales & Reports</h1>
           <p className="text-slate-500">Analyze your store's performance and sales metrics.</p>
         </div>
-        <button onClick={exportReport} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm">
+        <button onClick={exportReport} className="w-full md:w-auto justify-center flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm">
           <Download size={16} />
           Export Report
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="bg-indigo-600 text-white rounded-2xl p-6 shadow-lg shadow-indigo-200 relative overflow-hidden"
-        >
-          <div className="absolute -right-6 -top-6 text-white/10">
-            <IndianRupee size={120} />
-          </div>
-          <div className="relative z-10">
-            <p className="text-indigo-100 font-medium mb-1">Monthly Revenue</p>
-            <h3 className="text-3xl font-bold mb-4">₹{metrics.monthlySales.toLocaleString()}</h3>
-            <div className="flex items-center gap-2 text-sm text-emerald-300 font-medium bg-white/10 w-fit px-3 py-1 rounded-full">
-              <TrendingUp size={16} /> +12% from last month
+        {salesStatCards.map((stat, idx) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className={`rounded-2xl p-5 shadow-sm border ${stat.bgBox} relative flex flex-col justify-between overflow-hidden group hover:shadow-md transition-shadow`}
+          >
+            <div className="flex justify-between items-start mb-1 relative z-10">
+              <div>
+                <p className="font-semibold text-slate-500 text-xs tracking-wide uppercase">{stat.title}</p>
+                <h3 className="text-3xl font-black text-slate-800 mt-1">{stat.value}</h3>
+              </div>
+              <div className={`p-2.5 rounded-xl ${stat.iconBg} ${stat.color}`}>
+                {stat.icon}
+              </div>
             </div>
-          </div>
-        </motion.div>
+            
+            {/* Tiny Area Chart */}
+            <div className="h-12 w-full mt-2 relative z-10">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stat.data}>
+                  <defs>
+                    <linearGradient id={stat.id} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={stat.stroke} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={stat.stroke} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Area type="monotone" dataKey="v" stroke={stat.stroke} strokeWidth={2.5} fillOpacity={1} fill={`url(#${stat.id})`} isAnimationActive={true} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-slate-500 font-medium mb-1">Avg. Daily Sales</p>
-              <h3 className="text-2xl font-bold text-slate-800">₹{(metrics.monthlySales / 30).toFixed(0).toLocaleString()}</h3>
+            <div className="mt-1 relative z-10">
+               <p className="text-slate-400 text-[11px] font-semibold">{stat.subText}</p>
             </div>
-            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-              <Calendar size={20} />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-slate-500 font-medium mb-1">Total Items Sold (Month)</p>
-              <h3 className="text-2xl font-bold text-slate-800">342</h3>
-            </div>
-            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
-              <TrendingUp size={20} />
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Main Chart */}

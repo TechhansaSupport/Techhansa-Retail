@@ -98,37 +98,47 @@ export default function DeliveryTracking() {
             <div className="p-10">
               <h3 className="font-bold text-lg text-slate-800 mb-12">Tracking Timeline</h3>
               
-              <div className="relative flex justify-between px-4 sm:px-8">
-                {/* Progress Bar Background */}
-                <div className="absolute top-6 left-[10%] right-[10%] h-1.5 bg-slate-100 rounded-full z-0"></div>
-                
-                {/* Active Progress Bar */}
-                <div 
-                  className="absolute top-6 left-[10%] h-1.5 bg-indigo-500 rounded-full z-0 transition-all duration-1000"
-                  style={{ 
-                    width: `${(trackingSteps.findIndex(s => s.name === trackedOrder.status) / (trackingSteps.length - 1)) * 80}%` 
-                  }}
-                ></div>
+              <div className="py-6 sm:py-8">
+                <div className="relative flex flex-col sm:flex-row sm:justify-between px-6 sm:px-8 gap-8 sm:gap-0">
+                  
+                  {/* Desktop Progress Bars */}
+                  <div className="hidden sm:block absolute top-6 left-[10%] right-[10%] h-1.5 bg-slate-100 rounded-full z-0"></div>
+                  <div 
+                    className="hidden sm:block absolute top-6 left-[10%] h-1.5 bg-indigo-500 rounded-full z-0 transition-all duration-1000"
+                    style={{ 
+                      width: `${(trackingSteps.findIndex(s => s.name === trackedOrder.status) / (trackingSteps.length - 1)) * 80}%` 
+                    }}
+                  ></div>
 
-                {trackingSteps.map((step, idx) => {
-                  const state = getStepStatus(trackedOrder.status, step.name);
-                  return (
-                    <div key={step.name} className="relative z-10 flex flex-col items-center gap-4 w-20">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-colors duration-300 ${
-                        state === 'completed' ? 'bg-indigo-500 border-indigo-200 text-white' :
-                        state === 'current' ? 'bg-white border-indigo-500 text-indigo-600 shadow-[0_0_0_8px_rgba(99,102,241,0.1)]' :
-                        'bg-white border-slate-100 text-slate-300'
-                      }`}>
-                        {step.icon}
+                  {/* Mobile Progress Bars */}
+                  <div className="sm:hidden absolute top-8 bottom-8 left-[39px] w-1.5 bg-slate-100 rounded-full z-0"></div>
+                  <div 
+                    className="sm:hidden absolute top-8 left-[39px] w-1.5 bg-indigo-500 rounded-full z-0 transition-all duration-1000"
+                    style={{ 
+                      height: `${(trackingSteps.findIndex(s => s.name === trackedOrder.status) / (trackingSteps.length - 1)) * 100}%` 
+                    }}
+                  ></div>
+
+                  {trackingSteps.map((step, idx) => {
+                    const state = getStepStatus(trackedOrder.status, step.name);
+                    return (
+                      <div key={step.name} className="relative z-10 flex sm:flex-col items-center gap-6 sm:gap-4 sm:w-20">
+                        <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center border-4 transition-colors duration-300 ${
+                          state === 'completed' ? 'bg-indigo-500 border-indigo-200 text-white' :
+                          state === 'current' ? 'bg-white border-indigo-500 text-indigo-600 shadow-[0_0_0_8px_rgba(99,102,241,0.1)]' :
+                          'bg-white border-slate-100 text-slate-300'
+                        }`}>
+                          {step.icon}
+                        </div>
+                        <span className={`text-base sm:text-sm font-bold text-left sm:text-center ${
+                          state === 'upcoming' ? 'text-slate-400' : 'text-slate-800'
+                        }`}>
+                          {step.name}
+                        </span>
                       </div>
-                      <span className={`text-sm font-bold text-center ${
-                        state === 'upcoming' ? 'text-slate-400' : 'text-slate-800'
-                      }`}>
-                        {step.name}
-                      </span>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
               
               <div className="mt-12 p-6 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">

@@ -40,7 +40,7 @@ export default function Cart() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[75vh]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[75vh]">
         {/* Left Side: Cart Items */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-indigo-50/50 flex justify-between items-center">

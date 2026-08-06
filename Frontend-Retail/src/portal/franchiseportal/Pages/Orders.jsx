@@ -59,15 +59,15 @@ export default function Orders() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-end">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Order Management</h1>
           <p className="text-slate-500">View your incoming stock and request new inventory.</p>
         </div>
         <button 
           onClick={() => setIsRequesting(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+          className="w-full md:w-auto justify-center flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
         >
           <PackagePlus size={18} />
           Request New Stock
@@ -76,7 +76,8 @@ export default function Orders() {
 
       {/* Full Width Orders List */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-sm">
@@ -114,6 +115,47 @@ export default function Orders() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {orders.map((order) => (
+            <div key={order.id} className="p-4 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="font-bold text-slate-800 text-lg block">{order.id}</span>
+                  <span className="text-xs text-slate-500 font-medium">{order.date}</span>
+                </div>
+                <span className={`text-xs px-2.5 py-1 rounded-full border font-medium inline-block ${getStatusColor(order.status)}`}>
+                  {order.status}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl">
+                <div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Items Included</p>
+                  <p className="font-medium text-slate-700">{order.items} items</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Total Value</p>
+                  <p className="font-bold text-indigo-600 text-lg">₹{order.total.toLocaleString()}</p>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => navigate('/franchise/tracking', { state: { orderId: order.id } })}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-50 text-indigo-600 font-semibold rounded-lg hover:bg-indigo-100 transition-colors"
+              >
+                <Truck size={16} />
+                Track Delivery
+              </button>
+            </div>
+          ))}
+          {orders.length === 0 && (
+            <div className="p-8 text-center text-slate-500">
+              No orders found.
+            </div>
+          )}
         </div>
       </div>
       
@@ -156,21 +198,23 @@ export default function Orders() {
                      <div className="text-center text-slate-400 py-8">No items added to request.</div>
                   ) : (
                     requestCart.map(item => (
-                      <div key={item.id} className="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
+                      <div key={item.id} className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 shadow-sm">
                         <div>
                           <h4 className="font-bold text-slate-800 text-sm">{item.name}</h4>
                           <p className="text-xs text-slate-500">Buying Price: ₹{item.buyingPrice.toLocaleString()}</p>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center justify-between w-full sm:w-auto gap-4">
                           <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
                             <button onClick={() => updateRequestQty(item.id, -1)} className="px-2 py-1 text-slate-500 hover:bg-slate-200"><Minus size={14} /></button>
                             <span className="px-3 text-sm font-bold text-slate-700">{item.quantity}</span>
                             <button onClick={() => updateRequestQty(item.id, 1)} className="px-2 py-1 text-slate-500 hover:bg-slate-200"><Plus size={14} /></button>
                           </div>
-                          <p className="font-bold text-slate-700 w-24 text-right">₹{(item.buyingPrice * item.quantity).toLocaleString()}</p>
-                          <button onClick={() => removeFromRequest(item.id)} className="text-red-400 hover:text-red-600">
-                            <Trash2 size={18} />
-                          </button>
+                          <div className="flex items-center gap-4">
+                            <p className="font-bold text-slate-700 w-auto sm:w-24 text-right">₹{(item.buyingPrice * item.quantity).toLocaleString()}</p>
+                            <button onClick={() => removeFromRequest(item.id)} className="text-red-400 hover:text-red-600">
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -178,16 +222,16 @@ export default function Orders() {
                 </div>
               </div>
 
-              <div className="p-4 bg-white border-t border-slate-100 flex justify-between items-center">
-                <div className="text-slate-500 font-medium">
+              <div className="p-4 bg-white border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="text-slate-500 font-medium w-full sm:w-auto text-center sm:text-left">
                   Total: <span className="text-xl font-bold text-indigo-700">₹{requestCart.reduce((a, b) => a + (b.buyingPrice * b.quantity), 0).toLocaleString()}</span>
                 </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setIsRequesting(false)} className="px-5 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+                <div className="flex gap-3 w-full sm:w-auto">
+                  <button onClick={() => setIsRequesting(false)} className="flex-1 sm:flex-none px-5 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
                   <button 
                     onClick={submitRequest}
                     disabled={requestCart.length === 0}
-                    className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 disabled:opacity-50 disabled:shadow-none"
+                    className="flex-1 sm:flex-none px-5 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 disabled:opacity-50 disabled:shadow-none whitespace-nowrap"
                   >
                     Submit Request
                   </button>

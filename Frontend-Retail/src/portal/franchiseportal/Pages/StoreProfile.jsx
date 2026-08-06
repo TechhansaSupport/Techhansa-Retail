@@ -14,15 +14,15 @@ export default function StoreProfile() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-end">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Store Profile</h1>
           <p className="text-slate-500">Manage your store's public information and contact details.</p>
         </div>
         <button 
           onClick={() => setIsEditing(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200"
+          className="w-full md:w-auto justify-center flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200"
         >
           <Edit3 size={16} />
           Edit Profile
