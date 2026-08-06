@@ -32,9 +32,19 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
-  const updateUser = (newUserData) => {
+  const updateUser = async (newUserData) => {
     setUser(newUserData);
     localStorage.setItem('user', JSON.stringify(newUserData));
+    
+    try {
+      await fetch('http://localhost:5000/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUserData)
+      });
+    } catch (error) {
+      console.error('Failed to sync profile to server:', error);
+    }
   };
 
   return (

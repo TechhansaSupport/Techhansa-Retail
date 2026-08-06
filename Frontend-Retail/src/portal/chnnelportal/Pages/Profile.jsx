@@ -1,4 +1,4 @@
-import React, { useContext, useState, useRef } from 'react';
+import React, { useContext, useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Building, MapPin, Mail, Phone, Edit2, Camera, Save, X } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
@@ -16,16 +16,33 @@ export default function Profile() {
     address: user?.address || '123 Business Avenue, Tech Park, Bangalore 560001'
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || 'John Doe',
+        email: user.email || 'admin@partner.com',
+        companyName: user.companyName || 'Techhansa Retail Pvt Ltd',
+        phone: user.phone || '+91 98765 43210',
+        address: user.address || '123 Business Avenue, Tech Park, Bangalore 560001'
+      });
+      setProfilePhoto(user.profilePhoto || null);
+    }
+  }, [user]);
+
   const fileInputRef = useRef(null);
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setProfilePhoto(url);
-      if (updateUser && user) {
-        updateUser({ ...user, profilePhoto: url });
-      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setProfilePhoto(base64String);
+        if (updateUser && user) {
+          updateUser({ ...user, profilePhoto: base64String });
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 

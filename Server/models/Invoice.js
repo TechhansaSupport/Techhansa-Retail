@@ -8,7 +8,8 @@ const InvoiceSchema = new mongoose.Schema({
     type: String,
     enum: ['Unpaid', 'Paid', 'Overdue'],
     default: 'Unpaid'
-  }
+  },
+  userId: { type: String, required: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Invoice', InvoiceSchema);

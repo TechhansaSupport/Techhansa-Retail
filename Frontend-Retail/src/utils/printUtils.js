@@ -68,7 +68,7 @@ export const printInvoice = (invoice) => {
       </body>
     </html>
   `;
-  
+
   const printWindow = window.open('', '_blank');
   printWindow.document.write(invoiceHtml);
   printWindow.document.close();
@@ -115,7 +115,7 @@ export const printReport = (reportTitle, data) => {
       </body>
     </html>
   `;
-  
+
   const printWindow = window.open('', '_blank');
   printWindow.document.write(reportHtml);
   printWindow.document.close();

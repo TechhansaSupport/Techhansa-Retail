@@ -8,13 +8,25 @@ const Invoice = require('../models/Invoice');
 // GET Dashboard Stats
 router.get('/dashboard-stats', async (req, res) => {
   try {
-    const pendingRFPs = await RFP.countDocuments({ status: { $in: ['Draft', 'Submitted', 'Under Review'] } });
-    const approvedOrders = await Order.countDocuments({ status: 'Confirmed' });
-    const deliveredOrders = await Order.countDocuments({ status: 'Delivered' });
-    const totalInvoices = await Invoice.countDocuments();
-    
+    const { userId } = req.query;
+    if (!userId) {
+      return res.json({
+        pendingRFPs: 0,
+        approvedOrders: 0,
+        deliveredOrders: 0,
+        totalInvoices: 0,
+        totalSpending: 0
+      });
+    }
+    const filter = { userId };
+
+    const pendingRFPs = await RFP.countDocuments({ ...filter, status: { $in: ['Draft', 'Submitted', 'Under Review'] } });
+    const approvedOrders = await Order.countDocuments({ ...filter, status: 'Confirmed' });
+    const deliveredOrders = await Order.countDocuments({ ...filter, status: 'Delivered' });
+    const totalInvoices = await Invoice.countDocuments(filter);
+
     // Calculate total spending (sum of all Invoice amounts)
-    const invoices = await Invoice.find();
+    const invoices = await Invoice.find(filter);
     const totalSpending = invoices.reduce((acc, curr) => acc + curr.amount, 0);
 
     res.json({
@@ -33,7 +45,9 @@ router.get('/dashboard-stats', async (req, res) => {
 // GET all RFPs
 router.get('/rfp', async (req, res) => {
   try {
-    const rfps = await RFP.find().sort({ createdAt: -1 });
+    if (!req.query.userId) return res.json([]);
+    const filter = { userId: req.query.userId };
+    const rfps = await RFP.find(filter).sort({ createdAt: -1 });
     res.json(rfps);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -53,7 +67,8 @@ router.post('/rfp', async (req, res) => {
       vendor: 'TBD',
       amount: 0,
       validUntil: newRFP.expectedDeliveryDate,
-      status: 'Pending'
+      status: 'Pending',
+      userId: newRFP.userId
     });
     await newQuotation.save();
 
@@ -62,7 +77,8 @@ router.post('/rfp', async (req, res) => {
       orderNumber: `ORD-${newRFP.rfpId}`,
       quotationReference: newQuotation._id,
       expectedDelivery: newRFP.expectedDeliveryDate,
-      status: 'Pending'
+      status: 'Pending',
+      userId: newRFP.userId
     });
     await newOrder.save();
 
@@ -71,7 +87,8 @@ router.post('/rfp', async (req, res) => {
       invoiceNumber: `INV-${newRFP.rfpId}`,
       orderReference: newOrder._id,
       amount: 0,
-      paymentStatus: 'Unpaid'
+      paymentStatus: 'Unpaid',
+      userId: newRFP.userId
     });
     await newInvoice.save();
 
@@ -85,7 +102,9 @@ router.post('/rfp', async (req, res) => {
 // GET all Quotations
 router.get('/quotations', async (req, res) => {
   try {
-    const quotations = await Quotation.find().populate('rfpReference').sort({ createdAt: -1 });
+    if (!req.query.userId) return res.json([]);
+    const filter = { userId: req.query.userId };
+    const quotations = await Quotation.find(filter).populate('rfpReference').sort({ createdAt: -1 });
     res.json(quotations);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -95,7 +114,9 @@ router.get('/quotations', async (req, res) => {
 // GET all Orders
 router.get('/orders', async (req, res) => {
   try {
-    const orders = await Order.find().populate('quotationReference').sort({ createdAt: -1 });
+    if (!req.query.userId) return res.json([]);
+    const filter = { userId: req.query.userId };
+    const orders = await Order.find(filter).populate('quotationReference').sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -105,7 +126,9 @@ router.get('/orders', async (req, res) => {
 // GET all Invoices
 router.get('/invoices', async (req, res) => {
   try {
-    const invoices = await Invoice.find().populate('orderReference').sort({ createdAt: -1 });
+    if (!req.query.userId) return res.json([]);
+    const filter = { userId: req.query.userId };
+    const invoices = await Invoice.find(filter).populate('orderReference').sort({ createdAt: -1 });
     res.json(invoices);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Plus, Trash2, FileUp, Save, Send, Calendar, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function CreateRFP() {
+  const { user } = useContext(AuthContext) || { user: null };
   const navigate = useNavigate();
 
   // Form state
@@ -67,6 +69,7 @@ export default function CreateRFP() {
   // Build payload matching the backend RFP model
   const buildPayload = (status) => {
     return {
+      userId: user?.userId,
       rfpId: generateRfpId(),
       title: title.trim(),
       requirementName: requirementName.trim(),

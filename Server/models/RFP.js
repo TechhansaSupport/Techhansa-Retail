@@ -23,8 +23,7 @@ const RFPSchema = new mongoose.Schema({
     enum: ['Draft', 'Submitted', 'Under Review', 'Quotation Received', 'Approved', 'Rejected'],
     default: 'Draft' 
   },
-  // In a real app, this would ref the user or channel partner
-  // createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  userId: { type: String, required: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model('RFP', RFPSchema);

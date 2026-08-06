@@ -13,7 +13,8 @@ const OrderSchema = new mongoose.Schema({
     courier: { type: String },
     currentLocation: { type: String },
     progress: { type: Number, default: 0 } // 0 to 100 percentage
-  }
+  },
+  userId: { type: String, required: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', OrderSchema);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Edit3, Send, MessageSquare, Clock, XCircle } from 'lucide-react';
 
@@ -15,13 +15,17 @@ const itemVariants = {
   visible: { opacity: 1, x: 0 }
 };
 
+import { AuthContext } from '../../../context/AuthContext';
+
 export default function RecentActivity() {
+  const { user } = useContext(AuthContext) || { user: null };
   const [latestRfp, setLatestRfp] = useState(null);
 
   useEffect(() => {
     const fetchLatestRfp = async () => {
+      if (!user?.userId) return;
       try {
-        const res = await fetch('http://localhost:5000/api/procurement/rfp');
+        const res = await fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`);
         if (res.ok) {
           const data = await res.json();
           if (data.length > 0) {
@@ -33,7 +37,7 @@ export default function RecentActivity() {
       }
     };
     fetchLatestRfp();
-  }, []);
+  }, [user]);
 
   let steps = [];
   if (latestRfp) {

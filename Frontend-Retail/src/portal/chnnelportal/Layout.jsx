@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sidebar from './Layout/sidebar';
@@ -7,6 +7,14 @@ import Header from './Layout/header';
 export default function Layout() {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const mainRef = useRef(null);
+
+  // Reset scroll position on route change
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans p-2 md:p-4 gap-4 relative">
@@ -28,7 +36,7 @@ export default function Layout() {
         <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto relative bg-slate-50/30">
+        <main ref={mainRef} className="flex-1 overflow-y-auto relative bg-slate-50/30">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, MoreHorizontal, ChevronDown } from 'lucide-react';
 
@@ -21,7 +21,10 @@ const getStatusStyles = (status) => {
   }
 };
 
+import { AuthContext } from '../../../context/AuthContext';
+
 export default function ProcurementTables() {
+  const { user } = useContext(AuthContext) || { user: null };
   const [rfps, setRfps] = useState([]);
   const [quotations, setQuotations] = useState([]);
   const [rfpSearch, setRfpSearch] = useState('');
@@ -44,10 +47,11 @@ export default function ProcurementTables() {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user?.userId) return;
       try {
         const [rfpRes, qtRes] = await Promise.all([
-          fetch('http://localhost:5000/api/procurement/rfp'),
-          fetch('http://localhost:5000/api/procurement/quotations')
+          fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`),
+          fetch(`http://localhost:5000/api/procurement/quotations?userId=${user.userId}`)
         ]);
         if (rfpRes.ok) {
           const rfpData = await rfpRes.json();
@@ -62,7 +66,7 @@ export default function ProcurementTables() {
       }
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">

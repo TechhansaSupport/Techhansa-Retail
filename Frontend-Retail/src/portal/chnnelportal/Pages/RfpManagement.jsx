@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { exportToCSV } from '../../../utils/exportUtils';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -9,7 +9,6 @@ import {
   ChevronDown,
   Eye,
   Edit3,
-  Trash2,
   FileText,
   Clock,
   CheckCircle,
@@ -22,7 +21,7 @@ import {
   ArrowUpDown
 } from 'lucide-react';
 
-
+import { AuthContext } from '../../../context/AuthContext';
 
 const STATUS_CONFIG = {
   'Draft': { bg: 'bg-slate-100', text: 'text-slate-700', icon: FileText },
@@ -50,6 +49,7 @@ const itemVariants = {
 };
 
 export default function RfpManagement() {
+  const { user } = useContext(AuthContext) || { user: null };
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -57,12 +57,13 @@ export default function RfpManagement() {
   const [selectedRfp, setSelectedRfp] = useState(null);
 
   useEffect(() => {
-    fetchRfps();
-  }, []);
+    if (user?.userId) fetchRfps();
+  }, [user]);
 
   const fetchRfps = async () => {
+    if (!user?.userId) return;
     try {
-      const res = await fetch('http://localhost:5000/api/procurement/rfp');
+      const res = await fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`);
       const data = await res.json();
       setRfps(data);
     } catch (err) {
@@ -70,15 +71,6 @@ export default function RfpManagement() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this RFP?')) return;
-    try {
-      await fetch(`http://localhost:5000/api/procurement/rfp/${id}`, { method: 'DELETE' });
-      fetchRfps();
-    } catch (err) {
-      console.error('Failed to delete RFP', err);
-    }
-  };
 
   const handleEdit = (rfp) => {
     if (rfp.status !== 'Draft') {
@@ -243,9 +235,6 @@ export default function RfpManagement() {
                     </button>
                     <button onClick={() => handleEdit(rfp)} className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit">
                       <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(rfp.rfpId)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>

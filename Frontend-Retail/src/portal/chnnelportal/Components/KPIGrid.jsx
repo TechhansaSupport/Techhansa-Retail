@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -33,13 +33,17 @@ const NumberCounter = ({ value }) => {
   return <span>{value}</span>;
 };
 
+import { AuthContext } from '../../../context/AuthContext';
+
 export default function KPIGrid() {
+  const { user } = useContext(AuthContext) || { user: null };
   const [stats, setStats] = useState(null);
   
   useEffect(() => {
     const fetchStats = async () => {
+      if (!user?.userId) return;
       try {
-        const res = await fetch('http://localhost:5000/api/procurement/dashboard-stats');
+        const res = await fetch(`http://localhost:5000/api/procurement/dashboard-stats?userId=${user.userId}`);
         const data = await res.json();
         setStats(data);
       } catch (err) {
@@ -47,7 +51,7 @@ export default function KPIGrid() {
       }
     };
     fetchStats();
-  }, []);
+  }, [user]);
 
   const formatCurrency = (amount) => {
     if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)}Cr`;

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Receipt, Download, ExternalLink, Eye, XCircle, Printer } from 'lucide-react';
 import { printInvoice } from '../../../utils/printUtils';
+import { AuthContext } from '../../../context/AuthContext';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -14,19 +15,23 @@ const itemVariants = {
 };
 
 export default function Invoices() {
+  const { user } = useContext(AuthContext) || { user: null };
   const [invoices, setInvoices] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [rfps, setRfps] = useState([]);
-  
+
   useEffect(() => {
-    fetchInvoices();
-    fetchRfps();
-  }, []);
-  
+    if (user?.userId) {
+      fetchInvoices();
+      fetchRfps();
+    }
+  }, [user]);
+
   const fetchInvoices = async () => {
+    if (!user?.userId) return;
     try {
-      const res = await fetch('http://localhost:5000/api/procurement/invoices');
+      const res = await fetch(`http://localhost:5000/api/procurement/invoices?userId=${user.userId}`);
       const data = await res.json();
       setInvoices(data);
     } catch (err) {
@@ -35,8 +40,9 @@ export default function Invoices() {
   };
 
   const fetchRfps = async () => {
+    if (!user?.userId) return;
     try {
-      const res = await fetch('http://localhost:5000/api/procurement/rfp');
+      const res = await fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`);
       const data = await res.json();
       setRfps(data);
     } catch (err) {
@@ -115,7 +121,7 @@ export default function Invoices() {
       {/* View Invoice Modal */}
       {selectedInvoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
@@ -129,7 +135,7 @@ export default function Invoices() {
                 <XCircle className="w-6 h-6" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto">
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div>
@@ -162,27 +168,59 @@ export default function Invoices() {
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700">Item</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center">HSN</th>
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center">Qty</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Unit Price</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Total</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Rate</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">GST (18%)</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Total Amount</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {invoiceItems.map((item, i) => (
-                          <tr key={i} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || `${item.brand} ${item.category} (${item.model})`}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{item.quantity}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{item.unitPrice?.toLocaleString('en-IN') || 0}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{((item.quantity || 0) * (item.unitPrice || 0)).toLocaleString('en-IN')}</td>
-                          </tr>
-                        ))}
+                        {invoiceItems.map((item, i) => {
+                          const rate = item.rate || item.unitPrice || 0;
+                          const qty = item.quantity || 0;
+                          const hsn = item.hsn || '-';
+                          const gstRate = item.taxRate || 18;
+                          const taxableValue = rate * qty;
+                          const gstAmount = taxableValue * (gstRate / 100);
+                          const totalAmount = taxableValue + gstAmount;
+
+                          return (
+                            <tr key={i} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || `${item.brand} ${item.category} (${item.model})`}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-center">{hsn}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{qty}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{rate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium text-slate-500">
+                                ₹{gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-bold text-emerald-600">
+                                ₹{totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
+                      <tfoot className="bg-slate-50 border-t border-slate-200">
+                        <tr>
+                          <td colSpan="5" className="px-4 py-3 text-sm font-bold text-slate-700 text-right">Grand Total:</td>
+                          <td className="px-4 py-3 text-sm font-bold text-emerald-700 text-right">
+                            ₹{invoiceItems.reduce((acc, item) => {
+                               const r = item.rate || item.unitPrice || 0;
+                               const q = item.quantity || 0;
+                               const gRate = item.taxRate || 18;
+                               const tVal = r * q;
+                               return acc + tVal + (tVal * (gRate / 100));
+                            }, 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                          </td>
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
                 </>
               )}
             </div>
-            
+
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
               <button onClick={() => setSelectedInvoice(null)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-colors">
                 Close

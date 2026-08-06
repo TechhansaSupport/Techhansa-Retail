@@ -10,7 +10,8 @@ const QuotationSchema = new mongoose.Schema({
     type: String, 
     enum: ['Pending', 'Approved', 'Rejected'],
     default: 'Pending'
-  }
+  },
+  userId: { type: String, required: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Quotation', QuotationSchema);

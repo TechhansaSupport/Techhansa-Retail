@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Truck, CheckCircle, Package, Download } from 'lucide-react';
 import { exportToCSV } from '../../../utils/exportUtils';
+import { AuthContext } from '../../../context/AuthContext';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -15,17 +16,19 @@ const itemVariants = {
 };
 
 export default function Orders() {
+  const { user } = useContext(AuthContext) || { user: null };
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (user?.userId) fetchOrders();
+  }, [user]);
   
   const fetchOrders = async () => {
+    if (!user?.userId) return;
     try {
-      const res = await fetch('http://localhost:5000/api/procurement/orders');
+      const res = await fetch(`http://localhost:5000/api/procurement/orders?userId=${user.userId}`);
       const data = await res.json();
       setOrders(data);
     } catch (err) {
