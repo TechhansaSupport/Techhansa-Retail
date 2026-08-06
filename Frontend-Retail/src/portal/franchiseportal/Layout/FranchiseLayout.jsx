@@ -1,5 +1,5 @@
-import React, { useContext } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import React, { useContext, useEffect, useRef } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, Bell, User, Receipt, Truck } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -8,6 +8,14 @@ import logo from '../../../assets/logo.png';
 export default function FranchiseLayout() {
   const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const mainRef = useRef(null);
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -100,7 +108,7 @@ export default function FranchiseLayout() {
         </header>
 
         {/* Scrollable Content View */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-8">
+        <main ref={mainRef} className="flex-1 overflow-x-hidden overflow-y-auto p-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

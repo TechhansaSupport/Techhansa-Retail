@@ -34,6 +34,20 @@ export default function Dashboard() {
     { title: "Low Stock Alerts", value: lowStockCount, subText: "Items need reordering", icon: <AlertTriangle size={24} />, color: "text-rose-600", bgBox: "bg-rose-50/50 border-rose-100 shadow-rose-100/50", iconBg: "bg-rose-100/50", stroke: "#e11d48", fill: "#fecdd3", id: "colorRose", data: [{v:1},{v:2},{v:1},{v:2},{v:2},{v:2}] },
   ];
 
+  const chartData = useMemo(() => {
+    if (activeRevenueRange === '7 Days') return salesHistory;
+    // Generate 30 days mock data
+    return Array.from({ length: 30 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (29 - i));
+      return {
+        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        sales: Math.floor(Math.random() * 100000) + 50000,
+        orders: Math.floor(Math.random() * 10) + 5
+      };
+    });
+  }, [activeRevenueRange, salesHistory]);
+
   return (
     <div className="space-y-8 pb-8">
       
@@ -96,7 +110,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-xl font-bold text-slate-800">Revenue Trend</h2>
-              <p className="text-slate-500 text-sm">Last 7 Days Performance</p>
+              <p className="text-slate-500 text-sm">{activeRevenueRange === '7 Days' ? 'Last 7 Days Performance' : 'Last 30 Days Performance'}</p>
             </div>
             <div className="flex gap-2">
               <button 
@@ -115,7 +129,7 @@ export default function Dashboard() {
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={salesHistory} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#DDA73C" stopOpacity={0.4}/>

@@ -83,8 +83,11 @@ export function FranchiseProvider({ children }) {
     let updatedSalesHistory = [...salesHistory];
     
     if (todayIndex >= 0) {
-      updatedSalesHistory[todayIndex].sales += totalAmount;
-      updatedSalesHistory[todayIndex].orders += 1;
+      updatedSalesHistory[todayIndex] = {
+        ...updatedSalesHistory[todayIndex],
+        sales: updatedSalesHistory[todayIndex].sales + totalAmount,
+        orders: updatedSalesHistory[todayIndex].orders + 1
+      };
     } else {
       updatedSalesHistory.push({
         date: todayStr,
