@@ -50,9 +50,9 @@ export default function FranchiseLayout() {
         animate={{ x: 0 }}
         className={`fixed md:relative inset-y-0 left-0 z-50 w-72 md:w-80 bg-white md:rounded-2xl flex flex-col shadow-2xl md:shadow-sm overflow-hidden shrink-0 transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
-        <div className="h-20 flex items-center px-4 md:px-6 border-b border-slate-100 justify-between">
+        <div className="h-20 md:h-28 flex items-center px-4 md:px-6 border-b border-slate-100 justify-between">
           <div className="flex items-center min-w-0">
-            <img src={logo} alt="Techhansa Retail" className="h-12 w-auto -ml-2 object-contain shrink-0" />
+            <img src={logo} alt="Techhansa Retail" className="h-12 md:h-24 w-auto -ml-2 md:-ml-4 object-contain shrink-0" />
             <span className="text-base md:text-lg font-black ml-2 text-[var(--premium-gold)] tracking-tight uppercase whitespace-nowrap truncate">
               Techhansa Retail
             </span>
