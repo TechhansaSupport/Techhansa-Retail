@@ -4,6 +4,49 @@ const RFP = require('../models/RFP');
 const Quotation = require('../models/Quotation');
 const Order = require('../models/Order');
 const Invoice = require('../models/Invoice');
+const User = require('../models/User');
+const CompanySettings = require('../models/CompanySettings');
+
+async function generateInvoiceNumber() {
+  let stateCode = 'DL'; // default
+  const settings = await CompanySettings.findOne();
+  
+  if (settings) {
+    const addr = (settings.stateName || settings.registeredAddress || '').toUpperCase();
+    if (addr.includes('UTTAR PRADESH') || addr.includes(' UP') || addr.includes('U.P') || addr.includes(', UP')) stateCode = 'UP';
+    else if (addr.includes('MADHYA PRADESH') || addr.includes(' MP') || addr.includes('M.P')) stateCode = 'MP';
+    else if (addr.includes('RAJASTHAN') || addr.includes(' RJ') || addr.includes('R.J')) stateCode = 'RJ';
+    else if (addr.includes('MAHARASHTRA') || addr.includes(' MH') || addr.includes('M.H')) stateCode = 'MH';
+    else if (addr.includes('GUJARAT') || addr.includes(' GJ') || addr.includes('G.J')) stateCode = 'GJ';
+    else if (addr.includes('HARYANA') || addr.includes(' HR') || addr.includes('H.R')) stateCode = 'HR';
+    else if (addr.includes('KARNATAKA') || addr.includes(' KA') || addr.includes('K.A')) stateCode = 'KA';
+    else if (addr.includes('DELHI') || addr.includes(' DL') || addr.includes('D.L')) stateCode = 'DL';
+  }
+
+  const date = new Date();
+  const month = date.getMonth(); // 0-11
+  const year = date.getFullYear();
+  let startYear, endYear;
+  if (month >= 3) {
+    startYear = year.toString().slice(-2);
+    endYear = (year + 1).toString().slice(-2);
+  } else {
+    startYear = (year - 1).toString().slice(-2);
+    endYear = year.toString().slice(-2);
+  }
+  const fy = `${startYear}-${endYear}`;
+
+  const prefix = `THS-${stateCode}-${fy}`;
+  const lastInvoice = await Invoice.findOne({ invoiceNumber: new RegExp(`^${prefix}-`) }).sort({ createdAt: -1 });
+  let seq = 1;
+  if (lastInvoice) {
+    const parts = lastInvoice.invoiceNumber.split('-');
+    const lastSeq = parseInt(parts[parts.length - 1], 10);
+    if (!isNaN(lastSeq)) seq = lastSeq + 1;
+  }
+  const seqStr = seq.toString().padStart(3, '0');
+  return `${prefix}-${seqStr}`;
+}
 
 // GET Dashboard Stats
 router.get('/dashboard-stats', async (req, res) => {
@@ -85,7 +128,7 @@ router.post('/rfp', async (req, res) => {
 
       // Create placeholder Invoice
       const newInvoice = new Invoice({
-        invoiceNumber: `INV-${newRFP.rfpId}`,
+        invoiceNumber: await generateInvoiceNumber(),
         orderReference: newOrder._id,
         amount: 0,
         paymentStatus: 'Unpaid',
@@ -172,7 +215,7 @@ router.put('/rfp/:id', async (req, res) => {
         await newOrder.save();
 
         const newInvoice = new Invoice({
-          invoiceNumber: `INV-${updatedRFP.rfpId}`,
+          invoiceNumber: await generateInvoiceNumber(),
           orderReference: newOrder._id,
           amount: 0,
           paymentStatus: 'Unpaid',

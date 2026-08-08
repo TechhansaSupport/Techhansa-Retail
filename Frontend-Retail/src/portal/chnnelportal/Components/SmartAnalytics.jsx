@@ -1,35 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../../context/AuthContext';
 import { motion } from 'framer-motion';
 import {
   PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area
 } from 'recharts';
 
-const RFP_STATUS_DATA = [
-  { name: 'Draft', value: 4 },
-  { name: 'Submitted', value: 8 },
-  { name: 'Under Review', value: 5 },
-  { name: 'Quotation Received', value: 3 },
-  { name: 'Approved', value: 12 },
-  { name: 'Rejected', value: 2 },
-];
 const STATUS_COLORS = ['#94a3b8', '#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'];
-
-const MONTHLY_TREND_DATA = [
-  { name: 'Jan', value: 40000 },
-  { name: 'Feb', value: 30000 },
-  { name: 'Mar', value: 55000 },
-  { name: 'Apr', value: 45000 },
-  { name: 'May', value: 70000 },
-  { name: 'Jun', value: 85000 },
-];
-
-const ORDER_STATUS_DATA = [
-  { name: 'Pending', value: 15 },
-  { name: 'Confirmed', value: 25 },
-  { name: 'Processing', value: 10 },
-  { name: 'Shipped', value: 30 },
-  { name: 'Delivered', value: 128 },
-];
 const ORDER_COLORS = ['#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#10b981'];
 
 const itemVariants = {
@@ -52,6 +28,43 @@ const renderCustomLegend = (props) => {
 };
 
 export default function SmartAnalytics() {
+  const { user } = useContext(AuthContext) || { user: null };
+  const [rfpData, setRfpData] = useState([]);
+  const [trendData, setTrendData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.userId) return;
+      setIsLoading(true);
+      try {
+        const [rfpRes, reportsRes] = await Promise.all([
+          fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`),
+          fetch(`http://localhost:5000/api/procurement/reports?userId=${user.userId}`)
+        ]);
+
+        if (rfpRes.ok) {
+          const rfps = await rfpRes.json();
+          const counts = { 'Draft': 0, 'Submitted': 0, 'Under Review': 0, 'Quotation Received': 0, 'Approved': 0, 'Rejected': 0 };
+          rfps.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+          setRfpData(Object.entries(counts).map(([name, value]) => ({ name, value })));
+        }
+
+        if (reportsRes.ok) {
+          const reports = await reportsRes.json();
+          if (reports.monthly) {
+            setTrendData(reports.monthly.reverse().map(m => ({ name: m.name, value: m.spend })));
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [user]);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
       
@@ -60,7 +73,10 @@ export default function SmartAnalytics() {
         <h2 className="text-lg font-bold text-slate-900 mb-6">Monthly Procurement Trend</h2>
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={MONTHLY_TREND_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            {isLoading ? (
+              <div className="w-full h-full bg-slate-100 animate-pulse rounded-lg"></div>
+            ) : (
+            <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -84,6 +100,7 @@ export default function SmartAnalytics() {
                 activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }}
               />
             </AreaChart>
+            )}
           </ResponsiveContainer>
         </div>
       </motion.div>
@@ -93,9 +110,12 @@ export default function SmartAnalytics() {
         <h2 className="text-lg font-bold text-slate-900 mb-2">RFP Status</h2>
         <div className="flex-1 min-h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
+            {isLoading ? (
+              <div className="w-full h-full bg-slate-100 animate-pulse rounded-lg mt-4"></div>
+            ) : (
             <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
               <Pie 
-                data={RFP_STATUS_DATA} 
+                data={rfpData} 
                 cx="50%" 
                 cy="45%" 
                 innerRadius={70} 
@@ -105,7 +125,7 @@ export default function SmartAnalytics() {
                 cornerRadius={5}
                 stroke="none"
               >
-                {RFP_STATUS_DATA.map((entry, index) => (
+                {rfpData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
                 ))}
               </Pie>
@@ -117,6 +137,7 @@ export default function SmartAnalytics() {
                 content={renderCustomLegend}
               />
             </PieChart>
+            )}
           </ResponsiveContainer>
         </div>
       </motion.div>

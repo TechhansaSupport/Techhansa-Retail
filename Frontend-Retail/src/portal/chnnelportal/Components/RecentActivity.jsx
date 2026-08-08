@@ -20,10 +20,12 @@ import { AuthContext } from '../../../context/AuthContext';
 export default function RecentActivity() {
   const { user } = useContext(AuthContext) || { user: null };
   const [latestRfp, setLatestRfp] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchLatestRfp = async () => {
       if (!user?.userId) return;
+      setIsLoading(true);
       try {
         const res = await fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`);
         if (res.ok) {
@@ -34,6 +36,8 @@ export default function RecentActivity() {
         }
       } catch (err) {
         console.error('Error fetching RFP for activity:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchLatestRfp();
@@ -61,7 +65,7 @@ export default function RecentActivity() {
         <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">View All</button>
       </div>
 
-      <motion.div 
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -71,11 +75,22 @@ export default function RecentActivity() {
         <div className="absolute left-4 top-4 bottom-4 w-px bg-slate-200"></div>
 
         <div className="space-y-6">
-          {steps.length > 0 ? steps.map((act) => {
+          {isLoading ? (
+            // Skeleton Loader for Activity
+            [1, 2, 3, 4].map((i) => (
+              <div key={i} className="relative flex gap-4 pl-1">
+                <div className="shrink-0 w-6 h-6 rounded-full bg-slate-200 animate-pulse mt-0.5"></div>
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-4 bg-slate-200 rounded w-3/4 animate-pulse"></div>
+                  {i === 1 && <div className="h-3 bg-slate-100 rounded w-1/4 animate-pulse"></div>}
+                </div>
+              </div>
+            ))
+          ) : steps.length > 0 ? steps.map((act) => {
             const iconBg = act.active ? (act.isError ? 'bg-red-100' : 'bg-blue-100') : 'bg-slate-100';
             const iconColor = act.active ? (act.isError ? 'text-red-600' : 'text-blue-600') : 'text-slate-400';
             const textColor = act.active ? 'text-slate-800' : 'text-slate-400';
-            
+
             return (
               <motion.div key={act.id} variants={itemVariants} className="relative flex gap-4">
                 <div className={`relative z-10 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${iconBg} transition-colors`}>

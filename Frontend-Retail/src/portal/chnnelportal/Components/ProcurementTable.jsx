@@ -111,19 +111,19 @@ export default function ProcurementTables() {
             const styles = getStatusStyles(rfp.status);
             const date = new Date(rfp.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             return (
-            <div key={rfp._id} className="p-4 hover:bg-slate-50/80 transition-colors group cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-blue-600 text-sm group-hover:underline">{rfp.rfpId}</span>
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${styles.bg} ${styles.text}`}>
-                  <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
-                  {rfp.status}
-                </span>
+              <div key={rfp._id} className="p-4 hover:bg-slate-50/80 transition-colors group cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-blue-600 text-sm group-hover:underline">{rfp.rfpId}</span>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${styles.bg} ${styles.text}`}>
+                    <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
+                    {rfp.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-700 font-medium">{rfp.title}</span>
+                  <span className="text-sm text-slate-600 font-semibold">{date}</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-700 font-medium">{rfp.title}</span>
-                <span className="text-sm text-slate-600 font-semibold">{date}</span>
-              </div>
-            </div>
             );
           }) : <div className="p-4 text-sm text-slate-500">No recent RFPs.</div>}
 
@@ -155,18 +155,18 @@ export default function ProcurementTables() {
             const styles = getStatusStyles(qt.status);
             const date = new Date(qt.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             return (
-            <div key={qt._id} className="p-4 hover:bg-slate-50/80 transition-colors group cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-blue-600 text-sm group-hover:underline">{qt.quotationId || 'QT-XXXX'}</span>
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${styles.bg} ${styles.text}`}>
-                  {qt.status}
-                </span>
+              <div key={qt._id} className="p-4 hover:bg-slate-50/80 transition-colors group cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-blue-600 text-sm group-hover:underline">{qt.quotationId || 'QT-XXXX'}</span>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${styles.bg} ${styles.text}`}>
+                    {qt.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-700 font-medium">{qt.vendorName || 'Vendor'}</span>
+                  <span className="text-sm text-slate-600 font-semibold">{date}</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-700 font-medium">{qt.vendorName || 'Vendor'}</span>
-                <span className="text-sm text-slate-600 font-semibold">{date}</span>
-              </div>
-            </div>
             );
           }) : <div className="p-4 text-sm text-slate-500">No recent quotations.</div>}
         </div>
