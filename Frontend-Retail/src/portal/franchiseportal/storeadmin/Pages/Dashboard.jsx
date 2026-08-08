@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Package, TrendingUp, Clock, CheckCircle, AlertTriangle, Monitor, Cpu, Server, MousePointer2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
+import { IndianRupee, Trophy } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, 
   BarChart, Bar, PieChart, Pie, Cell, Legend 
@@ -30,8 +31,8 @@ export default function Dashboard() {
   const statCards = [
     { title: "Today's Sales", value: `₹${metrics.todaysSales.toLocaleString()}`, subText: "+14% from yesterday", icon: <TrendingUp size={24} />, color: "text-indigo-600", bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50", iconBg: "bg-indigo-100/50", stroke: "#4f46e5", fill: "#c7d2fe", id: "colorIndigo", data: [{v:20},{v:40},{v:30},{v:70},{v:50},{v:90}] },
     { title: "Available Stock", value: metrics.availableStock, subText: `${inventory.length} total SKUs`, icon: <CheckCircle size={24} />, color: "text-emerald-600", bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", iconBg: "bg-emerald-100/50", stroke: "#10b981", fill: "#a7f3d0", id: "colorEmerald", data: [{v:85},{v:82},{v:84},{v:81},{v:83},{v:83}] },
-    { title: "Pending Orders", value: metrics.pendingOrders, subText: "Awaiting fulfillment", icon: <Clock size={24} />, color: "text-amber-600", bgBox: "bg-amber-50/50 border-amber-100 shadow-amber-100/50", iconBg: "bg-amber-100/50", stroke: "#f59e0b", fill: "#fde68a", id: "colorAmber", data: [{v:6},{v:4},{v:5},{v:3},{v:2},{v:2}] },
-    { title: "Low Stock Alerts", value: lowStockCount, subText: "Items need reordering", icon: <AlertTriangle size={24} />, color: "text-rose-600", bgBox: "bg-rose-50/50 border-rose-100 shadow-rose-100/50", iconBg: "bg-rose-100/50", stroke: "#e11d48", fill: "#fecdd3", id: "colorRose", data: [{v:1},{v:2},{v:1},{v:2},{v:2},{v:2}] },
+    { title: "Wallet Balance", value: `₹${metrics.walletBalance?.toLocaleString() || 0}`, subText: "Available for B2B", icon: <IndianRupee size={24} />, color: "text-blue-600", bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50", iconBg: "bg-blue-100/50", stroke: "#2563eb", fill: "#bfdbfe", id: "colorBlue", data: [{v:60},{v:60},{v:40},{v:90},{v:90},{v:90}] },
+    { title: "Top Employee", value: metrics.topEmployee?.name || 'N/A', subText: `₹${metrics.topEmployee?.sales?.toLocaleString() || 0} this week`, icon: <Trophy size={24} />, color: "text-amber-600", bgBox: "bg-amber-50/50 border-amber-100 shadow-amber-100/50", iconBg: "bg-amber-100/50", stroke: "#f59e0b", fill: "#fde68a", id: "colorAmber", data: [{v:10},{v:20},{v:15},{v:30},{v:25},{v:45}] },
   ];
 
   const chartData = useMemo(() => {

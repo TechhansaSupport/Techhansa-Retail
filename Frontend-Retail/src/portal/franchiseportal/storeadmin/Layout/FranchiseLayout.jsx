@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, Bell, User, Receipt, Truck, Menu, X } from 'lucide-react';
-import { AuthContext } from '../../../context/AuthContext';
+import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, Bell, User, Receipt, Truck, Menu, X, Wallet, Users, ShoppingBag, ChevronDown, Settings } from 'lucide-react';
+import { AuthContext } from '../../../../context/AuthContext';
 import { motion } from 'framer-motion';
-import logo from '../../../assets/logo.png';
+import logo from '../../../../assets/logo.png';
 
 export default function FranchiseLayout() {
   const { logout, user } = useContext(AuthContext);
@@ -11,6 +11,10 @@ export default function FranchiseLayout() {
   const location = useLocation();
   const mainRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isStoreMenuOpen, setIsStoreMenuOpen] = useState(false);
+  const [activeStore, setActiveStore] = useState('Lanka Branch');
+  const stores = ['Lanka Branch', 'Shivpur Branch'];
 
   useEffect(() => {
     if (mainRef.current) {
@@ -27,11 +31,13 @@ export default function FranchiseLayout() {
 
   const navItems = [
     { name: 'Dashboard', path: '/franchise', end: true, icon: <LayoutDashboard size={20} /> },
+    { name: 'B2B Procurement', path: '/franchise/procurement', icon: <ShoppingBag size={20} /> },
     { name: 'Billing / POS', path: '/franchise/billing', icon: <Receipt size={20} /> },
-    { name: 'Store Profile', path: '/franchise/profile', icon: <Store size={20} /> },
+    { name: 'Credit Wallet', path: '/franchise/wallet', icon: <Wallet size={20} /> },
     { name: 'Inventory', path: '/franchise/inventory', icon: <Package size={20} /> },
     { name: 'Orders', path: '/franchise/orders', icon: <ShoppingCart size={20} /> },
     { name: 'Delivery Tracking', path: '/franchise/tracking', icon: <Truck size={20} /> },
+    { name: 'Employee Management', path: '/franchise/employees', icon: <Users size={20} /> },
     { name: 'Sales & Reports', path: '/franchise/sales', icon: <BarChart3 size={20} /> },
   ];
 
@@ -79,16 +85,6 @@ export default function FranchiseLayout() {
             </NavLink>
           ))}
         </nav>
-
-        <div className="p-4 border-t border-slate-100">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-          >
-            <LogOut size={20} />
-            <span className="font-medium">Sign Out</span>
-          </button>
-        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -103,6 +99,29 @@ export default function FranchiseLayout() {
             <h2 className="text-lg md:text-xl font-semibold text-slate-800 hidden sm:block">
               Welcome back, {user?.userId || 'Partner'}
             </h2>
+            <div className="relative ml-4 hidden md:block">
+              <button 
+                onClick={() => setIsStoreMenuOpen(!isStoreMenuOpen)}
+                className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
+              >
+                <Store size={16} className="text-indigo-600" />
+                {activeStore}
+                <ChevronDown size={14} className="text-slate-400" />
+              </button>
+              {isStoreMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+                  {stores.map(store => (
+                    <button
+                      key={store}
+                      onClick={() => { setActiveStore(store); setIsStoreMenuOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      {store}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center gap-4 md:gap-6">
@@ -110,14 +129,36 @@ export default function FranchiseLayout() {
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
             </button>
-            <div className="flex items-center gap-3 border-l border-slate-200 pl-6">
-              <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                <User size={18} />
-              </div>
-              <div className="text-sm">
-                <p className="font-semibold text-slate-700">Downtown Store</p>
-                <p className="text-slate-500 text-xs">ID: {user?.userId}</p>
-              </div>
+            
+            <div className="relative border-l border-slate-200 pl-6">
+              <button 
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-xl transition-colors text-left"
+              >
+                <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                  <User size={18} />
+                </div>
+                <div className="text-sm hidden md:block">
+                  <p className="font-semibold text-slate-700">Admin</p>
+                  <p className="text-slate-500 text-xs">ID: {user?.userId}</p>
+                </div>
+                <ChevronDown size={14} className="text-slate-400 hidden md:block" />
+              </button>
+              
+              {isProfileMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+                  <button onClick={() => { navigate('/franchise/profile'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                    <Store size={16} /> Store Profile
+                  </button>
+                  <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                    <Settings size={16} /> Settings
+                  </button>
+                  <div className="h-px bg-slate-100 my-2"></div>
+                  <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium">
+                    <LogOut size={16} /> Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

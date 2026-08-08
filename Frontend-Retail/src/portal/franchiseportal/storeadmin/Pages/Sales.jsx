@@ -2,10 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
-import { Download, IndianRupee, TrendingUp, Calendar } from 'lucide-react';
+import { Download, IndianRupee, TrendingUp, Calendar, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function Sales() {
-  const { metrics, salesHistory } = useFranchise();
+  const { metrics, salesHistory, invoices } = useFranchise();
   const [timeRange, setTimeRange] = useState('Last 7 Days');
 
   const chartData = useMemo(() => {
@@ -71,20 +73,27 @@ export default function Sales() {
   ];
 
   const exportReport = () => {
-    const headers = ['Date', 'Sales (INR)', 'Orders'];
-    const csvContent = [
-      headers.join(','),
-      ...chartData.map(row => `${row.date},${row.sales},${row.orders}`)
-    ].join('\n');
+    const doc = new jsPDF();
+    doc.text(`Sales & Order Report (${timeRange})`, 14, 15);
+    
+    doc.autoTable({
+      startY: 25,
+      head: [['Date', 'Sales (INR)', 'Orders']],
+      body: chartData.map(row => [row.date, `Rs. ${row.sales.toLocaleString()}`, row.orders]),
+      headStyles: { fillColor: [79, 70, 229] }
+    });
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `sales_report_${timeRange.replace(/\s+/g, '_').toLowerCase()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (invoices && invoices.length > 0) {
+      doc.text("Recent Invoices", 14, doc.lastAutoTable.finalY + 15);
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 20,
+        head: [['Invoice No', 'Date', 'Customer Name', 'Total Amount']],
+        body: invoices.map(inv => [inv.id, inv.date, inv.customer?.name || 'Walk-in', `Rs. ${inv.total.toLocaleString()}`]),
+        headStyles: { fillColor: [79, 70, 229] }
+      });
+    }
+
+    doc.save(`sales_report_${timeRange.replace(/\s+/g, '_').toLowerCase()}.pdf`);
   };
 
   return (
@@ -174,6 +183,57 @@ export default function Sales() {
               <Bar yAxisId="right" dataKey="orders" name="No. of Orders" fill="#34d399" radius={[4, 4, 0, 0]} barSize={40} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      </motion.div>
+
+      {/* Order History Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+        className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+      >
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+          <h2 className="text-lg font-bold text-slate-800">Order History</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <th className="px-6 py-4 font-medium">Invoice No</th>
+                <th className="px-6 py-4 font-medium">Date</th>
+                <th className="px-6 py-4 font-medium">Customer Name</th>
+                <th className="px-6 py-4 font-medium">Employee Name</th>
+                <th className="px-6 py-4 font-medium text-right">Total Amount</th>
+                <th className="px-6 py-4 font-medium text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {invoices && invoices.length > 0 ? invoices.map((inv) => (
+                <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 font-mono text-sm text-slate-700">{inv.id}</td>
+                  <td className="px-6 py-4 text-sm text-slate-600">{inv.date}</td>
+                  <td className="px-6 py-4 font-medium text-slate-800">{inv.customer?.name || 'Walk-in'}</td>
+                  <td className="px-6 py-4 text-sm text-slate-500">Admin</td>
+                  <td className="px-6 py-4 text-right font-medium text-indigo-600">₹{inv.total.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-center">
+                    <button 
+                      onClick={() => {
+                         const doc = new jsPDF();
+                         doc.text(`Invoice: ${inv.id}`, 14, 15);
+                         doc.text(`Date: ${inv.date}`, 14, 25);
+                         doc.text(`Total: Rs. ${inv.total.toLocaleString()}`, 14, 35);
+                         doc.save(`${inv.id}.pdf`);
+                      }}
+                      className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg flex justify-center items-center gap-1 mx-auto"
+                    >
+                      <FileText size={14} /> PDF
+                    </button>
+                  </td>
+                </tr>
+              )) : (
+                <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-500">No recent orders found.</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </motion.div>
     </div>

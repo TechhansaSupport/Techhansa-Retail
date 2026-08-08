@@ -20,7 +20,7 @@ export default function StoreProfile() {
           <h1 className="text-2xl font-bold text-slate-800">Store Profile</h1>
           <p className="text-slate-500">Manage your store's public information and contact details.</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsEditing(true)}
           className="w-full md:w-auto justify-center flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200"
         >
@@ -30,9 +30,9 @@ export default function StoreProfile() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* Main Info Card */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="md:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
         >
@@ -43,7 +43,7 @@ export default function StoreProfile() {
               </div>
             </div>
           </div>
-          
+
           <div className="pt-14 p-8">
             <h2 className="text-2xl font-bold text-slate-800 mb-1">{storeProfileData.storeName}</h2>
             <div className="flex items-start gap-2 text-slate-500 mb-6">
@@ -59,7 +59,7 @@ export default function StoreProfile() {
                   {storeProfileData.manager}
                 </div>
               </div>
-              
+
               <div>
                 <p className="text-sm font-medium text-slate-400 mb-1 uppercase tracking-wider">Employees</p>
                 <div className="flex items-center gap-2 text-slate-800 font-medium">
@@ -88,12 +88,12 @@ export default function StoreProfile() {
         </motion.div>
 
         {/* Contact Info Card */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6"
         >
           <h3 className="text-lg font-bold text-slate-800 mb-6">Contact Information</h3>
-          
+
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500">
@@ -115,7 +115,7 @@ export default function StoreProfile() {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-8 p-4 bg-amber-50 rounded-xl border border-amber-100">
             <h4 className="text-sm font-bold text-amber-800 mb-1">Important</h4>
             <p className="text-xs text-amber-700">Any changes to the Store Name, Address, or GST requires administrative approval before taking effect.</p>
@@ -126,7 +126,7 @@ export default function StoreProfile() {
       <AnimatePresence>
         {isEditing && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -143,35 +143,35 @@ export default function StoreProfile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Store Name</label>
-                    <input type="text" value={formData.storeName} onChange={e => setFormData({...formData, storeName: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" value={formData.storeName} onChange={e => setFormData({ ...formData, storeName: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Manager</label>
-                    <input type="text" value={formData.manager} onChange={e => setFormData({...formData, manager: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" value={formData.manager} onChange={e => setFormData({ ...formData, manager: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
-                    <input type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-                    <input type="text" value={formData.contact} onChange={e => setFormData({...formData, contact: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" value={formData.contact} onChange={e => setFormData({ ...formData, contact: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                    <input type="text" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Operating Hours</label>
-                    <input type="text" value={formData.timings} onChange={e => setFormData({...formData, timings: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" value={formData.timings} onChange={e => setFormData({ ...formData, timings: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Employees</label>
-                    <input type="number" value={formData.employees} onChange={e => setFormData({...formData, employees: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="number" value={formData.employees} onChange={e => setFormData({ ...formData, employees: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-slate-700 mb-1">GST Registration Number</label>
-                    <input type="text" value={formData.gst} onChange={e => setFormData({...formData, gst: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" value={formData.gst} onChange={e => setFormData({ ...formData, gst: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </div>
               </div>

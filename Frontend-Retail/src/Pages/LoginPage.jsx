@@ -89,6 +89,9 @@ export default function LoginPage() {
           case 'franchise':
             navigate('/franchise');
             break;
+          case 'employee':
+            navigate('/employee');
+            break;
           case 'channel':
             navigate('/channel');
             break;

@@ -1,5 +1,15 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { inventoryData as initialInventory, salesData as initialSales, summaryMetrics as initialMetrics, orderData as initialOrders, storeProfile as initialStoreProfile } from '../mockData';
+import { 
+  inventoryData as initialInventory, 
+  salesData as initialSales, 
+  summaryMetrics as initialMetrics, 
+  orderData as initialOrders, 
+  storeProfile as initialStoreProfile,
+  techhansaCatalog,
+  b2bInvoices as initialB2BInvoices,
+  walletTransactions as initialWalletTransactions,
+  employeesData as initialEmployeesData
+} from '../../mockData';
 
 export const FranchiseContext = createContext();
 
@@ -11,6 +21,10 @@ export function FranchiseProvider({ children }) {
   const [orders, setOrders] = useState(initialOrders);
   const [storeProfileData, setStoreProfileData] = useState(initialStoreProfile);
   const [globalCart, setGlobalCart] = useState([]);
+  
+  const [b2bInvoices, setB2bInvoices] = useState(initialB2BInvoices);
+  const [walletTransactions, setWalletTransactions] = useState(initialWalletTransactions);
+  const [employees, setEmployees] = useState(initialEmployeesData);
 
   const addToGlobalCart = (item) => {
     setGlobalCart(prev => {
@@ -79,9 +93,9 @@ export function FranchiseProvider({ children }) {
     // 2. Update Sales History (Assuming today's date for simplicity)
     const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const todayIndex = salesHistory.findIndex(s => s.date === todayStr);
-    
+
     let updatedSalesHistory = [...salesHistory];
-    
+
     if (todayIndex >= 0) {
       updatedSalesHistory[todayIndex] = {
         ...updatedSalesHistory[todayIndex],
@@ -95,7 +109,7 @@ export function FranchiseProvider({ children }) {
         orders: 1
       });
     }
-    
+
     setSalesHistory(updatedSalesHistory);
 
     // 3. Update Metrics
@@ -116,7 +130,7 @@ export function FranchiseProvider({ children }) {
       items: cartItems,
       total: totalAmount
     };
-    
+
     setInvoices(prev => [newInvoice, ...prev]);
 
     return newInvoice;
@@ -127,10 +141,18 @@ export function FranchiseProvider({ children }) {
       inventory,
       salesHistory,
       metrics,
+      setMetrics,
       orders,
       invoices,
       storeProfileData,
       globalCart,
+      techhansaCatalog,
+      b2bInvoices,
+      setB2bInvoices,
+      walletTransactions,
+      setWalletTransactions,
+      employees,
+      setEmployees,
       processSale,
       updateStoreProfile,
       requestNewStock,

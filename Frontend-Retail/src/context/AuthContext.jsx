@@ -26,7 +26,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Logout function to clear data
-  const logout = () => {
+  const logout = async () => {
+    if (user && user.userId) {
+      try {
+        await fetch('http://localhost:5000/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: user.userId }),
+        });
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+    }
+
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
