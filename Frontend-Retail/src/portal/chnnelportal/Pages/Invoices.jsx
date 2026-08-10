@@ -68,7 +68,8 @@ export default function Invoices() {
     return invId.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const selectedRfp = selectedInvoice ? rfps.find(r => r.rfpId === selectedInvoice.invoiceNumber?.replace('INV-', '')) : null;
+  const orderRefForRfp = selectedInvoice?.orderReference?.orderId || selectedInvoice?.orderReference?.orderNumber || (typeof selectedInvoice?.orderReference === 'string' ? selectedInvoice?.orderReference : '');
+  const selectedRfp = selectedInvoice ? rfps.find(r => r.rfpId === orderRefForRfp?.replace('ORD-', '')) : null;
   const invoiceItems = selectedInvoice?.items || selectedRfp?.products || [];
 
   return (
@@ -158,7 +159,7 @@ export default function Invoices() {
                 <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-slate-700">
                   {/* Company Details */}
                   <div className="p-4 border-b border-slate-700">
-                    <h3 className="font-bold text-slate-900 uppercase">{companySettings?.companyName || 'Company Name'}</h3>
+                    <h3 className="font-bold text-slate-900">{companySettings?.companyName || 'Company Name'}</h3>
                     <p className="text-sm text-slate-700 whitespace-pre-wrap">{companySettings?.registeredAddress || 'Address'}</p>
                     <div className="mt-2 text-sm text-slate-700 space-y-0.5">
                       <p><strong>GSTIN/UIN:</strong> {companySettings?.gstin || 'N/A'}</p>
@@ -170,7 +171,7 @@ export default function Invoices() {
                   {/* Buyer Details */}
                   <div className="p-4 flex-1">
                     <h4 className="text-sm text-slate-500 mb-1">Buyer (Bill to)</h4>
-                    <p className="font-bold text-slate-900 uppercase">{user?.companyName || user?.name || 'Buyer Name'}</p>
+                    <p className="font-bold text-slate-900">{user?.companyName || user?.name || 'Buyer Name'}</p>
                     <p className="text-sm text-slate-700">{user?.address || 'Buyer Address'}</p>
                     <p className="text-sm text-slate-700 mt-1"><strong>Phone:</strong> {user?.phone || 'N/A'}</p>
                     <p className="text-sm text-slate-700"><strong>Email:</strong> {user?.email || 'N/A'}</p>
@@ -376,7 +377,7 @@ export default function Invoices() {
 
                         {/* Signatory */}
                         <div className="p-4 flex-1 flex flex-col justify-between min-h-[120px] text-right text-sm">
-                          <p className="font-bold text-slate-900">for {companySettings?.companyName || 'TECHHANSA'}</p>
+                          <p className="font-bold text-slate-900">for {companySettings?.companyName || 'Techhansa Retail'}</p>
                           <div className="mt-auto">
                             <p className="text-slate-500 whitespace-pre-wrap leading-tight">{companySettings?.authorizedSignatoryText || 'Authorised Signatory'}</p>
                           </div>

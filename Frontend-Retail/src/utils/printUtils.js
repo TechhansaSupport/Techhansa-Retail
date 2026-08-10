@@ -25,7 +25,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   // Left Side: Company Details
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  const compName = companySettings?.companyName || 'TECHHANSA SOLUTIONS PRIVATE LIMITED';
+  const compName = companySettings?.companyName || 'Techhansa Retail';
   doc.text(compName, 15, 26);
   
   doc.setFont('helvetica', 'normal');
