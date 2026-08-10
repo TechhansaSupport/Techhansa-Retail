@@ -7,7 +7,17 @@ const userSchema = new mongoose.Schema({
   role: { 
     type: String, 
     required: true, 
-    enum: ['admin', 'franchise', 'channel'] 
+    enum: ['admin', 'franchise', 'channel', 'employee'] 
+  },
+  storeId: { 
+    type: String, 
+    required: function() { 
+      return this.role === 'franchise' || this.role === 'employee'; 
+    } 
+  },
+  isStoreActive: { 
+    type: Boolean, 
+    default: false 
   },
   name: { type: String, default: '' },
   email: { type: String, default: '' },
