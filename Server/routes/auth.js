@@ -89,7 +89,13 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         userId: user.userId,
-        role: user.role
+        role: user.role,
+        name: user.name,
+        email: user.email,
+        companyName: user.companyName,
+        phone: user.phone,
+        address: user.address,
+        profilePhoto: user.profilePhoto
       }
     });
 
@@ -115,6 +121,42 @@ router.post('/logout', async (req, res) => {
   } catch (error) {
     console.error('Logout error:', error);
     res.status(500).json({ message: 'Server error during logout' });
+  }
+});
+
+router.put('/profile', async (req, res) => {
+  try {
+    const { userId, name, email, companyName, phone, address, profilePhoto } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'UserId is required' });
+    }
+    
+    const updatedUser = await User.findOneAndUpdate(
+      { userId },
+      { name, email, companyName, phone, address, profilePhoto },
+      { new: true }
+    );
+    
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        userId: updatedUser.userId,
+        role: updatedUser.role,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        companyName: updatedUser.companyName,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        profilePhoto: updatedUser.profilePhoto
+      }
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Server error updating profile' });
   }
 });
 
