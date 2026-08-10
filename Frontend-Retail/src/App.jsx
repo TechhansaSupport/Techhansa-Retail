@@ -156,24 +156,24 @@ function App() {
             <Route index element={<ChannelDashboard />} />
             <Route path="rfp/create" element={<CreateRFP />} />
           </Route>
-        {/* Channel Partner Portal */}
-        <Route path="/channel" element={
-          <ProtectedRoute allowedRole="channel">
-            <ChannelLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<ChannelDashboard />} />
-          <Route path="rfp" element={<RfpManagement />} />
-          <Route path="rfp/create" element={<CreateRFP />} />
-          <Route path="quotations" element={<Quotations />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="tracking" element={<DeliveryTracking />} />
-          <Route path="invoices" element={<Invoices />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="support" element={<SupportCenter />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
+          {/* Channel Partner Portal */}
+          <Route path="/channel" element={
+            <ProtectedRoute allowedRole="channel">
+              <ChannelLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<ChannelDashboard />} />
+            <Route path="rfp" element={<RfpManagement />} />
+            <Route path="rfp/create" element={<CreateRFP />} />
+            <Route path="quotations" element={<Quotations />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="tracking" element={<DeliveryTracking />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="support" element={<SupportCenter />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
 
 
           {/* ==========================================

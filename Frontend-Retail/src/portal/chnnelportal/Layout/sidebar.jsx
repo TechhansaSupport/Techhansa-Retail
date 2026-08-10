@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
+import {
   LayoutDashboard,
   FileText,
   FileBadge,
@@ -19,15 +19,14 @@ import { AuthContext } from '../../../context/AuthContext';
 const SidebarLink = ({ to, icon: Icon, children }) => {
   const location = useLocation();
   const isActive = location.pathname === to || (to !== '/channel' && location.pathname.startsWith(to));
-  
+
   return (
     <Link
       to={to}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-        isActive 
-          ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-sm'
-          : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-500'
-      }`}
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
+        ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-sm'
+        : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-500'
+        }`}
     >
       <Icon size={20} />
       {children}
@@ -68,11 +67,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         <SidebarLink to="/channel/tracking" icon={Truck}>Delivery Tracking</SidebarLink>
         <SidebarLink to="/channel/invoices" icon={Receipt}>Invoices</SidebarLink>
         <SidebarLink to="/channel/reports" icon={PieChart}>Reports</SidebarLink>
-        
+
         <div className="pt-4 mt-auto border-t border-slate-100 mx-2">
           <SidebarLink to="/channel/support" icon={Headset}>Support</SidebarLink>
           <SidebarLink to="/channel/profile" icon={UserCircle}>Profile</SidebarLink>
-          <button 
+          <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 mt-1 text-sm font-medium transition-all duration-200 text-red-600 hover:bg-red-50 rounded-xl"
           >
