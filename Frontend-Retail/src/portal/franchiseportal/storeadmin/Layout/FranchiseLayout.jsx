@@ -42,7 +42,7 @@ export default function FranchiseLayout() {
   ];
 
   return (
-    <div className="flex h-screen bg-slate-100 md:p-4 md:gap-4 text-slate-800 font-sans overflow-hidden">
+    <div style={{ zoom: 0.75, height: '133.333vh', width: '133.333vw' }} className="flex bg-slate-100 md:p-4 md:gap-4 text-slate-800 font-sans overflow-hidden">
       
       {/* Mobile Overlay */}
       <div 

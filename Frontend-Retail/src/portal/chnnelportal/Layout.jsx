@@ -17,26 +17,24 @@ export default function Layout() {
   }, [location.pathname]);
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans p-2 md:p-4 gap-4 relative">
+    <div style={{ zoom: 0.75, height: '133.333vh', width: '133.333vw' }} className="flex bg-slate-100 md:p-4 md:gap-4 text-slate-800 font-sans overflow-hidden">
       {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 z-40 md:hidden backdrop-blur-sm"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      <div 
+        className={`fixed inset-0 bg-slate-900/50 z-40 md:hidden transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
 
       {/* Left Sidebar */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col bg-white md:rounded-2xl shadow-sm overflow-hidden relative w-full">
         
         {/* Top Navigation */}
         <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
         {/* Page Content */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto relative bg-slate-50/30">
+        <main ref={mainRef} className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -44,7 +42,7 @@ export default function Layout() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="p-4 md:p-6 min-h-full"
+              className="max-w-7xl mx-auto h-full"
             >
               <Outlet />
             </motion.div>

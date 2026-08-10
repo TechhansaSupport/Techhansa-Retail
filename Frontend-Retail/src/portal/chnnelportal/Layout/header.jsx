@@ -24,31 +24,31 @@ export default function Header({ toggleSidebar }) {
   };
 
   return (
-    <header className="h-20 bg-white/70 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-4 md:px-8 z-30 shrink-0 sticky top-0 transition-all">
-      <div className="flex-1 flex items-center gap-4">
+    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+      <div className="flex items-center gap-3">
         {/* Hamburger Menu (Mobile Only) */}
         <button 
           onClick={toggleSidebar}
-          className="md:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+          className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-50 rounded-xl"
         >
-          <Menu className="w-6 h-6" />
+          <Menu size={24} />
         </button>
-        
-        {/* Global Search */}
-       
+        <h2 className="text-lg md:text-xl font-semibold text-slate-800 hidden sm:block">
+          Welcome back, {user?.name || user?.userId || 'Partner'}
+        </h2>
       </div>
       
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4 md:gap-6">
         <div className="relative">
           <button 
             onClick={() => { 
               setShowNotifications(!showNotifications); 
               setHasUnread(false); 
             }} 
-            className="p-2.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all relative cursor-pointer"
+            className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50"
           >
-            <Bell className="h-5 w-5" />
-            {hasUnread && <span className="absolute top-2 right-2.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>}
+            <Bell size={20} />
+            {hasUnread && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>}
           </button>
           {showNotifications && (
             <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden z-50">
@@ -66,28 +66,26 @@ export default function Header({ toggleSidebar }) {
             </div>
           )}
         </div>
-        <button onClick={() => navigate('/channel/support')} className="p-2.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all cursor-pointer hidden sm:block">
-          <HelpCircle className="h-5 w-5" />
-        </button>
         
-        <div className="h-8 w-px bg-slate-200 mx-2"></div>
-        
-        <button onClick={() => navigate('/channel/profile')} className="flex items-center gap-3 cursor-pointer p-1.5 hover:bg-slate-100 rounded-full transition-all pr-4">
-          <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-white overflow-hidden">
-            {user?.profilePhoto ? (
-              <img src={user.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              user?.name ? user.name.charAt(0) : 'JD'
-            )}
-          </div>
-          <span className="text-sm font-medium text-slate-700 hidden sm:block">
-            {user?.name || 'John Doe'}
-          </span>
-        </button>
-        
-        <button onClick={() => navigate('/channel/settings')} className="p-2.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all cursor-pointer">
-          <Settings className="h-5 w-5" />
-        </button>
+        <div className="relative border-l border-slate-200 pl-6 flex items-center gap-2">
+          <button onClick={() => navigate('/channel/profile')} className="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-xl transition-colors text-left">
+            <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 overflow-hidden">
+              {user?.profilePhoto ? (
+                <img src={user.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="font-bold text-sm">{user?.name ? user.name.charAt(0) : 'C'}</span>
+              )}
+            </div>
+            <div className="text-sm hidden md:block">
+              <p className="font-semibold text-slate-700">{user?.name || 'Channel Partner'}</p>
+              <p className="text-slate-500 text-xs">ID: {user?.userId}</p>
+            </div>
+          </button>
+          
+          <button onClick={() => navigate('/channel/settings')} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50 hidden sm:block">
+            <Settings size={20} />
+          </button>
+        </div>
       </div>
     </header>
   );
