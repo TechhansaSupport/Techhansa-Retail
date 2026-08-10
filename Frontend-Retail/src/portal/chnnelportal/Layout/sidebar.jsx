@@ -11,7 +11,8 @@ import {
   PieChart,
   Headset,
   UserCircle,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
 
@@ -22,25 +23,14 @@ const SidebarLink = ({ to, icon: Icon, children }) => {
   return (
     <Link
       to={to}
-      className={`relative flex items-center gap-3 px-4 py-3 mx-2 my-1 text-sm font-medium transition-all duration-200 rounded-xl group overflow-hidden ${
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
         isActive 
-          ? 'text-blue-700' 
-          : 'text-slate-500 hover:text-slate-900'
+          ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-sm'
+          : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-500'
       }`}
     >
-      {isActive && (
-        <motion.div 
-          layoutId="sidebar-active"
-          className="absolute inset-0 bg-blue-50 border border-blue-100/50 rounded-xl -z-10"
-          initial={false}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        />
-      )}
-      {!isActive && (
-        <div className="absolute inset-0 bg-slate-100 opacity-0 group-hover:opacity-100 rounded-xl -z-10 transition-opacity duration-200" />
-      )}
-      <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
-      <span className="relative z-10">{children}</span>
+      <Icon size={20} />
+      {children}
     </Link>
   );
 };
@@ -55,19 +45,22 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   };
 
   return (
-    <aside className={`w-64 bg-white/80 backdrop-blur-xl border border-slate-200 flex flex-col h-[calc(100vh-1rem)] md:h-full z-50 rounded-2xl shadow-sm overflow-hidden transition-transform duration-300 absolute md:relative left-2 md:left-0 top-2 md:top-0 ${isOpen ? 'translate-x-0' : '-translate-x-[150%] md:translate-x-0'}`}>
+    <aside className={`fixed md:relative inset-y-0 left-0 z-50 w-72 md:w-80 bg-white md:rounded-2xl flex flex-col shadow-2xl md:shadow-sm overflow-hidden shrink-0 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
       {/* Logo Area */}
-      <div className="h-24 flex items-center px-1 border-b border-slate-100 shrink-0">
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/src/assets/logo.png" alt="Techhansa" className="h-22 w-auto" />
-          <span className="font-bold text-[#DDA73C] text-lg leading-tight mt-1">
+      <div className="h-20 md:h-28 flex items-center px-4 md:px-6 border-b border-slate-100 justify-between">
+        <Link to="/" className="flex items-center min-w-0">
+          <img src="/src/assets/logo.png" alt="Techhansa" className="h-12 md:h-24 w-auto -ml-2 md:-ml-4 object-contain shrink-0" />
+          <span className="text-base md:text-lg font-black ml-2 text-[var(--premium-gold)] tracking-tight uppercase whitespace-nowrap truncate">
             Techhansa Retail
           </span>
         </Link>
+        <button className="md:hidden text-slate-400 hover:text-slate-600 p-2 shrink-0 ml-1" onClick={() => setIsOpen(false)}>
+          <X size={24} />
+        </button>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-1">
+      <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <SidebarLink to="/channel" icon={LayoutDashboard}>Dashboard</SidebarLink>
         <SidebarLink to="/channel/rfp" icon={FileText}>RFP Management</SidebarLink>
         <SidebarLink to="/channel/quotations" icon={FileBadge}>Quotations</SidebarLink>
