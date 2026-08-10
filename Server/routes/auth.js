@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const User = require('../models/User');
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -11,29 +12,32 @@ router.post('/seed', async (req, res) => {
     // Clear out old test users to avoid duplicate key errors if this is run multiple times
     await User.deleteMany({ userId: { $in: ['admin123', 'franchise123', 'employee123', 'channel123'] } });
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+
     const adminUser = new User({
       userId: 'admin123',
-      password: 'password123',
+      password: hashedPassword,
       role: 'admin'
     });
     
     const franchiseUser = new User({
       userId: 'franchise123',
-      password: 'password123',
+      password: hashedPassword,
       role: 'franchise',
       storeId: 'store-001'
     });
 
     const employeeUser = new User({
       userId: 'employee123',
-      password: 'password123',
+      password: hashedPassword,
       role: 'employee',
       storeId: 'store-001'
     });
 
     const channelUser = new User({
       userId: 'channel123',
-      password: 'password123',
+      password: hashedPassword,
       role: 'channel'
     });
 
@@ -60,8 +64,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid User ID or Password' });
     }
 
-    // 2. Verify password (Compare plain text for now; use bcrypt in production)
-    if (user.password !== password) {
+    // 2. Verify password using bcrypt
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({ message: 'Invalid User ID or Password' });
     }
 
@@ -95,7 +100,8 @@ router.post('/login', async (req, res) => {
         companyName: user.companyName,
         phone: user.phone,
         address: user.address,
-        profilePhoto: user.profilePhoto
+        profilePhoto: user.profilePhoto,
+        storeId: user.storeId
       }
     });
 

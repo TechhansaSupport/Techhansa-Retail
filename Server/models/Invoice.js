@@ -2,8 +2,12 @@ const mongoose = require('mongoose');
 
 const InvoiceSchema = new mongoose.Schema({
   invoiceNumber: { type: String, required: true, unique: true },
-  orderReference: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
+  orderReference: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: false },
   amount: { type: Number, required: true },
+  customerName: { type: String, required: false },
+  customerPhone: { type: String, required: false },
+  employeeId: { type: String, required: false },
+  storeId: { type: String, required: false },
   paymentStatus: {
     type: String,
     enum: ['Unpaid', 'Paid', 'Overdue'],
