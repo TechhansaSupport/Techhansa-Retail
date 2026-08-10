@@ -58,22 +58,22 @@ export default function Header() {
         {/* 1. Logo Section */}
         <div className="flex-shrink-0 z-20">
           <a href="/" className="flex items-center gap-2 lg:gap-3">
-            <img src={logo} alt="Techhansa Retail" className="h-12 lg:h-24 w-auto object-contain" />
-            <span className="text-[var(--premium-gold)] font-extrabold text-lg lg:text-[26px] tracking-wide whitespace-nowrap">
+            <img src={logo} alt="Techhansa Retail" className="h-10 lg:h-16 xl:h-20 w-auto object-contain" />
+            <span className="text-[var(--premium-gold)] font-extrabold text-lg lg:text-xl xl:text-[26px] tracking-wide whitespace-nowrap">
               Techhansa Retail
             </span>
           </a>
         </div>
 
         {/* 2. Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-6 xl:gap-8 ml-12 xl:ml-20">
+        <nav className="hidden lg:flex items-center gap-4 lg:gap-5 xl:gap-8 ml-6 lg:ml-8 xl:ml-20">
           {navLinks.map((link) => (
             link.subLinks ? (
               // === DROPDOWN PARENT ===
               <div key={link.name} className="relative group">
                 <Link 
                   to={link.path} 
-                  className="relative flex items-center gap-1 font-medium text-[16px] py-4 hover:text-[var(--tech-blue)] transition-colors duration-300 whitespace-nowrap"
+                  className="relative flex items-center gap-1 font-medium text-[14px] lg:text-[15px] xl:text-[16px] py-4 hover:text-[var(--tech-blue)] transition-colors duration-300 whitespace-nowrap"
                 >
                   {link.name}
                   {/* Chevron Icon that rotates on hover */}
@@ -126,7 +126,7 @@ export default function Header() {
               <Link 
                 key={link.name} 
                 to={link.path} 
-                className="relative font-medium text-[16px] py-4 hover:text-[var(--tech-blue)] transition-colors duration-300 group whitespace-nowrap"
+                className="relative font-medium text-[14px] lg:text-[15px] xl:text-[16px] py-4 hover:text-[var(--tech-blue)] transition-colors duration-300 group whitespace-nowrap"
               >
                 {link.name}
                 <span className="absolute left-0 bottom-3 w-0 h-[2px] bg-[var(--premium-gold)] transition-all duration-300 group-hover:w-full"></span>
@@ -162,7 +162,7 @@ export default function Header() {
 
             {/* === DEFAULT ACTIONS === */}
             <div 
-              className={`flex items-center gap-4 xl:gap-6 transition-all duration-400 ease-in-out ${
+              className={`flex items-center gap-3 lg:gap-4 xl:gap-6 transition-all duration-400 ease-in-out ${
                 isSearchOpen ? 'opacity-0 invisible absolute right-0 scale-90' : 'opacity-100 visible relative scale-100'
               }`}
             >
@@ -177,9 +177,9 @@ export default function Header() {
               </button>
 
               {/* Contact & Login Section */}
-              <div className="hidden xl:flex flex-col -mt-8 items-end gap-0.5">
-                <div className="flex items-center gap-1 font-semibold text-[14px] whitespace-nowrap">
-                  <span className="text-lg">📞</span>
+              <div className="hidden lg:flex flex-col -mt-8 items-end gap-0.5">
+                <div className="flex items-center gap-1 font-semibold text-[13px] xl:text-[14px] whitespace-nowrap">
+                  <span className="text-base xl:text-lg">📞</span>
                   <a href="tel:+919711888951" className="hover:text-[var(--tech-blue)] transition-colors">+91 9711888951</a>
                 </div>
                 

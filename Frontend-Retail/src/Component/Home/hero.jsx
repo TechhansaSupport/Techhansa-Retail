@@ -52,11 +52,11 @@ export default function Hero() {
         </p>
 
         {/* 2. Massive Main Heading */}
-        <h1 className="text-white text-6xl md:text-7xl lg:text-[7rem] font-extrabold tracking-tight mb-2 md:mb-4 leading-none drop-shadow-lg" data-aos="fade-up" data-aos-delay="100">
+        <h1 className="text-white text-6xl md:text-7xl lg:text-[6rem] xl:text-[7rem] font-extrabold tracking-tight mb-2 md:mb-4 leading-none drop-shadow-lg" data-aos="fade-up" data-aos-delay="100">
           Your Growth
         </h1>
 
-        <p className="text-white text-2xl md:text-4xl lg:text-[2.5rem] font-light mb-12 drop-shadow-md" data-aos="fade-up" data-aos-delay="200">
+        <p className="text-white text-2xl md:text-4xl lg:text-[2rem] xl:text-[2.5rem] font-light mb-12 drop-shadow-md" data-aos="fade-up" data-aos-delay="200">
           powered by our <span className="text-[var(--premium-gold)] font-serif font-medium italic">IT Hardware</span> ecosystem
         </p>
 
