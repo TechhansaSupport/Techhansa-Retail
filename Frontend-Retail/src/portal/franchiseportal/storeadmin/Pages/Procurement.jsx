@@ -4,13 +4,12 @@ import { Plus, X, Trash2, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Procurement() {
-  const { techhansaCatalog, b2bInvoices } = useFranchise();
+  const { techhansaCatalog, b2bInvoices, orders, submitOrderRequest } = useFranchise();
   const [activeTab, setActiveTab] = useState('catalog');
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderItems, setOrderItems] = useState([]);
-  const [submittedOrders, setSubmittedOrders] = useState([]); // New state for submitted orders
   
   const initialFormState = {
     hardwareType: '',
@@ -66,15 +65,8 @@ export default function Procurement() {
     }
     // Simulate API call to send request to Techhansa Admin
     console.log("Multi-Item Order Submitted: ", orderItems);
-    
-    // Add to submitted orders
-    const newOrder = {
-      id: `REQ-${Math.floor(Math.random() * 10000)}`,
-      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-      status: 'Pending Verification',
-      items: [...orderItems]
-    };
-    setSubmittedOrders(prev => [newOrder, ...prev]);
+    // Add to submitted orders via context
+    submitOrderRequest(orderItems);
 
     toast.success("Order request sent to Techhansa Admin for verification.");
     setIsModalOpen(false);
@@ -195,9 +187,9 @@ export default function Procurement() {
           </div>
           
           {/* Submitted Orders Section */}
-          {submittedOrders.length > 0 ? (
+          {orders.length > 0 ? (
             <div className="space-y-6">
-                {submittedOrders.map(order => (
+                {orders.map(order => (
                   <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
                       <div>
@@ -219,7 +211,7 @@ export default function Procurement() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                          {order.items.map(item => (
+                          {Array.isArray(order.items) ? order.items.map(item => (
                             <tr key={item.id}>
                               <td className="py-3 font-medium text-slate-800">
                                 {item.hardwareType === 'Others' ? item.otherType : item.hardwareType}
@@ -237,7 +229,13 @@ export default function Procurement() {
                               </td>
                               <td className="py-3 text-center font-bold text-indigo-600">{item.quantity}</td>
                             </tr>
-                          ))}
+                          )) : (
+                            <tr>
+                              <td colSpan="4" className="py-3 text-center text-slate-500 italic">
+                                Legacy order items not structured for detailed view.
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>

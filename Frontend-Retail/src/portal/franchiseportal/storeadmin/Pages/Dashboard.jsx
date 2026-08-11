@@ -255,7 +255,7 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-800">Recent Admin Orders</h2>
-            <button onClick={() => navigate('/franchise/orders')} className="text-indigo-600 text-sm font-semibold hover:text-indigo-800">Order History</button>
+            <button onClick={() => navigate('/franchise/procurement')} className="text-indigo-600 text-sm font-semibold hover:text-indigo-800">Order History</button>
           </div>
           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
             {orders.slice(0, 4).map((order) => (
@@ -281,8 +281,12 @@ export default function Dashboard() {
                 </div>
                 
                 <div className="text-right">
-                  <span className="font-black text-slate-700 block">₹{order.total.toLocaleString()}</span>
-                  <span className="text-xs text-slate-500 font-medium">{order.items} Items</span>
+                  <span className="font-black text-slate-700 block">
+                    {order.total > 0 ? `₹${order.total.toLocaleString()}` : 'TBD'}
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium">
+                    {Array.isArray(order.items) ? order.items.reduce((acc, item) => acc + (Number(item.quantity) || 1), 0) : order.items} Items
+                  </span>
                 </div>
               </div>
             ))}

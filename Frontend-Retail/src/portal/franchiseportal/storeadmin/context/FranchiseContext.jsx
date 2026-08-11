@@ -90,12 +90,23 @@ export function FranchiseProvider({ children }) {
     const newOrder = {
       id: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
       date: new Date().toLocaleDateString('en-CA'),
-      items: items.reduce((acc, item) => acc + item.quantity, 0),
+      items: items,
       total: totalAmount,
       status: 'Pending',
       expectedDelivery: 'TBD'
     };
     setOrders([newOrder, ...orders]);
+  };
+
+  const submitOrderRequest = (orderItems) => {
+    const newOrder = {
+      id: `REQ-${Math.floor(Math.random() * 10000)}`,
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      status: 'PENDING',
+      items: orderItems,
+      total: 0 // TBD until techhansa approves
+    };
+    setOrders(prev => [newOrder, ...prev]);
   };
 
   // Automated Inventory Update & Sales Processing
@@ -186,7 +197,8 @@ export function FranchiseProvider({ children }) {
       clearGlobalCart,
       addInventoryItem,
       updateInventoryItem,
-      addFundsToWallet
+      addFundsToWallet,
+      submitOrderRequest
     }}>
       {children}
     </FranchiseContext.Provider>
