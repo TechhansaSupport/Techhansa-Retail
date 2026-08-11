@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Outlet }
 
 // --- Auth Context ---
 import { AuthContext, AuthProvider } from './context/AuthContext';
+import { Toaster } from 'react-hot-toast';
 
 // --- Public Website Layout & Pages ---
 import Header from './Component/Layout/header';
@@ -34,7 +35,11 @@ import Procurement from './portal/franchiseportal/storeadmin/Pages/Procurement';
 import Wallet from './portal/franchiseportal/storeadmin/Pages/Wallet';
 import Employees from './portal/franchiseportal/storeadmin/Pages/Employees';
 import { FranchiseProvider } from './portal/franchiseportal/storeadmin/context/FranchiseContext';
-import EmployeeDashboard from './portal/franchiseportal/employeeportal/components/employee';
+import EmployeeLayout from './portal/franchiseportal/employeeportal/Layout/EmployeeLayout';
+import EmployeeDashboard from './portal/franchiseportal/employeeportal/Pages/Dashboard';
+import EmployeeBilling from './portal/franchiseportal/employeeportal/Pages/Billing';
+import EmployeeInventory from './portal/franchiseportal/employeeportal/Pages/Inventory';
+import EmployeeOrders from './portal/franchiseportal/employeeportal/Pages/Orders';
 import ChannelLayout from './portal/chnnelportal/Layout';
 import ChannelDashboard from './portal/chnnelportal/Dashboard';
 import CreateRFP from './portal/chnnelportal/CreateRFP';
@@ -94,6 +99,7 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <Router>
         <ScrollToTop />
 
@@ -141,10 +147,13 @@ function App() {
           {/* Employee Portal */}
           <Route path="/employee" element={
             <ProtectedRoute allowedRole="employee">
-              <Outlet />
+              <EmployeeLayout />
             </ProtectedRoute>
           }>
             <Route index element={<EmployeeDashboard />} />
+            <Route path="billing" element={<EmployeeBilling />} />
+            <Route path="inventory" element={<EmployeeInventory />} />
+            <Route path="orders" element={<EmployeeOrders />} />
           </Route>
 
           {/* Channel Partner Portal */}
