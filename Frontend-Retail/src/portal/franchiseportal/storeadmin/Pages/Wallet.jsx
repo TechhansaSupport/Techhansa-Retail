@@ -3,13 +3,14 @@ import { useFranchise } from '../context/FranchiseContext';
 import { IndianRupee, Plus, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export default function Wallet() {
-  const { metrics, walletTransactions } = useFranchise();
+  const { metrics, walletTransactions, addFundsToWallet } = useFranchise();
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [amount, setAmount] = useState('');
 
   const handleAddFunds = (e) => {
     e.preventDefault();
-    alert(`Mock Payment Gateway: Adding ₹${amount} via Razorpay...`);
+    if (!amount || isNaN(amount) || amount <= 0) return;
+    addFundsToWallet(amount);
     setShowAddFunds(false);
     setAmount('');
   };
