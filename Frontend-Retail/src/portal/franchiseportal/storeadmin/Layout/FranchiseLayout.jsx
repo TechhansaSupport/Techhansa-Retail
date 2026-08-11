@@ -13,8 +13,15 @@ export default function FranchiseLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isStoreMenuOpen, setIsStoreMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [activeStore, setActiveStore] = useState('Lanka Branch');
   const stores = ['Lanka Branch', 'Shivpur Branch'];
+
+  const notifications = [
+    { id: 1, title: 'Low Stock Alert', message: 'Dell XPS 13 stock is below threshold.', time: '10 mins ago', unread: true },
+    { id: 2, title: 'Order Update', message: 'Your hardware request ORD-003 is approved.', time: '1 hour ago', unread: true },
+    { id: 3, title: 'New Feature', message: 'Point of Sale system updated to v2.0.', time: 'Yesterday', unread: false }
+  ];
 
   useEffect(() => {
     if (mainRef.current) {
@@ -89,7 +96,7 @@ export default function FranchiseLayout() {
       <div className="flex-1 flex flex-col bg-white md:rounded-2xl shadow-sm overflow-hidden relative w-full">
         
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 z-50 shrink-0 relative">
           <div className="flex items-center gap-3">
             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-50 rounded-xl">
               <Menu size={24} />
@@ -107,26 +114,60 @@ export default function FranchiseLayout() {
                 <ChevronDown size={14} className="text-slate-400" />
               </button>
               {isStoreMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
-                  {stores.map(store => (
-                    <button
-                      key={store}
-                      onClick={() => { setActiveStore(store); setIsStoreMenuOpen(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                    >
-                      {store}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsStoreMenuOpen(false)}></div>
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+                    {stores.map(store => (
+                      <button
+                        key={store}
+                        onClick={() => { setActiveStore(store); setIsStoreMenuOpen(false); }}
+                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 relative z-50"
+                      >
+                        {store}
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </div>
           
           <div className="flex items-center gap-4 md:gap-6">
-            <button className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50"
+              >
+                <Bell size={20} />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+              </button>
+              
+              {isNotificationOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsNotificationOpen(false)}></div>
+                  <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+                    <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center relative z-50">
+                      <h3 className="font-bold text-slate-800">Notifications</h3>
+                      <button className="text-xs text-indigo-600 font-medium hover:text-indigo-700">Mark all as read</button>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto relative z-50">
+                      {notifications.map(note => (
+                        <div key={note.id} className={`px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer ${note.unread ? 'bg-indigo-50/30' : ''}`}>
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className={`text-sm font-semibold ${note.unread ? 'text-slate-800' : 'text-slate-600'}`}>{note.title}</h4>
+                            <span className="text-[10px] text-slate-400">{note.time}</span>
+                          </div>
+                          <p className="text-xs text-slate-500 line-clamp-2">{note.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="px-4 py-2 border-t border-slate-100 text-center relative z-50">
+                      <button className="text-xs text-indigo-600 font-bold hover:text-indigo-700">View All Notifications</button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             
             <div className="relative border-l border-slate-200 pl-6">
               <button 
@@ -144,18 +185,18 @@ export default function FranchiseLayout() {
               </button>
               
               {isProfileMenuOpen && (
-                <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
-                  <button onClick={() => { navigate('/franchise/profile'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                    <Store size={16} /> Store Profile
-                  </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                    <Settings size={16} /> Settings
-                  </button>
-                  <div className="h-px bg-slate-100 my-2"></div>
-                  <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium">
-                    <LogOut size={16} /> Sign Out
-                  </button>
-                </div>
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)}></div>
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+                    <button onClick={() => { navigate('/franchise/profile'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 relative z-50">
+                      <Store size={16} /> Store Profile
+                    </button>
+                    <div className="h-px bg-slate-100 my-2 relative z-50"></div>
+                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium relative z-50">
+                      <LogOut size={16} /> Sign Out
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>
