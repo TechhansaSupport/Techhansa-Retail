@@ -35,8 +35,6 @@ export default function FranchiseLayout() {
     { name: 'Billing / POS', path: '/franchise/billing', icon: <Receipt size={20} /> },
     { name: 'Credit Wallet', path: '/franchise/wallet', icon: <Wallet size={20} /> },
     { name: 'Inventory', path: '/franchise/inventory', icon: <Package size={20} /> },
-    { name: 'Orders', path: '/franchise/orders', icon: <ShoppingCart size={20} /> },
-    { name: 'Delivery Tracking', path: '/franchise/tracking', icon: <Truck size={20} /> },
     { name: 'Employee Management', path: '/franchise/employees', icon: <Users size={20} /> },
     { name: 'Sales & Reports', path: '/franchise/sales', icon: <BarChart3 size={20} /> },
   ];

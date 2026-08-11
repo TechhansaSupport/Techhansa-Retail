@@ -26,8 +26,6 @@ import FranchiseLayout from './portal/franchiseportal/storeadmin/Layout/Franchis
 import FranchiseDashboard from './portal/franchiseportal/storeadmin/Pages/Dashboard';
 import FranchiseProfile from './portal/franchiseportal/storeadmin/Pages/StoreProfile';
 import FranchiseInventory from './portal/franchiseportal/storeadmin/Pages/Inventory';
-import FranchiseOrders from './portal/franchiseportal/storeadmin/Pages/Orders';
-import FranchiseDeliveryTracking from './portal/franchiseportal/storeadmin/Pages/DeliveryTracking';
 import FranchiseCart from './portal/franchiseportal/storeadmin/Pages/Cart';
 import FranchiseSales from './portal/franchiseportal/storeadmin/Pages/Sales';
 import FranchiseBilling from './portal/franchiseportal/storeadmin/Pages/Billing';
@@ -136,8 +134,6 @@ function App() {
             <Route path="cart" element={<FranchiseCart />} />
             <Route path="profile" element={<FranchiseProfile />} />
             <Route path="inventory" element={<FranchiseInventory />} />
-            <Route path="orders" element={<FranchiseOrders />} />
-            <Route path="tracking" element={<FranchiseDeliveryTracking />} />
             <Route path="sales" element={<FranchiseSales />} />
             <Route path="procurement" element={<Procurement />} />
             <Route path="wallet" element={<Wallet />} />

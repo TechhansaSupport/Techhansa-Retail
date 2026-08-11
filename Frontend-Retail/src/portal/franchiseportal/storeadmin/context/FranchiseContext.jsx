@@ -62,6 +62,30 @@ export function FranchiseProvider({ children }) {
     setStoreProfileData(newProfile);
   };
 
+  const addFundsToWallet = (amount) => {
+    const numAmount = Number(amount);
+    setMetrics(prev => ({ ...prev, walletBalance: prev.walletBalance + numAmount }));
+    
+    const newTxn = {
+      id: `TXN-${Date.now()}`,
+      date: new Date().toLocaleDateString('en-CA'),
+      type: 'Credit In',
+      amount: numAmount,
+      status: 'Success',
+      closingBalance: metrics.walletBalance + numAmount
+    };
+    
+    setWalletTransactions(prev => [newTxn, ...prev]);
+  };
+
+  const addInventoryItem = (newItem) => {
+    setInventory(prev => [{ ...newItem, id: `PROD-${Date.now()}` }, ...prev]);
+  };
+
+  const updateInventoryItem = (id, updatedFields) => {
+    setInventory(prev => prev.map(item => item.id === id ? { ...item, ...updatedFields } : item));
+  };
+
   const requestNewStock = (items, totalAmount) => {
     const newOrder = {
       id: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
@@ -159,7 +183,10 @@ export function FranchiseProvider({ children }) {
       addToGlobalCart,
       updateGlobalCartQuantity,
       removeGlobalCartItem,
-      clearGlobalCart
+      clearGlobalCart,
+      addInventoryItem,
+      updateInventoryItem,
+      addFundsToWallet
     }}>
       {children}
     </FranchiseContext.Provider>

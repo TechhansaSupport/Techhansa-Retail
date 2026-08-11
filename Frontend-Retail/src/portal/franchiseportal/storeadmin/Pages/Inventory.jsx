@@ -1,14 +1,35 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
-import { Search, Filter, AlertTriangle } from 'lucide-react';
+import { Search, Filter, AlertTriangle, Edit2, Plus, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Inventory() {
-  const { inventory } = useFranchise();
+  const { inventory, addInventoryItem, updateInventoryItem } = useFranchise();
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  
+  const initialFormState = {
+    category: '',
+    brand: '',
+    model: '',
+    name: '',
+    sku: '',
+    serialNumber: '',
+    buyingPrice: '',
+    mrp: '',
+    sellingPrice: '',
+    availableStock: '',
+    lowStockAlert: '',
+    reservedStock: '0'
+  };
+  const [formData, setFormData] = useState(initialFormState);
 
   const categories = ['All', ...new Set(inventory.map(i => i.category))];
 
@@ -25,14 +46,67 @@ export default function Inventory() {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  const handleOpenModal = (item = null) => {
+    if (item) {
+      setEditingItem(item);
+      setFormData(item);
+    } else {
+      setEditingItem(null);
+      setFormData(initialFormState);
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
+    setFormData(initialFormState);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    // Auto-fill 'name' based on brand and model if empty or generating
+    if (name === 'brand' || name === 'model') {
+       const newBrand = name === 'brand' ? value : formData.brand;
+       const newModel = name === 'model' ? value : formData.model;
+       setFormData(prev => ({ ...prev, [name]: value, name: `${newBrand} ${newModel}`.trim() }));
+    } else {
+       setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Parse numeric fields
+    const processedData = {
+      ...formData,
+      buyingPrice: Number(formData.buyingPrice),
+      mrp: Number(formData.mrp),
+      sellingPrice: Number(formData.sellingPrice),
+      availableStock: Number(formData.availableStock),
+      lowStockAlert: Number(formData.lowStockAlert),
+      reservedStock: Number(formData.reservedStock) || 0
+    };
+
+    if (editingItem) {
+      updateInventoryItem(editingItem.id, processedData);
+      toast.success("Stock updated successfully!");
+    } else {
+      addInventoryItem(processedData);
+      toast.success("New stock added successfully!");
+    }
+    handleCloseModal();
+  };
+
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Inventory Management</h1>
-          <p className="text-slate-500">View and track your current stock levels. (Read Only)</p>
+          <p className="text-slate-500">Manage and track your current stock levels.</p>
         </div>
-        <div className="flex w-full md:w-auto gap-3">
+        <div className="flex flex-wrap w-full md:w-auto gap-3 items-center">
           <div className="relative flex-1 md:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
@@ -81,6 +155,13 @@ export default function Inventory() {
               </div>
             )}
           </div>
+          <button 
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            <Plus size={16} />
+            Add New Product
+          </button>
         </div>
       </div>
 
@@ -98,9 +179,9 @@ export default function Inventory() {
                 <th className="px-6 py-4 font-medium">Brand & Model</th>
                 <th className="px-6 py-4 font-medium">SN / MAC Address</th>
                 <th className="px-6 py-4 font-medium text-right">B2B Purchase Price</th>
-                <th className="px-6 py-4 font-medium text-right">MRP</th>
                 <th className="px-6 py-4 font-medium text-right">Store Selling Price</th>
                 <th className="px-6 py-4 font-medium text-center">Available Qty</th>
+                <th className="px-6 py-4 font-medium text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -122,13 +203,10 @@ export default function Inventory() {
                       {item.serialNumber || 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-right font-medium text-slate-700">
-                      ₹{item.buyingPrice.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-right font-medium text-slate-500 line-through">
-                      ₹{item.mrp?.toLocaleString() || (item.sellingPrice * 1.2).toFixed(0)}
+                      ₹{item.buyingPrice?.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-right font-bold text-indigo-600">
-                      ₹{item.sellingPrice.toLocaleString()}
+                      ₹{item.sellingPrice?.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex flex-col items-center">
@@ -139,6 +217,15 @@ export default function Inventory() {
                           <span className="text-[10px] font-bold text-red-500 uppercase mt-1">Low Stock</span>
                         )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button 
+                        onClick={() => handleOpenModal(item)}
+                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Update Stock"
+                      >
+                        <Edit2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -166,19 +253,22 @@ export default function Inventory() {
                     <div className="font-bold text-slate-800 text-lg">{item.name}</div>
                     <div className="text-xs text-slate-500 font-mono mt-0.5">{item.sku}</div>
                   </div>
-                  <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">
-                    {item.category}
-                  </span>
+                  <button 
+                    onClick={() => handleOpenModal(item)}
+                    className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"
+                  >
+                    <Edit2 size={14} />
+                  </button>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-xl p-3">
                   <div>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Buying Price</p>
-                    <p className="font-semibold text-slate-700">₹{item.buyingPrice.toLocaleString()}</p>
+                    <p className="font-semibold text-slate-700">₹{item.buyingPrice?.toLocaleString()}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Selling Price</p>
-                    <p className="font-bold text-indigo-600">₹{item.sellingPrice.toLocaleString()}</p>
+                    <p className="font-bold text-indigo-600">₹{item.sellingPrice?.toLocaleString()}</p>
                   </div>
                 </div>
                 
@@ -189,10 +279,6 @@ export default function Inventory() {
                       <p className={`font-black text-xl ${isLowStock ? 'text-red-500' : 'text-slate-800'}`}>
                         {item.availableStock}
                       </p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Reserved</p>
-                      <p className="font-bold text-slate-500 text-xl">{item.reservedStock}</p>
                     </div>
                   </div>
                   
@@ -218,6 +304,99 @@ export default function Inventory() {
           )}
         </div>
       </motion.div>
+
+      {/* Add / Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl my-8 relative flex flex-col max-h-full">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 flex-shrink-0">
+              <h2 className="text-xl font-bold text-slate-800">
+                {editingItem ? 'Update Stock' : 'Add New Product'}
+              </h2>
+              <button onClick={handleCloseModal} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              <form id="inventory-form" onSubmit={handleSubmit} className="space-y-6">
+                
+                {/* Product Identification */}
+                <div className="bg-slate-50 p-4 rounded-xl space-y-4 border border-slate-100">
+                  <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Product Info</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Category *</label>
+                      <input type="text" name="category" value={formData.category} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Laptops" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">SKU</label>
+                      <input type="text" name="sku" value={formData.sku} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. SKU-12345" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Brand *</label>
+                      <input type="text" name="brand" value={formData.brand} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Dell" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Model *</label>
+                      <input type="text" name="model" value={formData.model} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. XPS 13" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Full Product Name</label>
+                      <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Dell XPS 13" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Serial Number / MAC Address</label>
+                      <input type="text" name="serialNumber" value={formData.serialNumber} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Enter SN..." />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pricing & Stock */}
+                <div className="bg-slate-50 p-4 rounded-xl space-y-4 border border-slate-100">
+                  <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Pricing & Quantities</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Buying Price (₹) *</label>
+                      <input type="number" name="buyingPrice" value={formData.buyingPrice} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">MRP (₹) *</label>
+                      <input type="number" name="mrp" value={formData.mrp} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Selling Price (₹) *</label>
+                      <input type="number" name="sellingPrice" value={formData.sellingPrice} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Available Stock *</label>
+                      <input type="number" name="availableStock" value={formData.availableStock} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Low Stock Alert Threshold *</label>
+                      <input type="number" name="lowStockAlert" value={formData.lowStockAlert} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+
+              </form>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 flex-shrink-0 bg-white rounded-b-2xl">
+              <button type="button" onClick={handleCloseModal} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+                Cancel
+              </button>
+              <button type="submit" form="inventory-form" className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors shadow-sm">
+                {editingItem ? 'Save Changes' : 'Add Product'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
