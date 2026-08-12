@@ -5,27 +5,29 @@ const ChannelPartner = require('../models/ChannelPartner');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { saveChannelPartnerJSON, getChannelPartnerUploadDir } = require('../utils/fileStorage');
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// The upload directory is determined dynamically per channel partner
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, '../uploads/channel');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Multer storage config
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const docPath = getChannelPartnerUploadDir(req.body.companyName);
-    cb(null, docPath);
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const uploaderName = (req.body.companyName || 'channel').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+    const uploaderName = (req.body.companyName || 'channel').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     cb(null, uploaderName + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
   fileFilter: (req, file, cb) => {
@@ -102,17 +104,13 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
 
   try {
     const {
-      companyName, cinGst, companyPan, companyTan, 
-      registeredAddress, companyContact, authName, 
+      companyName, cinGst, companyPan, companyTan,
+      registeredAddress, companyContact, authName,
       authContact, authEmail, directors
     } = req.body;
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    let documentPath = null;
-    if (req.file) {
-      const safeIdentifier = (companyName || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
-      documentPath = `${baseUrl}/uploads/channel/${safeIdentifier}/documents/${req.file.filename}`;
-    }
+    const documentPath = req.file ? `${baseUrl}/uploads/channel/${req.file.filename}` : null;
 
     // Parse directors if it's a JSON string
     let parsedDirectors = [];
@@ -122,22 +120,12 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
 
     // 1. Insert Channel Partner Application and Directors (MongoDB embeds them)
     const newApplication = await ChannelPartner.create({
-      companyName, cinGst, companyPan, companyTan, 
-      registeredAddress, companyContact, authName, 
+      companyName, cinGst, companyPan, companyTan,
+      registeredAddress, companyContact, authName,
       authContact, authEmail, documentPath,
       directors: parsedDirectors
     });
     const applicationId = newApplication._id;
-
-    // Save Application Form as JSON in the channel partner's folder
-    saveChannelPartnerJSON(companyName, '', 'application_form.json', {
-      applicationId,
-      companyName, cinGst, companyPan, companyTan, 
-      registeredAddress, companyContact, authName, 
-      authContact, authEmail, documentPath,
-      directors: parsedDirectors,
-      submittedAt: new Date().toISOString()
-    });
 
     // Send Email Notification
     try {
@@ -174,10 +162,10 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
       console.error("❌ Failed to send channel email:", emailError);
     }
 
-    res.status(201).json({ 
-      success: true, 
+    res.status(201).json({
+      success: true,
       message: 'Channel Partner application submitted successfully',
-      applicationId 
+      applicationId
     });
 
   } catch (error) {
@@ -186,13 +174,13 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
     await client.query('ROLLBACK');
     */
     console.error('Error submitting channel partner application:', error);
-    
+
     // Clean up uploaded file if DB insertion failed
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: 'Server error while submitting application',
       error: error.message
     });

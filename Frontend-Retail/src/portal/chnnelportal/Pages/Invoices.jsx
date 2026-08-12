@@ -69,7 +69,7 @@ export default function Invoices() {
   });
 
   const orderRefForRfp = selectedInvoice?.orderReference?.orderId || selectedInvoice?.orderReference?.orderNumber || (typeof selectedInvoice?.orderReference === 'string' ? selectedInvoice?.orderReference : '');
-  const selectedRfp = selectedInvoice ? rfps.find(r => r.rfpId === orderRefForRfp?.replace('ORD-', '')) : null;
+  const selectedRfp = selectedInvoice?.orderReference?.quotationReference?.rfpReference || (selectedInvoice ? rfps.find(r => r.rfpId === orderRefForRfp?.replace('ORD-', '')) : null);
   const invoiceItems = selectedInvoice?.items || selectedRfp?.products || [];
 
   return (
@@ -232,9 +232,14 @@ export default function Invoices() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {invoiceItems.map((item, i) => {
-                          const rate = item.rate || item.unitPrice || 0;
-                          const qty = item.quantity || 0;
+                        {(() => {
+                          const totalQtyAcrossAllItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+                          const totalAmountFromInvoice = selectedInvoice.amount || 0;
+                          const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / 1.18) / totalQtyAcrossAllItems : 0;
+                          
+                          return invoiceItems.map((item, i) => {
+                            const rate = item.rate || item.unitPrice || assumedRate;
+                            const qty = item.quantity || 0;
                           const hsn = item.hsn || '-';
                           const gstRate = item.taxRate || 18;
                           const taxableValue = rate * qty;
@@ -260,7 +265,8 @@ export default function Invoices() {
                               </td>
                             </tr>
                           );
-                        })}
+                          });
+                        })()}
                       </tbody>
                       <tfoot className="bg-slate-50 border-t border-slate-200">
                         <tr>
@@ -270,7 +276,7 @@ export default function Invoices() {
                           <td className="px-4 py-3 text-sm font-bold text-slate-700 text-right">
                             {(() => {
                               const totalGst = invoiceItems.reduce((acc, item) => {
-                                const r = item.rate || item.unitPrice || 0;
+                                const r = item.rate || item.unitPrice || assumedRate;
                                 const q = item.quantity || 0;
                                 const gRate = item.taxRate || 18;
                                 return acc + (r * q * (gRate / 100));
@@ -303,7 +309,7 @@ export default function Invoices() {
                       <div className="text-sm">
                         <span className="text-slate-500">Amount Chargeable (in words)</span>
                         <p className="font-bold text-slate-900 capitalize">
-                          INR {numberToWords(Math.round(selectedInvoice.amount || invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0)))} Only
+                          INR {numberToWords(Math.round(selectedInvoice.amount || invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0)))} Only
                         </p>
                       </div>
                       <div className="text-sm text-right">
@@ -316,20 +322,20 @@ export default function Invoices() {
                       <div className="text-sm w-1/2">
                         <span className="text-slate-500">Tax Amount (in words) : </span>
                         <p className="font-bold text-slate-900 capitalize">
-                          INR {numberToWords(Math.round(invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0)))} Only
+                          INR {numberToWords(Math.round(invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0)))} Only
                         </p>
                       </div>
                       <div className="text-sm w-1/2 flex flex-col items-end gap-1">
                         <div className="flex justify-between w-48">
                           <span className="text-slate-500">Taxable Value:</span>
                           <span className="font-bold text-slate-900">
-                            ₹{invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ₹{invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                         <div className="flex justify-between w-48">
                           <span className="text-slate-500">Total Tax:</span>
                           <span className="font-bold text-slate-900">
-                            ₹{invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ₹{invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                       </div>

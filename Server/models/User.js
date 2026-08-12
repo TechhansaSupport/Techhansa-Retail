@@ -25,6 +25,9 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, default: '' },
   address: { type: String, default: '' },
   profilePhoto: { type: String, default: '' },
+  totalCredit: { type: Number, default: 0 },
+  usedCredit: { type: Number, default: 0 },
+  reservedCredit: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -45,14 +45,14 @@ export default function DeliveryTracking() {
     }
   };
 
-  const statusLevels = { 'Pending': 0, 'Confirmed': 1, 'Processing': 2, 'Shipped': 3, 'Delivered': 4 };
-  const currentLevel = order ? (statusLevels[order.status] || 0) : -1;
+  const statusLevels = { 'Pending': -1, 'Confirmed': 0, 'Processing': 1, 'Dispatched': 2, 'Out for Delivery': 3, 'Delivered': 4 };
+  const currentLevel = order ? (statusLevels[order.status] ?? -1) : -1;
 
   const steps = [
-    { title: 'Approved', subtitle: 'Order confirmed', icon: FileCheck },
+    { title: 'Confirmed', subtitle: 'Order confirmed', icon: FileCheck },
     { title: 'Processing', subtitle: 'Preparing items', icon: PackageOpen },
-    { title: 'Packed', subtitle: 'Ready for dispatch', icon: Package },
-    { title: 'In Transit', subtitle: 'Out for delivery', icon: Truck },
+    { title: 'Dispatched', subtitle: 'Handed to courier', icon: Package },
+    { title: 'Out for Delivery', subtitle: 'Arriving soon', icon: Truck },
     { title: 'Delivered', subtitle: 'Successfully delivered', icon: MapPin }
   ];
 

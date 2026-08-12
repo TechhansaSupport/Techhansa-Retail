@@ -6,8 +6,8 @@ const QuotationSchema = new mongoose.Schema({
   vendor: { type: String, required: true },
   amount: { type: Number, required: true },
   validUntil: { type: Date, required: true },
-  status: { 
-    type: String, 
+  status: {
+    type: String,
     enum: ['Pending', 'Approved', 'Rejected'],
     default: 'Pending'
   },

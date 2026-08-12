@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, FileText, Download, Eye, ExternalLink, XCircle } from 'lucide-react';
 import { exportToCSV } from '../../../utils/exportUtils';
 import { AuthContext } from '../../../context/AuthContext';
@@ -15,6 +16,7 @@ const itemVariants = {
 };
 
 export default function Quotations() {
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext) || { user: null };
   const [quotations, setQuotations] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -223,6 +225,14 @@ export default function Quotations() {
               {selectedQuotation.status === 'Pending' && (
                 <button disabled className="px-6 py-2 bg-slate-200 text-slate-500 font-medium rounded-lg cursor-not-allowed" title="Awaiting admin approval">
                   Accept Quotation
+                </button>
+              )}
+              {selectedQuotation.status !== 'Pending' && (
+                <button 
+                  onClick={() => navigate('/channel/checkout', { state: { quotation: selectedQuotation } })} 
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  Proceed to Checkout
                 </button>
               )}
             </div>

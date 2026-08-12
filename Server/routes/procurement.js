@@ -6,21 +6,12 @@ const Order = require('../models/Order');
 const Invoice = require('../models/Invoice');
 const User = require('../models/User');
 const CompanySettings = require('../models/CompanySettings');
-const { saveChannelPartnerJSON } = require('../utils/fileStorage');
-
-async function getChannelPartnerIdentifier(userId) {
-  if (!userId) return null;
-  const user = await User.findOne({ userId });
-  if (user && user.role === 'channel') {
-    return user.companyName || user.userId;
-  }
-  return null;
-}
+const CreditTransaction = require('../models/CreditTransaction');
 
 async function generateInvoiceNumber() {
   let stateCode = 'DL'; // default
   const settings = await CompanySettings.findOne();
-  
+
   if (settings) {
     const addr = (settings.stateName || settings.registeredAddress || '').toUpperCase();
     if (addr.includes('UTTAR PRADESH') || addr.includes(' UP') || addr.includes('U.P') || addr.includes(', UP')) stateCode = 'UP';
@@ -113,11 +104,6 @@ router.post('/rfp', async (req, res) => {
     const newRFP = new RFP(req.body);
     await newRFP.save();
 
-    const partnerId = await getChannelPartnerIdentifier(newRFP.userId);
-    if (partnerId) {
-      saveChannelPartnerJSON(partnerId, 'rfps', `RFP-${newRFP.rfpId}.json`, newRFP.toObject());
-    }
-
     if (newRFP.status !== 'Draft') {
       // Create placeholder Quotation
       const newQuotation = new Quotation({
@@ -130,7 +116,6 @@ router.post('/rfp', async (req, res) => {
         userId: newRFP.userId
       });
       await newQuotation.save();
-      if (partnerId) saveChannelPartnerJSON(partnerId, 'quotations', `${newQuotation.quotationNo}.json`, newQuotation.toObject());
 
       // Create placeholder Order
       const newOrder = new Order({
@@ -141,7 +126,6 @@ router.post('/rfp', async (req, res) => {
         userId: newRFP.userId
       });
       await newOrder.save();
-      if (partnerId) saveChannelPartnerJSON(partnerId, 'orders', `${newOrder.orderNumber}.json`, newOrder.toObject());
 
       // Create placeholder Invoice
       const newInvoice = new Invoice({
@@ -152,7 +136,6 @@ router.post('/rfp', async (req, res) => {
         userId: newRFP.userId
       });
       await newInvoice.save();
-      if (partnerId) saveChannelPartnerJSON(partnerId, 'invoices', `${newInvoice.invoiceNumber}.json`, newInvoice.toObject());
     }
 
     res.status(201).json(newRFP);
@@ -186,12 +169,43 @@ router.get('/orders', async (req, res) => {
   }
 });
 
+// GET specific Order by orderNumber (with deep population)
+router.get('/orders/:orderNumber', async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber })
+      .populate({
+        path: 'quotationReference',
+        populate: {
+          path: 'rfpReference'
+        }
+      });
+    
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    res.json(order);
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET all Invoices
 router.get('/invoices', async (req, res) => {
   try {
     if (!req.query.userId) return res.json([]);
     const filter = { userId: req.query.userId };
-    const invoices = await Invoice.find(filter).populate('orderReference').sort({ createdAt: -1 });
+    const invoices = await Invoice.find(filter)
+      .populate({
+        path: 'orderReference',
+        populate: {
+          path: 'quotationReference',
+          populate: {
+            path: 'rfpReference'
+          }
+        }
+      })
+      .sort({ createdAt: -1 });
     res.json(invoices);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -208,11 +222,6 @@ router.put('/rfp/:id', async (req, res) => {
 
     const updatedRFP = await RFP.findOneAndUpdate({ rfpId: req.params.id }, req.body, { returnDocument: 'after' });
 
-    const partnerId = await getChannelPartnerIdentifier(updatedRFP.userId);
-    if (partnerId) {
-      saveChannelPartnerJSON(partnerId, 'rfps', `RFP-${updatedRFP.rfpId}.json`, updatedRFP.toObject());
-    }
-
     // Create placeholders if transitioning from Draft
     if (oldRFP.status === 'Draft' && updatedRFP.status !== 'Draft') {
       const existingQuotation = await Quotation.findOne({ quotationNo: `QT-${updatedRFP.rfpId}` });
@@ -227,7 +236,6 @@ router.put('/rfp/:id', async (req, res) => {
           userId: updatedRFP.userId
         });
         await newQuotation.save();
-        if (partnerId) saveChannelPartnerJSON(partnerId, 'quotations', `${newQuotation.quotationNo}.json`, newQuotation.toObject());
 
         const newOrder = new Order({
           orderNumber: `ORD-${updatedRFP.rfpId}`,
@@ -237,7 +245,6 @@ router.put('/rfp/:id', async (req, res) => {
           userId: updatedRFP.userId
         });
         await newOrder.save();
-        if (partnerId) saveChannelPartnerJSON(partnerId, 'orders', `${newOrder.orderNumber}.json`, newOrder.toObject());
 
         const newInvoice = new Invoice({
           invoiceNumber: await generateInvoiceNumber(),
@@ -247,7 +254,6 @@ router.put('/rfp/:id', async (req, res) => {
           userId: updatedRFP.userId
         });
         await newInvoice.save();
-        if (partnerId) saveChannelPartnerJSON(partnerId, 'invoices', `${newInvoice.invoiceNumber}.json`, newInvoice.toObject());
       }
     }
     res.json(updatedRFP);
@@ -353,6 +359,92 @@ router.get('/reports', async (req, res) => {
     res.json({ daily, monthly, yearly });
   } catch (error) {
     console.error('Error generating reports:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST new Order (Checkout)
+router.post('/orders', async (req, res) => {
+  try {
+    const { 
+      quotationReference, 
+      expectedDelivery, 
+      totalAmount, 
+      paymentMethod, 
+      utrNumber, 
+      transactionDate, 
+      receiptUrl, 
+      userId 
+    } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    let paymentStatus = 'None';
+    const orderNumber = `ORD-${Date.now()}`;
+
+    if (paymentMethod === 'Credit') {
+      const user = await User.findOne({ userId });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      
+      const availableCredit = (user.totalCredit || 0) - (user.usedCredit || 0) - (user.reservedCredit || 0);
+      if (availableCredit < totalAmount) {
+        return res.status(400).json({ error: 'Insufficient Credit Limit' });
+      }
+
+      // Reserve the credit
+      user.reservedCredit = (user.reservedCredit || 0) + totalAmount;
+      await user.save();
+      paymentStatus = 'Reserved';
+
+      // Record transaction
+      const transaction = new CreditTransaction({
+        userId,
+        type: 'Reserved',
+        amount: totalAmount,
+        referenceId: orderNumber,
+        description: `Reserved credit for Order ${orderNumber}`
+      });
+      await transaction.save();
+
+    } else if (paymentMethod === 'NEFT' || paymentMethod === 'UPI' || paymentMethod === 'Advance Payment') {
+      paymentStatus = 'Pending Verification';
+    }
+
+    const newOrder = new Order({
+      orderNumber,
+      quotationReference, // Can be null if they skip quotation
+      expectedDelivery: expectedDelivery || new Date(),
+      status: 'Pending',
+      totalAmount,
+      paymentMethod,
+      paymentStatus,
+      utrNumber,
+      transactionDate,
+      receiptUrl,
+      userId
+    });
+
+    await newOrder.save();
+    res.status(201).json(newOrder);
+
+  } catch (error) {
+    console.error('Error creating order:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET Credit Transactions
+router.get('/credit-transactions', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+    
+    const transactions = await CreditTransaction.find({ userId }).sort({ date: -1 });
+    res.json(transactions);
+  } catch (error) {
+    console.error('Error fetching credit transactions:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
