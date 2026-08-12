@@ -5,24 +5,22 @@ const ChannelPartner = require('../models/ChannelPartner');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { saveChannelPartnerJSON, getChannelPartnerUploadDir } = require('../utils/fileStorage');
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '../uploads/channel');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// The upload directory is determined dynamically per channel partner
 
 // Multer storage config
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir);
+    const docPath = getChannelPartnerUploadDir(req.body.companyName);
+    cb(null, docPath);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const uploaderName = (req.body.companyName || 'channel').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const uploaderName = (req.body.companyName || 'channel').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
     cb(null, uploaderName + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
@@ -110,7 +108,11 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
     } = req.body;
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const documentPath = req.file ? `${baseUrl}/uploads/channel/${req.file.filename}` : null;
+    let documentPath = null;
+    if (req.file) {
+      const safeIdentifier = (companyName || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+      documentPath = `${baseUrl}/uploads/channel/${safeIdentifier}/documents/${req.file.filename}`;
+    }
 
     // Parse directors if it's a JSON string
     let parsedDirectors = [];
@@ -126,6 +128,16 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
       directors: parsedDirectors
     });
     const applicationId = newApplication._id;
+
+    // Save Application Form as JSON in the channel partner's folder
+    saveChannelPartnerJSON(companyName, '', 'application_form.json', {
+      applicationId,
+      companyName, cinGst, companyPan, companyTan, 
+      registeredAddress, companyContact, authName, 
+      authContact, authEmail, documentPath,
+      directors: parsedDirectors,
+      submittedAt: new Date().toISOString()
+    });
 
     // Send Email Notification
     try {

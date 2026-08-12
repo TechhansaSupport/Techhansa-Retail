@@ -6,6 +6,16 @@ const Order = require('../models/Order');
 const Invoice = require('../models/Invoice');
 const User = require('../models/User');
 const CompanySettings = require('../models/CompanySettings');
+const { saveChannelPartnerJSON } = require('../utils/fileStorage');
+
+async function getChannelPartnerIdentifier(userId) {
+  if (!userId) return null;
+  const user = await User.findOne({ userId });
+  if (user && user.role === 'channel') {
+    return user.companyName || user.userId;
+  }
+  return null;
+}
 
 async function generateInvoiceNumber() {
   let stateCode = 'DL'; // default
@@ -103,6 +113,11 @@ router.post('/rfp', async (req, res) => {
     const newRFP = new RFP(req.body);
     await newRFP.save();
 
+    const partnerId = await getChannelPartnerIdentifier(newRFP.userId);
+    if (partnerId) {
+      saveChannelPartnerJSON(partnerId, 'rfps', `RFP-${newRFP.rfpId}.json`, newRFP.toObject());
+    }
+
     if (newRFP.status !== 'Draft') {
       // Create placeholder Quotation
       const newQuotation = new Quotation({
@@ -115,6 +130,7 @@ router.post('/rfp', async (req, res) => {
         userId: newRFP.userId
       });
       await newQuotation.save();
+      if (partnerId) saveChannelPartnerJSON(partnerId, 'quotations', `${newQuotation.quotationNo}.json`, newQuotation.toObject());
 
       // Create placeholder Order
       const newOrder = new Order({
@@ -125,6 +141,7 @@ router.post('/rfp', async (req, res) => {
         userId: newRFP.userId
       });
       await newOrder.save();
+      if (partnerId) saveChannelPartnerJSON(partnerId, 'orders', `${newOrder.orderNumber}.json`, newOrder.toObject());
 
       // Create placeholder Invoice
       const newInvoice = new Invoice({
@@ -135,6 +152,7 @@ router.post('/rfp', async (req, res) => {
         userId: newRFP.userId
       });
       await newInvoice.save();
+      if (partnerId) saveChannelPartnerJSON(partnerId, 'invoices', `${newInvoice.invoiceNumber}.json`, newInvoice.toObject());
     }
 
     res.status(201).json(newRFP);
@@ -190,6 +208,11 @@ router.put('/rfp/:id', async (req, res) => {
 
     const updatedRFP = await RFP.findOneAndUpdate({ rfpId: req.params.id }, req.body, { returnDocument: 'after' });
 
+    const partnerId = await getChannelPartnerIdentifier(updatedRFP.userId);
+    if (partnerId) {
+      saveChannelPartnerJSON(partnerId, 'rfps', `RFP-${updatedRFP.rfpId}.json`, updatedRFP.toObject());
+    }
+
     // Create placeholders if transitioning from Draft
     if (oldRFP.status === 'Draft' && updatedRFP.status !== 'Draft') {
       const existingQuotation = await Quotation.findOne({ quotationNo: `QT-${updatedRFP.rfpId}` });
@@ -204,6 +227,7 @@ router.put('/rfp/:id', async (req, res) => {
           userId: updatedRFP.userId
         });
         await newQuotation.save();
+        if (partnerId) saveChannelPartnerJSON(partnerId, 'quotations', `${newQuotation.quotationNo}.json`, newQuotation.toObject());
 
         const newOrder = new Order({
           orderNumber: `ORD-${updatedRFP.rfpId}`,
@@ -213,6 +237,7 @@ router.put('/rfp/:id', async (req, res) => {
           userId: updatedRFP.userId
         });
         await newOrder.save();
+        if (partnerId) saveChannelPartnerJSON(partnerId, 'orders', `${newOrder.orderNumber}.json`, newOrder.toObject());
 
         const newInvoice = new Invoice({
           invoiceNumber: await generateInvoiceNumber(),
@@ -222,6 +247,7 @@ router.put('/rfp/:id', async (req, res) => {
           userId: updatedRFP.userId
         });
         await newInvoice.save();
+        if (partnerId) saveChannelPartnerJSON(partnerId, 'invoices', `${newInvoice.invoiceNumber}.json`, newInvoice.toObject());
       }
     }
     res.json(updatedRFP);
