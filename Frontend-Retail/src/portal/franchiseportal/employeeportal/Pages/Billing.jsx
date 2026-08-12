@@ -44,8 +44,8 @@ export default function EmployeeBilling() {
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
     const foundProduct = inventory.find(p => 
-      p.serialNumber.toLowerCase() === searchQuery.toLowerCase() || 
-      p.model.toLowerCase().includes(searchQuery.toLowerCase())
+      p.sku?.toLowerCase() === searchQuery.toLowerCase() || 
+      p.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (foundProduct) {
@@ -54,7 +54,7 @@ export default function EmployeeBilling() {
         setCart(cart.map(item => item._id === foundProduct._id ? { ...item, quantity: item.quantity + 1 } : item));
       } else {
         setCart([...cart, { ...foundProduct, quantity: 1 }]);
-        toast.success(`${foundProduct.model} added to cart!`);
+        toast.success(`${foundProduct.name} added to cart!`);
       }
       setSearchQuery('');
     } else {
@@ -65,7 +65,8 @@ export default function EmployeeBilling() {
   const updateQuantity = (id, delta) => {
     setCart(cart.map(item => {
       if (item._id === id) {
-        const newQuantity = Math.max(1, item.quantity + delta);
+        // Prevent exceeding available stock
+        const newQuantity = Math.max(1, Math.min(item.availableStock, item.quantity + delta));
         return { ...item, quantity: newQuantity };
       }
       return item;
@@ -216,7 +217,7 @@ export default function EmployeeBilling() {
             <div className="flex gap-3">
               <input
                 type="text"
-                placeholder="Scan or type Serial Number / Model (e.g., SN1001)"
+                placeholder="Scan or type SKU / Name (e.g., LAP-HP-001)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -247,9 +248,9 @@ export default function EmployeeBilling() {
                   {cart.map((item) => (
                     <tr key={item._id}>
                       <td className="px-6 py-4">
-                        <p className="font-bold text-slate-800">{item.model}</p>
-                        <p className="text-xs text-slate-500">{item.specs}</p>
-                        <p className="text-xs text-indigo-600 mt-1">SN: {item.serialNumber}</p>
+                        <p className="font-bold text-slate-800">{item.name}</p>
+                        <p className="text-xs text-slate-500">{item.category} • {item.brand}</p>
+                        <p className="text-xs text-indigo-600 mt-1">SKU: {item.sku}</p>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">

@@ -17,7 +17,7 @@ router.get('/:storeId', async (req, res) => {
 // POST seed inventory for testing
 router.post('/seed', async (req, res) => {
   try {
-    const storeId = req.body.storeId || 'store-001';
+    const storeId = req.body.storeId || 'STORE-001';
     
     // Clear existing for this store
     await Product.deleteMany({ storeId });
@@ -34,6 +34,29 @@ router.post('/seed', async (req, res) => {
     res.json({ success: true, message: 'Inventory seeded successfully for store ' + storeId });
   } catch (error) {
     console.error('Error seeding inventory:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// POST add new inventory item
+router.post('/:storeId', async (req, res) => {
+  try {
+    const newProduct = new Product(req.body);
+    await newProduct.save();
+    res.json({ success: true, data: newProduct });
+  } catch (error) {
+    console.error('Error adding inventory item:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// PUT update inventory item
+router.put('/:storeId/:id', async (req, res) => {
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ success: true, data: updatedProduct });
+  } catch (error) {
+    console.error('Error updating inventory item:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

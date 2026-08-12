@@ -25,14 +25,14 @@ router.post('/seed', async (req, res) => {
       userId: 'franchise123',
       password: hashedPassword,
       role: 'franchise',
-      storeId: 'store-001'
+      storeId: 'STORE-001'
     });
 
     const employeeUser = new User({
       userId: 'employee123',
       password: hashedPassword,
       role: 'employee',
-      storeId: 'store-001'
+      storeId: 'STORE-001'
     });
 
     const channelUser = new User({

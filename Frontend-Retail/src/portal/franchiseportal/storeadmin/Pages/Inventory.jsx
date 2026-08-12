@@ -189,7 +189,7 @@ export default function Inventory() {
                 const isLowStock = item.availableStock <= item.lowStockAlert;
                 
                 return (
-                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={item._id || item.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">
                         {item.category}
@@ -247,7 +247,7 @@ export default function Inventory() {
           {filteredData.map((item) => {
             const isLowStock = item.availableStock <= item.lowStockAlert;
             return (
-              <div key={item.id} className="p-4 space-y-3">
+              <div key={item._id || item.id} className="p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-bold text-slate-800 text-lg">{item.name}</div>
