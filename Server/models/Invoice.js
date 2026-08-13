@@ -44,5 +44,16 @@ const InvoiceSchema = new mongoose.Schema({
   },
   termsAndConditions: [String]
 }, { timestamps: true });
+InvoiceSchema.pre('save', function() {
+  if (this.paymentStatus === 'Paid') {
+    this.receivedAmount = this.amount;
+    this.balanceAmount = 0;
+  } else {
+    if (this.receivedAmount === undefined || this.receivedAmount === null) {
+      this.receivedAmount = 0;
+    }
+    this.balanceAmount = Math.max(0, this.amount - this.receivedAmount);
+  }
+});
 
 module.exports = mongoose.model('Invoice', InvoiceSchema);

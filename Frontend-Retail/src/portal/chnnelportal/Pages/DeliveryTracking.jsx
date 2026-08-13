@@ -45,14 +45,14 @@ export default function DeliveryTracking() {
     }
   };
 
-  const statusLevels = { 'Pending': 0, 'Confirmed': 1, 'Processing': 2, 'Shipped': 3, 'Delivered': 4 };
-  const currentLevel = order ? (statusLevels[order.status] || 0) : -1;
+  const statusLevels = { 'Pending': -1, 'Confirmed': 0, 'Processing': 1, 'Dispatched': 2, 'Out for Delivery': 3, 'Delivered': 4 };
+  const currentLevel = order ? (statusLevels[order.status] ?? -1) : -1;
 
   const steps = [
-    { title: 'Approved', subtitle: 'Order confirmed', icon: FileCheck },
+    { title: 'Confirmed', subtitle: 'Order confirmed', icon: FileCheck },
     { title: 'Processing', subtitle: 'Preparing items', icon: PackageOpen },
-    { title: 'Packed', subtitle: 'Ready for dispatch', icon: Package },
-    { title: 'In Transit', subtitle: 'Out for delivery', icon: Truck },
+    { title: 'Dispatched', subtitle: 'Handed to courier', icon: Package },
+    { title: 'Out for Delivery', subtitle: 'Arriving soon', icon: Truck },
     { title: 'Delivered', subtitle: 'Successfully delivered', icon: MapPin }
   ];
 
@@ -191,9 +191,9 @@ export default function DeliveryTracking() {
                         >
                           <Icon className={`w-6 h-6 ${isCompleted ? 'text-white' : 'text-slate-300'}`} />
                           
-                          {/* Success Checkmark Badge */}
-                          {isCompleted && !isCurrent && (
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                          {/* Status Badge */}
+                          {isCompleted && (
+                            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center ${(!isCurrent || index === steps.length - 1) ? 'bg-emerald-500' : 'bg-blue-500'}`}>
                               <Check className="w-3 h-3 text-white" strokeWidth={3} />
                             </div>
                           )}
@@ -245,8 +245,8 @@ export default function DeliveryTracking() {
                         `}
                       >
                         <Icon className="w-6 h-6" />
-                        {isCompleted && !isCurrent && (
-                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                        {isCompleted && (
+                          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center ${(!isCurrent || index === steps.length - 1) ? 'bg-emerald-500' : 'bg-blue-500'}`}>
                             <Check className="w-2 h-2 text-white" strokeWidth={3} />
                           </div>
                         )}

@@ -69,8 +69,24 @@ export default function Invoices() {
   });
 
   const orderRefForRfp = selectedInvoice?.orderReference?.orderId || selectedInvoice?.orderReference?.orderNumber || (typeof selectedInvoice?.orderReference === 'string' ? selectedInvoice?.orderReference : '');
-  const selectedRfp = selectedInvoice ? rfps.find(r => r.rfpId === orderRefForRfp?.replace('ORD-', '')) : null;
+  const selectedRfp = selectedInvoice?.orderReference?.quotationReference?.rfpReference || (selectedInvoice ? rfps.find(r => r.rfpId === orderRefForRfp?.replace('ORD-', '')) : null);
   const invoiceItems = selectedInvoice?.items || selectedRfp?.products || [];
+
+  const totalQtyAcrossAllItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const totalAmountFromInvoice = selectedInvoice?.amount || 0;
+  const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / 1.18) / totalQtyAcrossAllItems : 0;
+  
+  const calculatedTotalAmount = invoiceItems.reduce((acc, item) => {
+    const rate = item.rate || item.unitPrice || assumedRate;
+    const qty = item.quantity || 0;
+    const taxRate = item.taxRate || 18;
+    return acc + (rate * qty * (1 + (taxRate / 100)));
+  }, 0);
+  const finalTotalAmount = selectedInvoice?.amount || calculatedTotalAmount;
+  const displayReceivedAmount = selectedInvoice?.receivedAmount || 0;
+  const isPaid = selectedInvoice?.paymentStatus === 'Paid';
+  const calculatedBalance = Math.max(0, finalTotalAmount - displayReceivedAmount);
+  const displayBalanceAmount = isPaid ? 0 : (selectedInvoice?.balanceAmount || calculatedBalance);
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
@@ -233,8 +249,8 @@ export default function Invoices() {
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {invoiceItems.map((item, i) => {
-                          const rate = item.rate || item.unitPrice || 0;
-                          const qty = item.quantity || 0;
+                            const rate = item.rate || item.unitPrice || assumedRate;
+                            const qty = item.quantity || 0;
                           const hsn = item.hsn || '-';
                           const gstRate = item.taxRate || 18;
                           const taxableValue = rate * qty;
@@ -270,7 +286,7 @@ export default function Invoices() {
                           <td className="px-4 py-3 text-sm font-bold text-slate-700 text-right">
                             {(() => {
                               const totalGst = invoiceItems.reduce((acc, item) => {
-                                const r = item.rate || item.unitPrice || 0;
+                                const r = item.rate || item.unitPrice || assumedRate;
                                 const q = item.quantity || 0;
                                 const gRate = item.taxRate || 18;
                                 return acc + (r * q * (gRate / 100));
@@ -303,7 +319,7 @@ export default function Invoices() {
                       <div className="text-sm">
                         <span className="text-slate-500">Amount Chargeable (in words)</span>
                         <p className="font-bold text-slate-900 capitalize">
-                          INR {numberToWords(Math.round(selectedInvoice.amount || invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0)))} Only
+                          INR {numberToWords(Math.round(selectedInvoice.amount || invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0)))} Only
                         </p>
                       </div>
                       <div className="text-sm text-right">
@@ -316,20 +332,20 @@ export default function Invoices() {
                       <div className="text-sm w-1/2">
                         <span className="text-slate-500">Tax Amount (in words) : </span>
                         <p className="font-bold text-slate-900 capitalize">
-                          INR {numberToWords(Math.round(invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0)))} Only
+                          INR {numberToWords(Math.round(invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0)))} Only
                         </p>
                       </div>
                       <div className="text-sm w-1/2 flex flex-col items-end gap-1">
                         <div className="flex justify-between w-48">
                           <span className="text-slate-500">Taxable Value:</span>
                           <span className="font-bold text-slate-900">
-                            ₹{invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ₹{invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                         <div className="flex justify-between w-48">
                           <span className="text-slate-500">Total Tax:</span>
                           <span className="font-bold text-slate-900">
-                            ₹{invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ₹{invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                       </div>
@@ -339,11 +355,11 @@ export default function Invoices() {
                     <div className="p-4 border-b border-slate-700 flex justify-between bg-white">
                       <div className="text-sm flex items-center gap-2">
                         <span className="text-slate-500">Received Amount:</span>
-                        <span className="font-bold text-emerald-600">₹{(selectedInvoice.receivedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span className="font-bold text-emerald-600">₹{displayReceivedAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div className="text-sm flex items-center gap-2">
                         <span className="text-slate-500">Balance Amount:</span>
-                        <span className="font-bold text-amber-600">₹{(selectedInvoice.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span className="font-bold text-amber-600">₹{displayBalanceAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                     </div>
 

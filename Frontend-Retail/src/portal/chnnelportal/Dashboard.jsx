@@ -8,6 +8,7 @@ import { exportToCSV } from '../../utils/exportUtils';
 // Components
 import KPIGrid from './components/KPIGrid';
 import SmartAnalytics from './components/SmartAnalytics';
+import CreditCard from './Components/CreditCard';
 
 import RecentActivity from './components/RecentActivity';
 import ProcurementTables from './components/ProcurementTable';
@@ -87,6 +88,11 @@ export default function Dashboard() {
 
 
 
+
+      {/* Credit Dashboard Card */}
+      <motion.div variants={itemVariants} className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <CreditCard />
+      </motion.div>
 
       {/* KPI Grid */}
       <motion.div variants={itemVariants}>

@@ -104,7 +104,10 @@ router.post('/login', async (req, res) => {
         phone: user.phone,
         address: user.address,
         profilePhoto: user.profilePhoto,
-        storeId: user.storeId
+        storeId: user.storeId,
+        totalCredit: user.totalCredit || 0,
+        usedCredit: user.usedCredit || 0,
+        reservedCredit: user.reservedCredit || 0
       }
     });
 
@@ -130,6 +133,35 @@ router.post('/logout', async (req, res) => {
   } catch (error) {
     console.error('Logout error:', error);
     res.status(500).json({ message: 'Server error during logout' });
+  }
+});
+
+router.get('/me', async (req, res) => {
+  try {
+    // Usually uses JWT, but since frontend just passes userId in this simple auth:
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ message: 'userId is required' });
+    
+    const user = await User.findOne({ userId });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    res.json({
+      userId: user.userId,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+      companyName: user.companyName,
+      phone: user.phone,
+      address: user.address,
+      profilePhoto: user.profilePhoto,
+      storeId: user.storeId,
+      totalCredit: user.totalCredit || 0,
+      usedCredit: user.usedCredit || 0,
+      reservedCredit: user.reservedCredit || 0
+    });
+  } catch (error) {
+    console.error('Fetch me error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

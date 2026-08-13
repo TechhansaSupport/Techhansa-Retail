@@ -18,10 +18,10 @@ const RFPSchema = new mongoose.Schema({
   priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
   remarks: { type: String },
   products: [RFPProductSchema],
-  status: { 
-    type: String, 
+  status: {
+    type: String,
     enum: ['Draft', 'Submitted', 'Under Review', 'Quotation Received', 'Approved', 'Rejected'],
-    default: 'Draft' 
+    default: 'Draft'
   },
   userId: { type: String, required: false },
 }, { timestamps: true });

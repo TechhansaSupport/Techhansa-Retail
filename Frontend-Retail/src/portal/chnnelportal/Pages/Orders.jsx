@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Filter, Truck, CheckCircle, Package, Download } from 'lucide-react';
 import { exportToCSV } from '../../../utils/exportUtils';
 import { AuthContext } from '../../../context/AuthContext';
@@ -18,8 +18,10 @@ const itemVariants = {
 export default function Orders() {
   const { user } = useContext(AuthContext) || { user: null };
   const navigate = useNavigate();
+  const location = useLocation();
   const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState(location.state?.filter || 'All');
   
   useEffect(() => {
     if (user?.userId) fetchOrders();
@@ -36,9 +38,15 @@ export default function Orders() {
     }
   };
 
+  const validStatuses = ['Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered'];
+
   const filteredOrders = orders.filter(o => {
+    if (!validStatuses.includes(o.status)) return false;
+
     const orderId = o.orderNumber || o.orderId || '';
-    return orderId.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = orderId.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'All' || o.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   return (
@@ -62,6 +70,20 @@ export default function Orders() {
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
             />
           </div>
+          
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg text-sm font-medium focus:outline-none focus:border-blue-500 shrink-0 bg-white"
+          >
+            <option value="All">All Status</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Processing">Processing</option>
+            <option value="Dispatched">Dispatched</option>
+            <option value="Out for Delivery">Out for Delivery</option>
+            <option value="Delivered">Delivered</option>
+          </select>
+
           <button onClick={() => exportToCSV('orders.csv', filteredOrders, [
             { key: 'orderNumber', label: 'Order ID' },
             { key: 'status', label: 'Status' },

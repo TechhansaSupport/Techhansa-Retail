@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../../context/AuthContext';
 import { motion } from 'framer-motion';
 import {
@@ -29,6 +30,7 @@ const renderCustomLegend = (props) => {
 
 export default function SmartAnalytics() {
   const { user } = useContext(AuthContext) || { user: null };
+  const navigate = useNavigate();
   const [rfpData, setRfpData] = useState([]);
   const [trendData, setTrendData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,9 +47,16 @@ export default function SmartAnalytics() {
 
         if (rfpRes.ok) {
           const rfps = await rfpRes.json();
-          const counts = { 'Draft': 0, 'Submitted': 0, 'Under Review': 0, 'Quotation Received': 0, 'Approved': 0, 'Rejected': 0 };
-          rfps.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
-          setRfpData(Object.entries(counts).map(([name, value]) => ({ name, value })));
+          const counts = { 'Draft': 0, 'Pending Admin Approval': 0, 'Under Review': 0, 'Quotation Received': 0, 'Approved': 0, 'Rejected': 0 };
+          rfps.forEach(r => { 
+            const statusLabel = r.status === 'Submitted' ? 'Pending Admin Approval' : r.status;
+            if (counts[statusLabel] !== undefined) counts[statusLabel]++; 
+          });
+          setRfpData(Object.entries(counts).map(([name, value]) => ({ 
+            name, 
+            originalStatus: name === 'Pending Admin Approval' ? 'Submitted' : name,
+            value 
+          })));
         }
 
         if (reportsRes.ok) {
@@ -126,7 +135,12 @@ export default function SmartAnalytics() {
                 stroke="none"
               >
                 {rfpData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={STATUS_COLORS[index % STATUS_COLORS.length]} 
+                    onClick={() => navigate('/channel/rfp-management', { state: { filter: entry.originalStatus } })}
+                    style={{ cursor: 'pointer', outline: 'none' }}
+                  />
                 ))}
               </Pie>
               <Tooltip 
