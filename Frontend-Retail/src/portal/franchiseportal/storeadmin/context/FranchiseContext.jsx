@@ -21,14 +21,15 @@ export function FranchiseProvider({ children }) {
 
   const refreshData = async () => {
     try {
-      const [profileRes, inventoryRes, walletRes, invoicesRes, employeesRes, catalogRes, requestsRes] = await Promise.all([
+      const [profileRes, inventoryRes, walletRes, invoicesRes, employeesRes, catalogRes, requestsRes, salesRes] = await Promise.all([
         axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/profile`),
         axios.get(`http://localhost:5000/api/inventory/${STORE_ID}`),
         axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/wallet`),
         axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/b2b-invoices`),
         axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/employees`),
         axios.get(`http://localhost:5000/api/franchise/catalog/all`),
-        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/requests`)
+        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/requests`),
+        axios.get(`http://localhost:5000/api/sales/store/${STORE_ID}`) // Fetch Store Sales
       ]);
 
       if (profileRes.data.success) {
@@ -47,6 +48,7 @@ export function FranchiseProvider({ children }) {
       if (employeesRes.data.success) setEmployees(employeesRes.data.data);
       if (catalogRes.data.success) setTechhansaCatalog(catalogRes.data.data);
       if (requestsRes.data.success) setOrders(requestsRes.data.data);
+      if (salesRes.data.success) setInvoices(salesRes.data.data); // Set Sales Invoices
 
     } catch (error) {
       console.error("Failed to fetch franchise data", error);
@@ -152,11 +154,28 @@ export function FranchiseProvider({ children }) {
     }
   };
 
-  // This is replaced by employee POS API call, but kept for StoreAdmin legacy POS compatibility if needed
-  const processSale = (cartItems, customerDetails, totalAmount) => {
-    console.warn('Deprecated: Use Employee POS API /api/sales/checkout instead');
-  };
+  const processSale = async (cartItems, customerDetails, totalAmount) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/sales/checkout', {
+        cart: cartItems,
+        customer: customerDetails,
+        employeeId: STORE_ID,
+        storeId: STORE_ID
+      });
 
+      if (response.data.success) {
+        // Refresh inventory after successful sale
+        await refreshData();
+        return response.data.invoice;
+      } else {
+        console.error("Sale failed:", response.data.message);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error processing sale:", error);
+      return null;
+    }
+  };
   const addInventoryItem = async (newItem) => {
     try {
       const payload = { ...newItem, storeId: STORE_ID };
@@ -175,7 +194,8 @@ export function FranchiseProvider({ children }) {
     try {
       const res = await axios.put(`http://localhost:5000/api/inventory/${STORE_ID}/${id}`, updatedFields);
       if (res.data.success) {
-        setInventory(prev => prev.map(item => item._id === id || item.id === id ? { ...item, ...updatedFields } : item));
+        // Use the server response to update state so we have the true data
+        setInventory(prev => prev.map(item => (item._id === id || item.id === id) ? res.data.data : item));
         return true;
       }
     } catch (error) {

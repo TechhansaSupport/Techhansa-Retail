@@ -208,20 +208,56 @@ export default function Sales() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {invoices && invoices.length > 0 ? invoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-mono text-sm text-slate-700">{inv.id}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{inv.date}</td>
-                  <td className="px-6 py-4 font-medium text-slate-800">{inv.customer?.name || 'Walk-in'}</td>
-                  <td className="px-6 py-4 text-sm text-slate-500">Admin</td>
-                  <td className="px-6 py-4 text-right font-medium text-indigo-600">₹{inv.total.toLocaleString()}</td>
+                <tr key={inv._id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 font-mono text-sm text-slate-700">{inv.invoiceNumber}</td>
+                  <td className="px-6 py-4 text-sm text-slate-600">{new Date(inv.createdAt).toLocaleString()}</td>
+                  <td className="px-6 py-4 font-medium text-slate-800">{inv.customerName || 'Walk-in'}</td>
+                  <td className="px-6 py-4 text-sm text-slate-500">{inv.employeeId}</td>
+                  <td className="px-6 py-4 text-right font-medium text-indigo-600">₹{inv.amount.toLocaleString()}</td>
                   <td className="px-6 py-4 text-center">
                     <button 
                       onClick={() => {
                          const doc = new jsPDF();
-                         doc.text(`Invoice: ${inv.id}`, 14, 15);
-                         doc.text(`Date: ${inv.date}`, 14, 25);
-                         doc.text(`Total: Rs. ${inv.total.toLocaleString()}`, 14, 35);
-                         doc.save(`${inv.id}.pdf`);
+                         doc.setFontSize(20);
+                         doc.text("Techhansa Retail", 14, 22);
+                         doc.setFontSize(12);
+                         doc.text("Customer Invoice", 14, 32);
+                         doc.setFontSize(10);
+                         doc.text(`Invoice No: ${inv.invoiceNumber}`, 14, 45);
+                         doc.text(`Date: ${new Date(inv.createdAt).toLocaleString()}`, 14, 52);
+                         doc.text(`Customer Name: ${inv.customerName || 'Walk-in'}`, 14, 59);
+                         doc.text(`Phone: ${inv.customerPhone || 'N/A'}`, 14, 66);
+                         
+                         const tableBody = (inv.items || []).map(item => [
+                           item.name,
+                           item.quantity,
+                           `Rs. ${item.sellingPrice.toLocaleString()}`,
+                           `Rs. ${(item.quantity * item.sellingPrice).toLocaleString()}`
+                         ]);
+                         
+                         doc.autoTable({
+                           startY: 75,
+                           head: [['Item Name', 'Qty', 'Price', 'Total']],
+                           body: tableBody,
+                           theme: 'grid',
+                           headStyles: { fillColor: [79, 70, 229] }
+                         });
+                         
+                         const finalY = doc.lastAutoTable.finalY + 10;
+                         
+                         doc.autoTable({
+                           startY: finalY,
+                           body: [
+                             ['Subtotal', `Rs. ${inv.subtotalAmount?.toLocaleString() || '-'}`],
+                             ['Tax (18% GST)', `Rs. ${(inv.amount - (inv.subtotalAmount || 0)).toLocaleString()}`],
+                             ['Grand Total', `Rs. ${inv.amount?.toLocaleString()}`]
+                           ],
+                           theme: 'plain',
+                           styles: { halign: 'right' },
+                           columnStyles: { 0: { fontStyle: 'bold' } }
+                         });
+                         
+                         doc.save(`${inv.invoiceNumber}.pdf`);
                       }}
                       className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg flex justify-center items-center gap-1 mx-auto"
                     >

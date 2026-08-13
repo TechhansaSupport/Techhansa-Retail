@@ -75,7 +75,10 @@ router.post('/login', async (req, res) => {
       user.isStoreActive = true;
       await user.save();
     } else if (user.role === 'employee') {
-      const franchiseAdmin = await User.findOne({ role: 'franchise', storeId: user.storeId });
+      const franchiseAdmin = await User.findOne({ 
+        role: 'franchise', 
+        storeId: { $regex: new RegExp(`^${user.storeId}$`, 'i') } 
+      });
       if (!franchiseAdmin || !franchiseAdmin.isStoreActive) {
         return res.status(403).json({ message: 'Store is closed' });
       }
