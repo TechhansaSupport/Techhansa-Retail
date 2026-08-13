@@ -12,8 +12,8 @@ export default function Billing() {
   // Available inventory items (filtering out things with 0 stock)
   const availableItems = inventory.filter(item => 
     item.availableStock > 0 && 
-    (item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     item.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+    (item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+     item.sku?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -43,12 +43,12 @@ export default function Billing() {
         <div className="flex-1 overflow-y-auto p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {availableItems.map(item => {
-              const inCartItem = globalCart.find(c => c.id === item.id);
+              const inCartItem = globalCart.find(c => (c._id || c.id) === (item._id || item.id));
               const remainingStock = item.availableStock - (inCartItem ? inCartItem.quantity : 0);
 
               return (
                 <div 
-                  key={item.id} 
+                  key={item._id || item.id} 
                   onClick={() => remainingStock > 0 && addToGlobalCart(item)}
                   className={`p-5 border rounded-2xl transition-all flex flex-col group ${
                     remainingStock > 0 

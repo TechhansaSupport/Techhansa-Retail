@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useFranchise } from '../context/FranchiseContext';
+import { useEmployee } from '../context/EmployeeContext';
 import { Minus, Plus, Trash2, Printer, CheckCircle2, User, Phone, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Cart() {
-  const { globalCart, updateGlobalCartQuantity, removeGlobalCartItem, clearGlobalCart, processSale } = useFranchise();
+  const { globalCart, updateGlobalCartQuantity, removeGlobalCartItem, clearGlobalCart, processSale } = useEmployee();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
   const [generatedInvoice, setGeneratedInvoice] = useState(null);
@@ -63,7 +63,7 @@ export default function Cart() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <button 
-          onClick={() => navigate('/franchise/billing')}
+          onClick={() => navigate('/employee/billing')}
           className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-slate-500 hover:text-slate-700"
         >
           <ArrowLeft size={20} />

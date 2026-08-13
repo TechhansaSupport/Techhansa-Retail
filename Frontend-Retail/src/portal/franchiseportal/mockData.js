@@ -57,9 +57,9 @@ export const techhansaCatalog = [
 ];
 
 export const b2bInvoices = [
-  { id: "INV-B2B-1044", date: "2026-08-05", amount: 156000, status: "Pending" },
-  { id: "INV-B2B-1045", date: "2026-08-06", amount: 45000, status: "Pending" },
-  { id: "INV-B2B-1042", date: "2026-08-02", amount: 85000, status: "Paid" },
+  { id: "INV-B2B-1044", requestId: "REQ-001", date: "2026-08-05", amount: 156000, status: "Pending", invoiceFile: "inv-1044.pdf" },
+  { id: "INV-B2B-1045", requestId: "REQ-002", date: "2026-08-06", amount: 45000, status: "Pending", invoiceFile: "inv-1045.pdf" },
+  { id: "INV-B2B-1042", requestId: "REQ-003", date: "2026-08-02", amount: 85000, status: "Paid", invoiceFile: "inv-1042.pdf" },
 ];
 
 export const walletTransactions = [

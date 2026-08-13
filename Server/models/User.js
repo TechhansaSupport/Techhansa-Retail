@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, default: '' },
   address: { type: String, default: '' },
   profilePhoto: { type: String, default: '' },
+  status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
   totalCredit: { type: Number, default: 0 },
   usedCredit: { type: Number, default: 0 },
   reservedCredit: { type: Number, default: 0 },
