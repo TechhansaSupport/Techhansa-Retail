@@ -10,7 +10,7 @@ export default function EmployeeInventory() {
 
   useEffect(() => {
     if (user?.storeId) {
-      fetch(`http://localhost:5000/api/inventory/${user.storeId}`)
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {

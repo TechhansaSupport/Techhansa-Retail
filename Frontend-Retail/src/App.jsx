@@ -21,7 +21,11 @@ import LoginPage from './Pages/LoginPage';
 import PartnerApplicationPage from './Pages/Partners/partnerpage';
 
 // --- Portal Dashboard Pages ---
-import AdminDashboard from './portal/Admin/Components/Admin';
+import AdminLayout from './portal/Admin/Layout/AdminLayout';
+import AdminDashboard from './portal/Admin/Pages/Dashboard';
+import EntityManagement from './portal/Admin/Pages/EntityManagement';
+import CentralCatalog from './portal/Admin/Pages/CentralCatalog';
+import AuditLogs from './portal/Admin/Pages/AuditLogs';
 import FranchiseLayout from './portal/franchiseportal/storeadmin/Layout/FranchiseLayout';
 import FranchiseDashboard from './portal/franchiseportal/storeadmin/Pages/Dashboard';
 import FranchiseProfile from './portal/franchiseportal/storeadmin/Pages/StoreProfile';
@@ -118,11 +122,13 @@ function App() {
           {/* Admin Portal */}
           <Route path="/admin" element={
             <ProtectedRoute allowedRole="admin">
-              <Outlet />
+              <AdminLayout />
             </ProtectedRoute>
           }>
             <Route index element={<AdminDashboard />} />
-            {/* Add more admin routes here later: <Route path="users" element={<UsersPage />} /> */}
+            <Route path="entities" element={<EntityManagement />} />
+            <Route path="catalog" element={<CentralCatalog />} />
+            <Route path="audit" element={<AuditLogs />} />
           </Route>
 
           {/* Franchise Portal */}

@@ -53,8 +53,8 @@ export default function ProcurementTables() {
       if (!user?.userId) return;
       try {
         const [rfpRes, qtRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`),
-          fetch(`http://localhost:5000/api/procurement/quotations?userId=${user.userId}`)
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`),
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/quotations?userId=${user.userId}`)
         ]);
         if (rfpRes.ok) {
           const rfpData = await rfpRes.json();

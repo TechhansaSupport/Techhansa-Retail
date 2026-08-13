@@ -47,7 +47,7 @@ export default function EmployeeDashboard() {
 
   useEffect(() => {
     if (user?.userId) {
-      fetch(`http://localhost:5000/api/sales/dashboard/${user.userId}`)
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales/dashboard/${user.userId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {

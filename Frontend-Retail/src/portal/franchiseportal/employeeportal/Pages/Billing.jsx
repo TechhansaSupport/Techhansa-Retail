@@ -1,20 +1,132 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useEmployee } from '../context/EmployeeContext';
-import { Search, Plus, ShoppingCart, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { Search, User, Phone, Mail, ShoppingCart, Plus, Minus, Trash2, CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { AuthContext } from '../../../../context/AuthContext';
+import toast from 'react-hot-toast';
 
-export default function Billing() {
-  const { inventory, globalCart, addToGlobalCart } = useEmployee();
-  const [searchTerm, setSearchTerm] = useState('');
-  const navigate = useNavigate();
+export default function EmployeeBilling() {
+  const { user } = useContext(AuthContext);
+  const [inventory, setInventory] = useState([]);
+  const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Initialize cart from localStorage
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem('employee_cart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
 
-  // Available inventory items (filtering out things with 0 stock)
-  const availableItems = inventory.filter(item => 
-    item.availableStock > 0 && 
-    (item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     item.sku?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch real inventory
+  useEffect(() => {
+    if (user?.storeId) {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setInventory(data.data);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch inventory", err);
+          toast.error("Failed to fetch live inventory.");
+        });
+    }
+  }, [user]);
+
+  // Persist cart to localStorage
+  useEffect(() => {
+    localStorage.setItem('employee_cart', JSON.stringify(cart));
+  }, [cart]);
+
+  const handleSearch = () => {
+    if (!searchQuery.trim()) return;
+    const foundProduct = inventory.find(p => 
+      p.serialNumber.toLowerCase() === searchQuery.toLowerCase() || 
+      p.model.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (foundProduct) {
+      const existingItem = cart.find(item => item._id === foundProduct._id);
+      if (existingItem) {
+        setCart(cart.map(item => item._id === foundProduct._id ? { ...item, quantity: item.quantity + 1 } : item));
+      } else {
+        setCart([...cart, { ...foundProduct, quantity: 1 }]);
+        toast.success(`${foundProduct.model} added to cart!`);
+      }
+      setSearchQuery('');
+    } else {
+      toast.error("Product not found in inventory.");
+    }
+  };
+
+  const updateQuantity = (id, delta) => {
+    setCart(cart.map(item => {
+      if (item._id === id) {
+        const newQuantity = Math.max(1, item.quantity + delta);
+        return { ...item, quantity: newQuantity };
+      }
+      return item;
+    }));
+  };
+
+  const removeItem = (id) => {
+    setCart(cart.filter(item => item._id !== id));
+  };
+
+  const subtotal = cart.reduce((acc, item) => acc + (item.sellingPrice * item.quantity), 0);
+  const tax = subtotal * 0.18; // 18% GST
+  const grandTotal = subtotal + tax;
+
+  const handleGenerateInvoice = async () => {
+    if (!customer.name || !customer.phone) {
+      toast.error("Please fill in Customer Name and Phone Number.");
+      return;
+    }
+    if (cart.length === 0) {
+      toast.error("Cart is empty.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cart,
+          customer,
+          employeeId: user?.userId,
+          storeId: user?.storeId
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsSuccess(true);
+        setCart([]);
+        setCustomer({ name: '', phone: '', email: '' });
+        localStorage.removeItem('employee_cart');
+        toast.success("Checkout successful!");
+        
+        // Refresh inventory
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`)
+          .then(res => res.json())
+          .then(d => { if(d.success) setInventory(d.data); });
+
+        setTimeout(() => setIsSuccess(false), 3000);
+      } else {
+        toast.error(data.message || 'Checkout failed');
+      }
+    } catch (error) {
+      console.error('Checkout error', error);
+      toast.error('Network error during checkout');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6 pb-24 relative min-h-screen">
