@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
         setUser(parsedUser);
         
         try {
-          const res = await fetch(`http://localhost:5000/api/auth/me?userId=${parsedUser.userId}`);
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me?userId=${parsedUser.userId}`);
           if (res.ok) {
             const freshUser = await res.json();
             setUser(freshUser);
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     if (user && user.userId) {
       try {
-        await fetch('http://localhost:5000/api/auth/logout', {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/logout`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(newUserData));
     
     try {
-      await fetch('http://localhost:5000/api/auth/profile', {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUserData)

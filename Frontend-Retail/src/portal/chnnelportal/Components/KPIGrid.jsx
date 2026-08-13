@@ -47,7 +47,7 @@ export default function KPIGrid() {
       if (!user?.userId) return;
       setIsLoading(true);
       try {
-        const res = await fetch(`http://localhost:5000/api/procurement/dashboard-stats?userId=${user.userId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/dashboard-stats?userId=${user.userId}`);
         const data = await res.json();
         setStats(data);
       } catch (err) {

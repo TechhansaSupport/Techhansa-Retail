@@ -64,6 +64,10 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid User ID or Password' });
     }
 
+    if (user.status === 'Suspended') {
+      return res.status(403).json({ message: 'Account Suspended: Please contact the Super Admin.' });
+    }
+
     // 2. Verify password using bcrypt
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {

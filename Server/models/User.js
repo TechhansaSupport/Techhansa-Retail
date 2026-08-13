@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },
+  status: { 
+    type: String, 
+    enum: ['Active', 'Suspended'], 
+    default: 'Active' 
+  },
   name: { type: String, default: '' },
   email: { type: String, default: '' },
   companyName: { type: String, default: '' },
@@ -28,6 +33,7 @@ const userSchema = new mongoose.Schema({
   totalCredit: { type: Number, default: 0 },
   usedCredit: { type: Number, default: 0 },
   reservedCredit: { type: Number, default: 0 },
+  deletedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

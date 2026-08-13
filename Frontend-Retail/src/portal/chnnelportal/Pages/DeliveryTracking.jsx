@@ -24,7 +24,7 @@ export default function DeliveryTracking() {
     setError('');
 
     try {
-      const url = user?.userId ? `http://localhost:5000/api/procurement/orders?userId=${user.userId}` : 'http://localhost:5000/api/procurement/orders';
+      const url = user?.userId ? `${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders?userId=${user.userId}` : `${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders`;
       const res = await fetch(url);
       const data = await res.json();
       const found = data.find(o => (o.orderNumber === trackingId.trim() || o.orderId === trackingId.trim()));

@@ -33,7 +33,7 @@ export default function Dashboard() {
 
   const handleExport = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/procurement/dashboard-stats');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/dashboard-stats`);
       const data = await res.json();
       const exportData = [
         {

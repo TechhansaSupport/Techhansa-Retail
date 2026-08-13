@@ -65,7 +65,7 @@ export default function RfpManagement() {
   const fetchRfps = async () => {
     if (!user?.userId) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`);
       const data = await res.json();
       setRfps(data);
     } catch (err) {

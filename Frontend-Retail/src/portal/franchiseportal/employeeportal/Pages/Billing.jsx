@@ -22,7 +22,7 @@ export default function EmployeeBilling() {
   // Fetch real inventory
   useEffect(() => {
     if (user?.storeId) {
-      fetch(`http://localhost:5000/api/inventory/${user.storeId}`)
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -92,7 +92,7 @@ export default function EmployeeBilling() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:5000/api/sales/checkout', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -112,7 +112,7 @@ export default function EmployeeBilling() {
         toast.success("Checkout successful!");
         
         // Refresh inventory
-        fetch(`http://localhost:5000/api/inventory/${user.storeId}`)
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`)
           .then(res => res.json())
           .then(d => { if(d.success) setInventory(d.data); });
 

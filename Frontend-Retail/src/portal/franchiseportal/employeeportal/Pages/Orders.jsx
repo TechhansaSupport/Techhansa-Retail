@@ -12,7 +12,7 @@ export default function EmployeeOrders() {
 
   useEffect(() => {
     if (user?.userId) {
-      fetch(`http://localhost:5000/api/sales/orders/${user.userId}`)
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales/orders/${user.userId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
