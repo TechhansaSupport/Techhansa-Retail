@@ -75,7 +75,7 @@ export default function Invoices() {
   const totalQtyAcrossAllItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const totalAmountFromInvoice = selectedInvoice?.amount || 0;
   const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / 1.18) / totalQtyAcrossAllItems : 0;
-  
+
   const calculatedTotalAmount = invoiceItems.reduce((acc, item) => {
     const rate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
@@ -167,10 +167,10 @@ export default function Invoices() {
             </div>
 
             <div className="p-6 overflow-y-auto">
-              
+
               {/* Professional Invoice Header */}
               <div className="flex flex-col md:flex-row border border-slate-700 mb-6">
-                
+
                 {/* Left Side: Company & Buyer Details */}
                 <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-slate-700">
                   {/* Company Details */}
@@ -249,8 +249,8 @@ export default function Invoices() {
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {invoiceItems.map((item, i) => {
-                            const rate = item.rate || item.unitPrice || assumedRate;
-                            const qty = item.quantity || 0;
+                          const rate = item.rate || item.unitPrice || assumedRate;
+                          const qty = item.quantity || 0;
                           const hsn = item.hsn || '-';
                           const gstRate = item.taxRate || 18;
                           const taxableValue = rate * qty;
@@ -313,7 +313,7 @@ export default function Invoices() {
 
                   {/* Professional Invoice Summary & Footer */}
                   <div className="border border-slate-700 border-t-0 mt-[-24px] mb-6 flex flex-col">
-                    
+
                     {/* Amount Chargeable (in words) */}
                     <div className="p-4 border-b border-slate-700 flex justify-between items-center">
                       <div className="text-sm">
@@ -365,7 +365,7 @@ export default function Invoices() {
 
                     {/* Bottom Section: Declaration & Bank Details */}
                     <div className="flex flex-col md:flex-row">
-                      
+
                       {/* Left: Declaration */}
                       <div className="flex-1 p-4 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col">
                         <div className="mb-4 text-sm">
@@ -469,6 +469,99 @@ export default function Invoices() {
                       </div>
                     )}
                   </div>
+
+                  {/* Product Details Section */}
+                  {(() => {
+                    // Use stored productDetails if available, otherwise build from RFP products
+                    const prodList = (selectedInvoice.productDetails && selectedInvoice.productDetails.length > 0)
+                      ? selectedInvoice.productDetails
+                      : (selectedRfp?.products || []).map(p => {
+                          const perItemRate = assumedRate;
+                          const gst = perItemRate * 0.18;
+                          return {
+                            productName: p.category || p.name || '-',
+                            brand: p.brand || '-',
+                            model: p.model || '-',
+                            configuration: p.configuration || '-',
+                            serialNumber: '',
+                            rate: perItemRate,
+                            gstAmount: gst,
+                            totalAmount: perItemRate + gst
+                          };
+                        });
+                    
+                    if (prodList.length === 0) return null;
+
+                    return (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-bold text-slate-900 mb-4">Product Details</h3>
+                        <div className="border border-slate-200 rounded-xl overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs md:text-sm">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-slate-200">
+                                <th className="px-4 py-2 font-semibold text-slate-700 whitespace-nowrap">Product Name</th>
+                                <th className="px-4 py-2 font-semibold text-slate-700 whitespace-nowrap">Brand</th>
+                                <th className="px-4 py-2 font-semibold text-slate-700 whitespace-nowrap">Model</th>
+                                <th className="px-4 py-2 font-semibold text-slate-700 whitespace-nowrap">Configuration</th>
+                                <th className="px-4 py-2 font-semibold text-slate-700 whitespace-nowrap">Serial Number</th>
+                                <th className="px-4 py-2 font-semibold text-slate-700 text-right whitespace-nowrap">Rate</th>
+                                <th className="px-4 py-2 font-semibold text-slate-700 text-right whitespace-nowrap">GST Amount</th>
+                                <th className="px-4 py-2 font-semibold text-slate-700 text-right whitespace-nowrap">Total Amount</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {prodList.map((prod, i) => {
+                                const rate = prod.rate || 0;
+                                const gstAmount = prod.gstAmount || (rate * 0.18);
+                                const totalAmount = prod.totalAmount || (rate + gstAmount);
+                                return (
+                                  <tr key={i}>
+                                    <td className="px-4 py-2 text-slate-900">{prod.productName || prod.category || '-'}</td>
+                                    <td className="px-4 py-2 text-slate-900">{prod.brand || '-'}</td>
+                                    <td className="px-4 py-2 text-slate-900">{prod.model || '-'}</td>
+                                    <td className="px-4 py-2 text-slate-500">{prod.configuration || '-'}</td>
+                                    <td className="px-4 py-2 text-slate-900">{prod.serialNumber || '-'}</td>
+                                    <td className="px-4 py-2 text-slate-900 text-right">₹{rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    <td className="px-4 py-2 text-slate-900 text-right">₹{gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    <td className="px-4 py-2 font-bold text-slate-900 text-right">₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Buyer Details Section */}
+                  {(() => {
+                    // Use stored buyerDetails if available, otherwise build from user context
+                    const buyer = (selectedInvoice.buyerDetails && selectedInvoice.buyerDetails.buyerId)
+                      ? selectedInvoice.buyerDetails
+                      : {
+                          buyerId: user?.userId || selectedInvoice.userId || 'N/A',
+                          productId: selectedRfp?.rfpId || selectedInvoice.orderReference?.orderNumber || 'N/A',
+                          buyerName: user?.name || user?.companyName || 'N/A',
+                          paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
+                        };
+
+                    return (
+                      <div className="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 className="text-sm font-bold text-slate-900 mb-3">Buyer Details</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-600">
+                          <p><span className="font-medium text-slate-700 block">Buyer ID:</span> {buyer.buyerId || 'N/A'}</p>
+                          <p><span className="font-medium text-slate-700 block">Product ID:</span> {buyer.productId || 'N/A'}</p>
+                          <p><span className="font-medium text-slate-700 block">Buyer Name:</span> {buyer.buyerName || 'N/A'}</p>
+                          <p><span className="font-medium text-slate-700 block">Payment Details:</span>
+                            <span className={buyer.paymentDetails === 'Advance Payment' ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>
+                              {buyer.paymentDetails || 'Advance Payment'}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </>
               )}
             </div>

@@ -127,13 +127,42 @@ router.post('/rfp', async (req, res) => {
       });
       await newOrder.save();
 
+      // Build productDetails from RFP products
+      const productDetails = (newRFP.products || []).map(p => {
+        const rate = 0; // Placeholder — updated when quotation is approved
+        const gstAmount = rate * 0.18;
+        const totalAmount = rate + gstAmount;
+        return {
+          productName: p.category || '',
+          brand: p.brand || '',
+          model: p.model || '',
+          configuration: p.configuration || '',
+          serialNumber: '',
+          rate,
+          gstAmount,
+          totalAmount
+        };
+      });
+
+      // Build buyerDetails from User record
+      const buyerUser = await User.findOne({ userId: newRFP.userId });
+      const hasCredit = buyerUser && (buyerUser.totalCredit || 0) > 0;
+      const buyerDetails = {
+        buyerId: newRFP.userId || '',
+        productId: newRFP.rfpId || '',
+        buyerName: buyerUser?.name || buyerUser?.companyName || '',
+        paymentDetails: hasCredit ? 'Credit Limit' : 'Advance Payment'
+      };
+
       // Create placeholder Invoice
       const newInvoice = new Invoice({
         invoiceNumber: await generateInvoiceNumber(),
         orderReference: newOrder._id,
         amount: 0,
         paymentStatus: 'Unpaid',
-        userId: newRFP.userId
+        userId: newRFP.userId,
+        productDetails,
+        buyerDetails
       });
       await newInvoice.save();
     }
@@ -246,12 +275,41 @@ router.put('/rfp/:id', async (req, res) => {
         });
         await newOrder.save();
 
+        // Build productDetails from RFP products
+        const prodDetails = (updatedRFP.products || []).map(p => {
+          const rate = 0;
+          const gstAmount = rate * 0.18;
+          const totalAmount = rate + gstAmount;
+          return {
+            productName: p.category || '',
+            brand: p.brand || '',
+            model: p.model || '',
+            configuration: p.configuration || '',
+            serialNumber: '',
+            rate,
+            gstAmount,
+            totalAmount
+          };
+        });
+
+        // Build buyerDetails from User record
+        const bUser = await User.findOne({ userId: updatedRFP.userId });
+        const hasCred = bUser && (bUser.totalCredit || 0) > 0;
+        const bDetails = {
+          buyerId: updatedRFP.userId || '',
+          productId: updatedRFP.rfpId || '',
+          buyerName: bUser?.name || bUser?.companyName || '',
+          paymentDetails: hasCred ? 'Credit Limit' : 'Advance Payment'
+        };
+
         const newInvoice = new Invoice({
           invoiceNumber: await generateInvoiceNumber(),
           orderReference: newOrder._id,
           amount: 0,
           paymentStatus: 'Unpaid',
-          userId: updatedRFP.userId
+          userId: updatedRFP.userId,
+          productDetails: prodDetails,
+          buyerDetails: bDetails
         });
         await newInvoice.save();
       }
@@ -445,6 +503,27 @@ router.get('/credit-transactions', async (req, res) => {
     res.json(transactions);
   } catch (error) {
     console.error('Error fetching credit transactions:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PATCH update Invoice (for admin to add/edit productDetails & buyerDetails on existing invoices)
+router.patch('/invoices/:invoiceNumber', async (req, res) => {
+  try {
+    const { productDetails, buyerDetails } = req.body;
+    const updateFields = {};
+    if (productDetails) updateFields.productDetails = productDetails;
+    if (buyerDetails) updateFields.buyerDetails = buyerDetails;
+
+    const invoice = await Invoice.findOneAndUpdate(
+      { invoiceNumber: req.params.invoiceNumber },
+      { $set: updateFields },
+      { new: true }
+    );
+    if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+    res.json(invoice);
+  } catch (error) {
+    console.error('Error updating invoice:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
