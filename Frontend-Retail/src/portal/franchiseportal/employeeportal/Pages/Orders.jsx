@@ -28,7 +28,7 @@ export default function EmployeeOrders() {
     (order.customerName && order.customerName.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const generatePDF = (order) => {
+  const generatePDF = (order, autoPrint = false) => {
     const doc = new jsPDF();
     
     // Header
@@ -44,20 +44,41 @@ export default function EmployeeOrders() {
     doc.text(`Customer Name: ${order.customerName || 'Walk-in'}`, 14, 59);
     doc.text(`Phone: ${order.customerPhone || 'N/A'}`, 14, 66);
     
-    // Table
+    const tableBody = (order.items || []).map(item => [
+      item.name,
+      item.quantity,
+      `Rs. ${item.sellingPrice.toLocaleString()}`,
+      `Rs. ${(item.quantity * item.sellingPrice).toLocaleString()}`
+    ]);
+    
     doc.autoTable({
       startY: 75,
-      head: [['Description', 'Amount']],
-      body: [
-        ['Total Items Quantity', order.totalQuantity || '-'],
-        ['Subtotal', `INR ${order.subtotalAmount?.toLocaleString() || '-'}`],
-        ['Tax (18% GST)', `INR ${(order.amount - (order.subtotalAmount || 0)).toLocaleString()}`],
-        ['Grand Total', `INR ${order.amount.toLocaleString()}`]
-      ],
+      head: [['Item Name', 'Qty', 'Price', 'Total']],
+      body: tableBody,
       theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229] }
+    });
+    
+    const finalY = doc.lastAutoTable.finalY + 10;
+    
+    doc.autoTable({
+      startY: finalY,
+      body: [
+        ['Subtotal', `Rs. ${order.subtotalAmount?.toLocaleString() || '-'}`],
+        ['Tax (18% GST)', `Rs. ${(order.amount - (order.subtotalAmount || 0)).toLocaleString()}`],
+        ['Grand Total', `Rs. ${order.amount?.toLocaleString()}`]
+      ],
+      theme: 'plain',
+      styles: { halign: 'right' },
+      columnStyles: { 0: { fontStyle: 'bold' } }
     });
 
-    doc.save(`${order.invoiceNumber}.pdf`);
+    if (autoPrint) {
+      doc.autoPrint();
+      window.open(doc.output('bloburl'), '_blank');
+    } else {
+      doc.save(`${order.invoiceNumber}.pdf`);
+    }
   };
 
   return (
@@ -132,10 +153,7 @@ export default function EmployeeOrders() {
                           <Download size={14} /> Download
                         </button>
                         <button 
-                          onClick={() => {
-                            generatePDF(order);
-                            // Real-world scenario would trigger an automatic print dialog or raw ESC/POS payload
-                          }}
+                          onClick={() => generatePDF(order, true)}
                           className="flex items-center gap-1 text-slate-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors border border-transparent hover:border-indigo-100 text-xs font-medium"
                         >
                           <Printer size={14} /> Print Bill

@@ -129,188 +129,108 @@ export default function EmployeeBilling() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Point of Sale (POS)</h1>
-        <p className="text-slate-500">Create a new customer invoice quickly.</p>
+    <div className="space-y-6 pb-24 relative min-h-screen">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Point of Sale</h1>
+          <p className="text-slate-500">Select products to add to cart.</p>
+        </div>
       </div>
 
-      {isSuccess && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl flex items-center gap-3"
-        >
-          <CheckCircle2 size={24} />
-          <div>
-            <h4 className="font-bold">Invoice Generated Successfully!</h4>
-            <p className="text-sm">Inventory has been updated and receipt is ready.</p>
+      {/* Product Selection */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden h-[75vh]">
+        <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search products by SKU or Name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+            />
           </div>
-        </motion.div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        </div>
         
-        {/* Left Column: Customer & Product Search */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Customer Details */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <User size={20} className="text-indigo-600"/> Customer Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User size={16} className="text-slate-400" />
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {availableItems.map(item => {
+              const inCartItem = globalCart.find(c => (c._id || c.id) === (item._id || item.id));
+              const remainingStock = item.availableStock - (inCartItem ? inCartItem.quantity : 0);
+
+              return (
+                <div 
+                  key={item._id || item.id} 
+                  onClick={() => remainingStock > 0 && addToGlobalCart(item)}
+                  className={`p-5 border rounded-2xl transition-all flex flex-col group ${
+                    remainingStock > 0 
+                    ? 'border-slate-100 hover:border-indigo-300 hover:bg-indigo-50/30 cursor-pointer hover:shadow-md'
+                    : 'border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex-1">
+                    <h3 className="font-bold text-slate-800 group-hover:text-indigo-700 leading-tight mb-1">{item.name}</h3>
+                    <p className="text-xs text-slate-500 font-mono mb-3">{item.sku}</p>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-md ${
+                      remainingStock > 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-red-50 text-red-600'
+                    }`}>
+                      {remainingStock > 0 ? `Stock: ${remainingStock}` : 'Out of Stock'}
+                    </span>
                   </div>
-                  <input 
-                    type="text" 
-                    value={customer.name}
-                    onChange={(e) => setCustomer({...customer, name: e.target.value})}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                    placeholder="John Doe"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number *</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone size={16} className="text-slate-400" />
+                  <div className="flex justify-between items-end mt-4 pt-4 border-t border-slate-100">
+                    <p className="font-black text-indigo-600 text-lg">₹{item.sellingPrice.toLocaleString()}</p>
+                    {remainingStock > 0 && (
+                      <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <Plus size={18} />
+                      </div>
+                    )}
                   </div>
-                  <input 
-                    type="tel" 
-                    value={customer.phone}
-                    onChange={(e) => setCustomer({...customer, phone: e.target.value})}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                    placeholder="+91 9876543210"
-                  />
                 </div>
+              );
+            })}
+            {availableItems.length === 0 && (
+              <div className="col-span-full text-center text-slate-400 py-12">
+                No products found or out of stock.
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email Address (Optional)</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail size={16} className="text-slate-400" />
-                  </div>
-                  <input 
-                    type="email" 
-                    value={customer.email}
-                    onChange={(e) => setCustomer({...customer, email: e.target.value})}
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                    placeholder="john@example.com"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Product Search */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Search size={20} className="text-indigo-600"/> Add Product to Cart
-            </h3>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                placeholder="Scan or type Serial Number / Model (e.g., SN1001)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              />
-              <button 
-                onClick={handleSearch}
-                className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-indigo-700 transition-colors"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-
-          {/* Cart Table */}
-          {cart.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600 font-medium">
-                  <tr>
-                    <th className="px-6 py-4">Product details</th>
-                    <th className="px-6 py-4">Quantity</th>
-                    <th className="px-6 py-4 text-right">Price</th>
-                    <th className="px-6 py-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {cart.map((item) => (
-                    <tr key={item._id}>
-                      <td className="px-6 py-4">
-                        <p className="font-bold text-slate-800">{item.model}</p>
-                        <p className="text-xs text-slate-500">{item.specs}</p>
-                        <p className="text-xs text-indigo-600 mt-1">SN: {item.serialNumber}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <button onClick={() => updateQuantity(item._id, -1)} className="p-1 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200"><Minus size={14}/></button>
-                          <span className="font-medium w-4 text-center">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item._id, 1)} className="p-1 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200"><Plus size={14}/></button>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right font-medium text-slate-800">
-                        ₹{(item.sellingPrice * item.quantity).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => removeItem(item._id)} className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors">
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Order Summary */}
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 sticky top-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <ShoppingCart size={20} className="text-indigo-600"/> Summary
-            </h3>
-            
-            <div className="space-y-3 text-sm mb-6">
-              <div className="flex justify-between text-slate-600">
-                <span>Subtotal</span>
-                <span className="font-medium text-slate-800">₹{subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Tax (18% GST)</span>
-                <span className="font-medium text-slate-800">₹{tax.toLocaleString()}</span>
-              </div>
-              <div className="h-px bg-slate-100 my-2"></div>
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-800 text-base">Grand Total</span>
-                <span className="font-black text-indigo-700 text-xl">₹{grandTotal.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={handleGenerateInvoice}
-              disabled={cart.length === 0 || isSubmitting}
-              className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
-            >
-              {isSubmitting ? 'Processing...' : 'Generate Invoice'}
-            </button>
-            <p className="text-xs text-center text-slate-500 mt-4">
-              Clicking generate will instantly update the inventory quantity and prevent duplicate sales.
-            </p>
+            )}
           </div>
         </div>
-
       </div>
+
+      {/* Floating Cart Button */}
+      <AnimatePresence>
+        {globalCart.length > 0 && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-50 md:ml-32 w-[90%] md:w-auto" // Center on mobile, offset on desktop
+          >
+            <button 
+              onClick={() => navigate('/employee/cart')}
+              className="flex w-full md:w-auto items-center justify-between md:justify-center gap-2 md:gap-4 bg-indigo-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-full shadow-2xl hover:bg-indigo-700 hover:shadow-indigo-500/30 transition-all hover:-translate-y-1"
+            >
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="relative">
+                  <ShoppingCart size={24} />
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-indigo-600">
+                    {globalCart.length}
+                  </span>
+                </div>
+                <span className="font-bold text-base md:text-lg hidden xs:inline">View Cart</span>
+              </div>
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="w-px h-6 bg-indigo-400/50 mx-1 hidden md:block"></div>
+                <span className="font-black text-lg md:text-xl">
+                ₹{globalCart.reduce((a, b) => a + (b.sellingPrice * b.quantity), 0).toLocaleString()}
+              </span>
+              <ArrowRight size={20} className="ml-2" />
+              </div>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

@@ -40,8 +40,10 @@ import { FranchiseProvider } from './portal/franchiseportal/storeadmin/context/F
 import EmployeeLayout from './portal/franchiseportal/employeeportal/Layout/EmployeeLayout';
 import EmployeeDashboard from './portal/franchiseportal/employeeportal/Pages/Dashboard';
 import EmployeeBilling from './portal/franchiseportal/employeeportal/Pages/Billing';
+import EmployeeCart from './portal/franchiseportal/employeeportal/Pages/Cart';
 import EmployeeInventory from './portal/franchiseportal/employeeportal/Pages/Inventory';
 import EmployeeOrders from './portal/franchiseportal/employeeportal/Pages/Orders';
+import { EmployeeProvider } from './portal/franchiseportal/employeeportal/context/EmployeeContext';
 import ChannelLayout from './portal/chnnelportal/Layout';
 import ChannelDashboard from './portal/chnnelportal/Dashboard';
 import CreateRFP from './portal/chnnelportal/CreateRFP';
@@ -151,11 +153,14 @@ function App() {
           {/* Employee Portal */}
           <Route path="/employee" element={
             <ProtectedRoute allowedRole="employee">
-              <EmployeeLayout />
+              <EmployeeProvider>
+                <EmployeeLayout />
+              </EmployeeProvider>
             </ProtectedRoute>
           }>
             <Route index element={<EmployeeDashboard />} />
             <Route path="billing" element={<EmployeeBilling />} />
+            <Route path="cart" element={<EmployeeCart />} />
             <Route path="inventory" element={<EmployeeInventory />} />
             <Route path="orders" element={<EmployeeOrders />} />
           </Route>

@@ -1,37 +1,71 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { 
-  inventoryData as initialInventory, 
-  salesData as initialSales, 
-  summaryMetrics as initialMetrics, 
-  orderData as initialOrders, 
-  storeProfile as initialStoreProfile,
-  techhansaCatalog,
-  b2bInvoices as initialB2BInvoices,
-  walletTransactions as initialWalletTransactions,
-  employeesData as initialEmployeesData
-} from '../../mockData';
+import axios from 'axios';
 
 export const FranchiseContext = createContext();
 
 export function FranchiseProvider({ children }) {
-  const [inventory, setInventory] = useState(initialInventory);
-  const [salesHistory, setSalesHistory] = useState(initialSales);
-  const [metrics, setMetrics] = useState(initialMetrics);
+  const STORE_ID = 'STORE-001';
+
+  const [inventory, setInventory] = useState([]);
+  const [salesHistory, setSalesHistory] = useState([]);
+  const [metrics, setMetrics] = useState({ todaysSales: 0, monthlySales: 0, walletBalance: 0, completedOrders: 0, pendingOrders: 0 });
   const [invoices, setInvoices] = useState([]);
-  const [orders, setOrders] = useState(initialOrders);
-  const [storeProfileData, setStoreProfileData] = useState(initialStoreProfile);
+  const [orders, setOrders] = useState([]);
+  const [storeProfileData, setStoreProfileData] = useState(null);
   const [globalCart, setGlobalCart] = useState([]);
   
-  const [b2bInvoices, setB2bInvoices] = useState(initialB2BInvoices);
-  const [walletTransactions, setWalletTransactions] = useState(initialWalletTransactions);
-  const [employees, setEmployees] = useState(initialEmployeesData);
+  const [techhansaCatalog, setTechhansaCatalog] = useState([]);
+  const [b2bInvoices, setB2bInvoices] = useState([]);
+  const [walletTransactions, setWalletTransactions] = useState([]);
+  const [employees, setEmployees] = useState([]);
+
+  const refreshData = async () => {
+    try {
+      const [profileRes, inventoryRes, walletRes, invoicesRes, employeesRes, catalogRes, requestsRes, salesRes] = await Promise.all([
+        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/profile`),
+        axios.get(`http://localhost:5000/api/inventory/${STORE_ID}`),
+        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/wallet`),
+        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/b2b-invoices`),
+        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/employees`),
+        axios.get(`http://localhost:5000/api/franchise/catalog/all`),
+        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/requests`),
+        axios.get(`http://localhost:5000/api/sales/store/${STORE_ID}`) // Fetch Store Sales
+      ]);
+
+      if (profileRes.data.success) {
+         setStoreProfileData(profileRes.data.data);
+         setMetrics({
+           todaysSales: profileRes.data.data.todaysSales || 0,
+           monthlySales: profileRes.data.data.monthlySales || 0,
+           walletBalance: profileRes.data.data.walletBalance || 0,
+           completedOrders: profileRes.data.data.completedOrders || 0,
+           pendingOrders: profileRes.data.data.pendingOrders || 0,
+         });
+      }
+      if (inventoryRes.data.success) setInventory(inventoryRes.data.data);
+      if (walletRes.data.success) setWalletTransactions(walletRes.data.data);
+      if (invoicesRes.data.success) setB2bInvoices(invoicesRes.data.data);
+      if (employeesRes.data.success) setEmployees(employeesRes.data.data);
+      if (catalogRes.data.success) setTechhansaCatalog(catalogRes.data.data);
+      if (requestsRes.data.success) setOrders(requestsRes.data.data);
+      if (salesRes.data.success) setInvoices(salesRes.data.data); // Set Sales Invoices
+
+    } catch (error) {
+      console.error("Failed to fetch franchise data", error);
+    }
+  };
+
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   const addToGlobalCart = (item) => {
     setGlobalCart(prev => {
-      const existing = prev.find(i => i.id === item.id);
+      const itemId = item._id || item.id;
+      const existing = prev.find(i => (i._id || i.id) === itemId);
       if (existing) {
         if (existing.quantity >= item.availableStock) return prev;
-        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map(i => (i._id || i.id) === itemId ? { ...i, quantity: i.quantity + 1 } : i);
       }
       return [...prev, { ...item, quantity: 1 }];
     });
@@ -39,9 +73,10 @@ export function FranchiseProvider({ children }) {
 
   const updateGlobalCartQuantity = (id, delta) => {
     setGlobalCart(prev => prev.map(item => {
-      if (item.id === id) {
+      const itemId = item._id || item.id;
+      if (itemId === id) {
         const newQty = item.quantity + delta;
-        const inventoryItem = inventory.find(i => i.id === id);
+        const inventoryItem = inventory.find(i => (i._id || i.id) === id);
         if (inventoryItem && newQty > inventoryItem.availableStock) return item;
         if (newQty < 1) return item;
         return { ...item, quantity: newQty };
@@ -51,7 +86,7 @@ export function FranchiseProvider({ children }) {
   };
 
   const removeGlobalCartItem = (id) => {
-    setGlobalCart(prev => prev.filter(item => item.id !== id));
+    setGlobalCart(prev => prev.filter(item => (item._id || item.id) !== id));
   };
 
   const clearGlobalCart = () => {
@@ -62,28 +97,31 @@ export function FranchiseProvider({ children }) {
     setStoreProfileData(newProfile);
   };
 
-  const addFundsToWallet = (amount) => {
-    const numAmount = Number(amount);
-    setMetrics(prev => ({ ...prev, walletBalance: prev.walletBalance + numAmount }));
-    
-    const newTxn = {
-      id: `TXN-${Date.now()}`,
-      date: new Date().toLocaleDateString('en-CA'),
-      type: 'Credit In',
-      amount: numAmount,
-      status: 'Success',
-      closingBalance: metrics.walletBalance + numAmount
-    };
-    
-    setWalletTransactions(prev => [newTxn, ...prev]);
+  const addFundsToWallet = async (amount) => {
+    try {
+      const res = await axios.post(`http://localhost:5000/api/franchise/${STORE_ID}/wallet/add`, { amount });
+      if (res.data.success) {
+        setMetrics(prev => ({ ...prev, walletBalance: res.data.newBalance }));
+        setWalletTransactions(prev => [res.data.data, ...prev]);
+        return true;
+      }
+    } catch (error) {
+      console.error("Failed to add funds", error);
+      return false;
+    }
   };
 
-  const addInventoryItem = (newItem) => {
-    setInventory(prev => [{ ...newItem, id: `PROD-${Date.now()}` }, ...prev]);
-  };
-
-  const updateInventoryItem = (id, updatedFields) => {
-    setInventory(prev => prev.map(item => item.id === id ? { ...item, ...updatedFields } : item));
+  const approveB2BInvoice = async (invoiceId) => {
+    try {
+      const res = await axios.put(`http://localhost:5000/api/franchise/${STORE_ID}/b2b-invoices/${invoiceId}/approve`);
+      if (res.data.success) {
+        await refreshData();
+        return true;
+      }
+    } catch (error) {
+      console.error("Failed to approve invoice", error);
+      throw error;
+    }
   };
 
   const requestNewStock = (items, totalAmount) => {
@@ -98,77 +136,99 @@ export function FranchiseProvider({ children }) {
     setOrders([newOrder, ...orders]);
   };
 
-  const submitOrderRequest = (orderItems) => {
-    const newOrder = {
-      id: `REQ-${Math.floor(Math.random() * 10000)}`,
-      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-      status: 'PENDING',
-      items: orderItems,
-      total: 0 // TBD until techhansa approves
-    };
-    setOrders(prev => [newOrder, ...prev]);
+  const submitOrderRequest = async (orderItems) => {
+    try {
+      const payload = {
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        items: orderItems,
+        total: 0 // Calculate if needed, but backend can handle or leave 0 for requests
+      };
+      const res = await axios.post(`http://localhost:5000/api/franchise/${STORE_ID}/requests`, payload);
+      if (res.data.success) {
+        setOrders(prev => [res.data.data, ...prev]);
+        return true;
+      }
+    } catch (error) {
+      console.error("Failed to submit order request", error);
+      return false;
+    }
   };
 
-  // Automated Inventory Update & Sales Processing
-  const processSale = (cartItems, customerDetails, totalAmount) => {
-    // 1. Update Inventory (decrement available stock)
-    const updatedInventory = inventory.map(item => {
-      const cartItem = cartItems.find(c => c.id === item.id);
-      if (cartItem) {
-        return {
-          ...item,
-          availableStock: item.availableStock - cartItem.quantity
-        };
-      }
-      return item;
-    });
-
-    setInventory(updatedInventory);
-
-    // 2. Update Sales History (Assuming today's date for simplicity)
-    const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const todayIndex = salesHistory.findIndex(s => s.date === todayStr);
-
-    let updatedSalesHistory = [...salesHistory];
-
-    if (todayIndex >= 0) {
-      updatedSalesHistory[todayIndex] = {
-        ...updatedSalesHistory[todayIndex],
-        sales: updatedSalesHistory[todayIndex].sales + totalAmount,
-        orders: updatedSalesHistory[todayIndex].orders + 1
-      };
-    } else {
-      updatedSalesHistory.push({
-        date: todayStr,
-        sales: totalAmount,
-        orders: 1
+  const processSale = async (cartItems, customerDetails, totalAmount) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/sales/checkout', {
+        cart: cartItems,
+        customer: customerDetails,
+        employeeId: STORE_ID,
+        storeId: STORE_ID
       });
+
+      if (response.data.success) {
+        // Refresh inventory after successful sale
+        await refreshData();
+        return response.data.invoice;
+      } else {
+        console.error("Sale failed:", response.data.message);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error processing sale:", error);
+      return null;
     }
+  };
+  const addInventoryItem = async (newItem) => {
+    try {
+      const payload = { ...newItem, storeId: STORE_ID };
+      const res = await axios.post(`http://localhost:5000/api/inventory/${STORE_ID}`, payload);
+      if (res.data.success) {
+        setInventory(prev => [res.data.data, ...prev]);
+        return true;
+      }
+    } catch (error) {
+      console.error("Failed to add inventory item", error);
+      return false;
+    }
+  };
 
-    setSalesHistory(updatedSalesHistory);
+  const updateInventoryItem = async (id, updatedFields) => {
+    try {
+      const res = await axios.put(`http://localhost:5000/api/inventory/${STORE_ID}/${id}`, updatedFields);
+      if (res.data.success) {
+        // Use the server response to update state so we have the true data
+        setInventory(prev => prev.map(item => (item._id === id || item.id === id) ? res.data.data : item));
+        return true;
+      }
+    } catch (error) {
+      console.error("Failed to update inventory item", error);
+      return false;
+    }
+  };
 
-    // 3. Update Metrics
-    const totalItemsSold = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-    setMetrics(prev => ({
-      ...prev,
-      availableStock: prev.availableStock - totalItemsSold,
-      todaysSales: prev.todaysSales + totalAmount,
-      monthlySales: prev.monthlySales + totalAmount,
-      completedOrders: prev.completedOrders + 1
-    }));
+  const addEmployee = async (employeeData) => {
+    try {
+      const res = await axios.post(`http://localhost:5000/api/franchise/${STORE_ID}/employees`, employeeData);
+      if (res.data.success) {
+        setEmployees(prev => [res.data.data, ...prev]);
+        return { success: true };
+      }
+      return { success: false, message: 'Failed to add employee' };
+    } catch (error) {
+      console.error("Failed to add employee", error);
+      return { success: false, message: error.response?.data?.message || 'Server error' };
+    }
+  };
 
-    // 4. Save Invoice
-    const newInvoice = {
-      id: `INV-${Date.now()}`,
-      date: new Date().toLocaleString(),
-      customer: customerDetails,
-      items: cartItems,
-      total: totalAmount
-    };
-
-    setInvoices(prev => [newInvoice, ...prev]);
-
-    return newInvoice;
+  const toggleEmployeeStatus = async (id) => {
+    try {
+      const res = await axios.put(`http://localhost:5000/api/franchise/${STORE_ID}/employees/${id}/status`);
+      if (res.data.success) {
+        setEmployees(prev => prev.map(emp => (emp._id === id || emp.id === id) ? { ...emp, status: res.data.data.status } : emp));
+        return true;
+      }
+    } catch (error) {
+      console.error("Failed to toggle employee status", error);
+      return false;
+    }
   };
 
   return (
@@ -195,10 +255,14 @@ export function FranchiseProvider({ children }) {
       updateGlobalCartQuantity,
       removeGlobalCartItem,
       clearGlobalCart,
+      addFundsToWallet,
+      submitOrderRequest,
+      refreshData,
+      approveB2BInvoice,
       addInventoryItem,
       updateInventoryItem,
-      addFundsToWallet,
-      submitOrderRequest
+      addEmployee,
+      toggleEmployeeStatus
     }}>
       {children}
     </FranchiseContext.Provider>
