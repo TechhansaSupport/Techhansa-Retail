@@ -21,7 +21,11 @@ import LoginPage from './Pages/LoginPage';
 import PartnerApplicationPage from './Pages/Partners/partnerpage';
 
 // --- Portal Dashboard Pages ---
-import AdminDashboard from './portal/Admin/Components/Admin';
+import AdminLayout from './portal/Admin/Layout/AdminLayout';
+import AdminDashboard from './portal/Admin/Pages/Dashboard';
+import EntityManagement from './portal/Admin/Pages/EntityManagement';
+import CentralCatalog from './portal/Admin/Pages/CentralCatalog';
+import AuditLogs from './portal/Admin/Pages/AuditLogs';
 import FranchiseLayout from './portal/franchiseportal/storeadmin/Layout/FranchiseLayout';
 import FranchiseDashboard from './portal/franchiseportal/storeadmin/Pages/Dashboard';
 import FranchiseProfile from './portal/franchiseportal/storeadmin/Pages/StoreProfile';
@@ -36,8 +40,10 @@ import { FranchiseProvider } from './portal/franchiseportal/storeadmin/context/F
 import EmployeeLayout from './portal/franchiseportal/employeeportal/Layout/EmployeeLayout';
 import EmployeeDashboard from './portal/franchiseportal/employeeportal/Pages/Dashboard';
 import EmployeeBilling from './portal/franchiseportal/employeeportal/Pages/Billing';
+import EmployeeCart from './portal/franchiseportal/employeeportal/Pages/Cart';
 import EmployeeInventory from './portal/franchiseportal/employeeportal/Pages/Inventory';
 import EmployeeOrders from './portal/franchiseportal/employeeportal/Pages/Orders';
+import { EmployeeProvider } from './portal/franchiseportal/employeeportal/context/EmployeeContext';
 import ChannelLayout from './portal/chnnelportal/Layout';
 import ChannelDashboard from './portal/chnnelportal/Dashboard';
 import CreateRFP from './portal/chnnelportal/CreateRFP';
@@ -116,11 +122,13 @@ function App() {
           {/* Admin Portal */}
           <Route path="/admin" element={
             <ProtectedRoute allowedRole="admin">
-              <Outlet />
+              <AdminLayout />
             </ProtectedRoute>
           }>
             <Route index element={<AdminDashboard />} />
-            {/* Add more admin routes here later: <Route path="users" element={<UsersPage />} /> */}
+            <Route path="entities" element={<EntityManagement />} />
+            <Route path="catalog" element={<CentralCatalog />} />
+            <Route path="audit" element={<AuditLogs />} />
           </Route>
 
           {/* Franchise Portal */}
@@ -145,11 +153,14 @@ function App() {
           {/* Employee Portal */}
           <Route path="/employee" element={
             <ProtectedRoute allowedRole="employee">
-              <EmployeeLayout />
+              <EmployeeProvider>
+                <EmployeeLayout />
+              </EmployeeProvider>
             </ProtectedRoute>
           }>
             <Route index element={<EmployeeDashboard />} />
             <Route path="billing" element={<EmployeeBilling />} />
+            <Route path="cart" element={<EmployeeCart />} />
             <Route path="inventory" element={<EmployeeInventory />} />
             <Route path="orders" element={<EmployeeOrders />} />
           </Route>

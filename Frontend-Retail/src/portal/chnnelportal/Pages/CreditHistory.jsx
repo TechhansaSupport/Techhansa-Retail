@@ -33,7 +33,7 @@ export default function CreditHistory() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/procurement/credit-transactions?userId=${user.userId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/credit-transactions?userId=${user.userId}`);
       const data = await res.json();
       setTransactions(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -77,7 +77,7 @@ export default function CreditHistory() {
     setIsModalOpen(true);
     
     try {
-      const res = await fetch(`http://localhost:5000/api/procurement/orders/${tx.referenceId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders/${tx.referenceId}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedOrder(data);

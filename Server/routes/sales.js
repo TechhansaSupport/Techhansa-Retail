@@ -21,16 +21,16 @@ router.post('/checkout', async (req, res) => {
     for (const item of cart) {
       // Find and deduct in one atomic operation
       const result = await Product.updateOne(
-        { _id: item._id || item.id, quantity: { $gte: item.quantity } },
-        { $inc: { quantity: -item.quantity } }
+        { _id: item._id || item.id, availableStock: { $gte: item.quantity } },
+        { $inc: { quantity: -item.quantity, availableStock: -item.quantity } }
       );
 
       if (result.modifiedCount === 0) {
         // Rollback already deducted products
         for (const deducted of deductedProducts) {
           await Product.updateOne(
-            { _id: deducted._id },
-            { $inc: { quantity: deducted.quantity } }
+            { _id: deducted._id || deducted.id },
+            { $inc: { quantity: deducted.quantity, availableStock: deducted.quantity } }
           );
         }
         return res.status(400).json({ success: false, message: `Insufficient stock for ${item.model} or product not found.` });
@@ -40,6 +40,15 @@ router.post('/checkout', async (req, res) => {
       subtotal += (item.sellingPrice * item.quantity);
       totalQuantity += item.quantity;
     }
+
+    const invoiceItems = cart.map(item => ({
+      productId: item._id || item.id,
+      name: item.name,
+      sku: item.sku,
+      quantity: item.quantity,
+      sellingPrice: item.sellingPrice,
+      serialNumbers: item.serialNumbers || []
+    }));
 
     const tax = subtotal * 0.18; // 18% GST mock
     const grandTotal = subtotal + tax;
@@ -56,7 +65,8 @@ router.post('/checkout', async (req, res) => {
       storeId,
       totalQuantity,
       subtotalAmount: subtotal,
-      paymentStatus: 'Paid' // Assuming POS is paid immediately
+      paymentStatus: 'Paid',
+      items: invoiceItems
     });
 
     await invoice.save();
@@ -103,6 +113,19 @@ router.get('/orders/:userId', async (req, res) => {
   } catch (error) {
     console.error('Order history error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching order history' });
+  }
+});
+
+// GET all order history for a specific store
+router.get('/store/:storeId', async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    // Populate employee name if possible, or just return as is
+    const invoices = await Invoice.find({ storeId }).sort({ createdAt: -1 });
+    res.json({ success: true, data: invoices });
+  } catch (error) {
+    console.error('Store order history error:', error);
+    res.status(500).json({ success: false, message: 'Server error fetching store order history' });
   }
 });
 

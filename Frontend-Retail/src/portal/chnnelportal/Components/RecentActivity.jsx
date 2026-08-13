@@ -27,7 +27,7 @@ export default function RecentActivity() {
       if (!user?.userId) return;
       setIsLoading(true);
       try {
-        const res = await fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`);
         if (res.ok) {
           const data = await res.json();
           if (data.length > 0) {

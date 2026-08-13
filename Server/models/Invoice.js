@@ -18,6 +18,14 @@ const InvoiceSchema = new mongoose.Schema({
   subtotalAmount: { type: Number, default: 0 },
   receivedAmount: { type: Number, default: 0 },
   balanceAmount: { type: Number, default: 0 },
+  items: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    name: String,
+    sku: String,
+    quantity: Number,
+    sellingPrice: Number,
+    serialNumbers: [String]
+  }],
   taxBreakdown: [{
     hsn: String,
     taxableValue: Number,

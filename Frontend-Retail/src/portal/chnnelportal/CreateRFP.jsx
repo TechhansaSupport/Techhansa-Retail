@@ -119,7 +119,7 @@ export default function CreateRFP() {
     try {
       const payload = buildPayload('Submitted');
       const isEdit = !!rfp;
-      const url = isEdit ? `http://localhost:5000/api/procurement/rfp/${rfp.rfpId}` : 'http://localhost:5000/api/procurement/rfp';
+      const url = isEdit ? `${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp/${rfp.rfpId}` : `${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp`;
       const method = isEdit ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -170,7 +170,7 @@ export default function CreateRFP() {
       }));
 
       const isEdit = !!rfp;
-      const url = isEdit ? `http://localhost:5000/api/procurement/rfp/${rfp.rfpId}` : 'http://localhost:5000/api/procurement/rfp';
+      const url = isEdit ? `${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp/${rfp.rfpId}` : `${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp`;
       const method = isEdit ? 'PUT' : 'POST';
 
       const response = await fetch(url, {

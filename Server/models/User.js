@@ -19,15 +19,22 @@ const userSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },
+  status: { 
+    type: String, 
+    enum: ['Active', 'Suspended'], 
+    default: 'Active' 
+  },
   name: { type: String, default: '' },
   email: { type: String, default: '' },
   companyName: { type: String, default: '' },
   phone: { type: String, default: '' },
   address: { type: String, default: '' },
   profilePhoto: { type: String, default: '' },
+  status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
   totalCredit: { type: Number, default: 0 },
   usedCredit: { type: Number, default: 0 },
   reservedCredit: { type: Number, default: 0 },
+  deletedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

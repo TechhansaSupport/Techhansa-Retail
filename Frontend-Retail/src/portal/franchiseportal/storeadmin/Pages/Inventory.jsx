@@ -75,7 +75,7 @@ export default function Inventory() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Parse numeric fields
@@ -85,16 +85,26 @@ export default function Inventory() {
       mrp: Number(formData.mrp),
       sellingPrice: Number(formData.sellingPrice),
       availableStock: Number(formData.availableStock),
+      quantity: Number(formData.availableStock), // keep in sync
       lowStockAlert: Number(formData.lowStockAlert),
       reservedStock: Number(formData.reservedStock) || 0
     };
 
     if (editingItem) {
-      updateInventoryItem(editingItem.id, processedData);
-      toast.success("Stock updated successfully!");
+      const itemId = editingItem._id || editingItem.id;
+      const result = await updateInventoryItem(itemId, processedData);
+      if (result) {
+        toast.success("Stock updated successfully!");
+      } else {
+        toast.error("Failed to update stock.");
+      }
     } else {
-      addInventoryItem(processedData);
-      toast.success("New stock added successfully!");
+      const result = await addInventoryItem(processedData);
+      if (result) {
+        toast.success("New stock added successfully!");
+      } else {
+        toast.error("Failed to add stock.");
+      }
     }
     handleCloseModal();
   };
@@ -177,7 +187,6 @@ export default function Inventory() {
               <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
                 <th className="px-6 py-4 font-medium">Hardware Category</th>
                 <th className="px-6 py-4 font-medium">Brand & Model</th>
-                <th className="px-6 py-4 font-medium">SN / MAC Address</th>
                 <th className="px-6 py-4 font-medium text-right">B2B Purchase Price</th>
                 <th className="px-6 py-4 font-medium text-right">Store Selling Price</th>
                 <th className="px-6 py-4 font-medium text-center">Available Qty</th>
@@ -189,7 +198,7 @@ export default function Inventory() {
                 const isLowStock = item.availableStock <= item.lowStockAlert;
                 
                 return (
-                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={item._id || item.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">
                         {item.category}
@@ -198,9 +207,6 @@ export default function Inventory() {
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-800">{item.brand}</div>
                       <div className="text-xs text-slate-500 font-mono mt-0.5">{item.model}</div>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-sm text-slate-700">
-                      {item.serialNumber || 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-right font-medium text-slate-700">
                       ₹{item.buyingPrice?.toLocaleString()}
@@ -247,7 +253,7 @@ export default function Inventory() {
           {filteredData.map((item) => {
             const isLowStock = item.availableStock <= item.lowStockAlert;
             return (
-              <div key={item.id} className="p-4 space-y-3">
+              <div key={item._id || item.id} className="p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-bold text-slate-800 text-lg">{item.name}</div>
@@ -344,10 +350,6 @@ export default function Inventory() {
                     <div className="md:col-span-2">
                       <label className="block text-xs font-semibold text-slate-600 mb-1">Full Product Name</label>
                       <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Dell XPS 13" />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Serial Number / MAC Address</label>
-                      <input type="text" name="serialNumber" value={formData.serialNumber} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Enter SN..." />
                     </div>
                   </div>
                 </div>

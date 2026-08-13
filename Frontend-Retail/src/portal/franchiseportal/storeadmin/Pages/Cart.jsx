@@ -9,20 +9,54 @@ export default function Cart() {
   const navigate = useNavigate();
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
   const [generatedInvoice, setGeneratedInvoice] = useState(null);
+  
+  const [showSerialModal, setShowSerialModal] = useState(false);
+  const [serialNumbers, setSerialNumbers] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const cartTotal = globalCart.reduce((acc, item) => acc + (item.sellingPrice * item.quantity), 0);
 
-  const handleCheckout = () => {
+  const handleInitiateCheckout = () => {
     if (globalCart.length === 0) return alert("Cart is empty");
     if (!customer.name || !customer.phone) return alert("Please fill in Customer Name and Phone");
-
-    // Process the sale through context (This deducts inventory automatically)
-    const invoice = processSale(globalCart, customer, cartTotal);
-    setGeneratedInvoice(invoice);
     
-    // Clear cart
-    clearGlobalCart();
-    setCustomer({ name: '', phone: '', email: '' });
+    const initialSerials = {};
+    globalCart.forEach(item => {
+      initialSerials[item._id || item.id] = Array(item.quantity).fill('');
+    });
+    setSerialNumbers(initialSerials);
+    setShowSerialModal(true);
+  };
+
+  const handleSerialChange = (itemId, index, value) => {
+    setSerialNumbers(prev => {
+      const updated = [...(prev[itemId] || [])];
+      updated[index] = value;
+      return { ...prev, [itemId]: updated };
+    });
+  };
+
+  const handleCheckout = async () => {
+    setIsSubmitting(true);
+    const cartWithSerials = globalCart.map(item => {
+      const itemId = item._id || item.id;
+      return {
+        ...item,
+        serialNumbers: (serialNumbers[itemId] || []).filter(sn => sn.trim() !== '')
+      };
+    });
+
+    const invoice = await processSale(cartWithSerials, customer, cartTotal);
+    setIsSubmitting(false);
+    
+    if (invoice) {
+      setShowSerialModal(false);
+      setGeneratedInvoice(invoice);
+      clearGlobalCart();
+      setCustomer({ name: '', phone: '', email: '' });
+    } else {
+      alert("Checkout failed. Please check stock availability and try again.");
+    }
   };
 
   return (
@@ -62,7 +96,7 @@ export default function Cart() {
               </div>
             ) : (
               globalCart.map(item => (
-                <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm gap-4">
+                <div key={item._id || item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm gap-4">
                   <div className="flex-1">
                     <h4 className="font-bold text-slate-800 text-lg">{item.name}</h4>
                     <p className="text-slate-500 font-mono text-xs">{item.sku}</p>
@@ -70,15 +104,15 @@ export default function Cart() {
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden shadow-inner">
-                      <button onClick={() => updateGlobalCartQuantity(item.id, -1)} className="p-3 text-slate-500 hover:bg-slate-200 transition-colors"><Minus size={16} /></button>
+                      <button onClick={() => updateGlobalCartQuantity(item._id || item.id, -1)} className="p-3 text-slate-500 hover:bg-slate-200 transition-colors"><Minus size={16} /></button>
                       <span className="px-4 text-lg font-bold text-slate-700 w-12 text-center">{item.quantity}</span>
-                      <button onClick={() => updateGlobalCartQuantity(item.id, 1)} className="p-3 text-slate-500 hover:bg-slate-200 transition-colors"><Plus size={16} /></button>
+                      <button onClick={() => updateGlobalCartQuantity(item._id || item.id, 1)} className="p-3 text-slate-500 hover:bg-slate-200 transition-colors"><Plus size={16} /></button>
                     </div>
                     <div className="text-right w-24">
                        <p className="text-xs text-slate-400 font-medium">Subtotal</p>
                        <p className="font-bold text-slate-800 text-lg">₹{(item.sellingPrice * item.quantity).toLocaleString()}</p>
                     </div>
-                    <button onClick={() => removeGlobalCartItem(item.id)} className="text-red-400 hover:text-red-600 p-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                    <button onClick={() => removeGlobalCartItem(item._id || item.id)} className="text-red-400 hover:text-red-600 p-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
                       <Trash2 size={20} />
                     </button>
                   </div>
@@ -114,8 +148,8 @@ export default function Cart() {
             </div>
             
             <button 
-              onClick={handleCheckout}
-              disabled={globalCart.length === 0}
+              onClick={handleInitiateCheckout}
+              disabled={globalCart.length === 0 || isSubmitting}
               className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
             >
               <CheckCircle2 size={24} />
@@ -146,19 +180,18 @@ export default function Cart() {
                 <button onClick={() => setGeneratedInvoice(null)} className="text-slate-400 hover:text-slate-600">✕</button>
               </div>
 
-              {/* Invoice Printable Area */}
               <div className="p-8 flex-1 overflow-y-auto bg-white" id="invoice-print-area">
                 <div className="text-center mb-8 border-b border-slate-100 pb-6">
                   <h2 className="text-2xl font-bold text-slate-800">Techhansa Retail</h2>
                   <p className="text-slate-500 text-sm">Downtown Store</p>
-                  <p className="text-slate-400 text-xs mt-2">Invoice: {generatedInvoice.id}</p>
-                  <p className="text-slate-400 text-xs">{generatedInvoice.date}</p>
+                  <p className="text-slate-400 text-xs mt-2">Invoice: {generatedInvoice.invoiceNumber}</p>
+                  <p className="text-slate-400 text-xs">{new Date(generatedInvoice.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                 </div>
                 
                 <div className="mb-6">
                   <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Billed To:</p>
-                  <p className="font-bold text-slate-800">{generatedInvoice.customer.name}</p>
-                  <p className="text-sm text-slate-500">Phone: {generatedInvoice.customer.phone}</p>
+                  <p className="font-bold text-slate-800">{generatedInvoice.customerName}</p>
+                  <p className="text-sm text-slate-500">Phone: {generatedInvoice.customerPhone}</p>
                 </div>
 
                 <table className="w-full text-sm mb-8">
@@ -171,8 +204,8 @@ export default function Cart() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {generatedInvoice.items.map(item => (
-                      <tr key={item.id}>
+                    {generatedInvoice.items.map((item, idx) => (
+                      <tr key={item.productId || idx}>
                         <td className="py-3 text-slate-800 font-medium">
                           {item.name}
                           <div className="text-xs text-slate-400 font-mono">{item.sku}</div>
@@ -185,9 +218,19 @@ export default function Cart() {
                   </tbody>
                 </table>
 
-                <div className="flex justify-between items-center pt-4 border-t-2 border-slate-800">
-                  <span className="font-bold text-slate-800">Total Amount</span>
-                  <span className="text-2xl font-black text-indigo-600">₹{generatedInvoice.total.toLocaleString()}</span>
+                <div className="space-y-2 pt-4 border-t-2 border-slate-800">
+                  <div className="flex justify-between items-center text-sm text-slate-500">
+                    <span>Subtotal</span>
+                    <span>₹{generatedInvoice.subtotalAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-slate-500">
+                    <span>Tax (GST 18%)</span>
+                    <span>₹{(generatedInvoice.amount - generatedInvoice.subtotalAmount).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                    <span className="font-bold text-slate-800">Grand Total</span>
+                    <span className="text-2xl font-black text-indigo-600">₹{generatedInvoice.amount.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
               
@@ -195,6 +238,62 @@ export default function Cart() {
                 <button onClick={() => setGeneratedInvoice(null)} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-xl transition-colors">Close</button>
                 <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200">
                   <Printer size={18} /> Print Invoice
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Serial Number Modal */}
+      <AnimatePresence>
+        {showSerialModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h2 className="text-xl font-bold text-slate-800">Enter Serial Numbers</h2>
+                <button onClick={() => setShowSerialModal(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              </div>
+
+              <div className="p-6 flex-1 overflow-y-auto space-y-6">
+                <p className="text-sm text-slate-500 mb-2">Scan or type the serial number/MAC address for each item. You can leave it blank for non-electronic items.</p>
+                {globalCart.map(item => {
+                  const itemId = item._id || item.id;
+                  return (
+                    <div key={itemId} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                      <h4 className="font-bold text-slate-800 mb-3">{item.name} <span className="text-xs text-indigo-600 ml-2 font-mono">Qty: {item.quantity}</span></h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {Array.from({ length: item.quantity }).map((_, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-400 w-6">#{idx + 1}</span>
+                            <input 
+                              type="text" 
+                              placeholder="Serial Number..."
+                              value={serialNumbers[itemId]?.[idx] || ''}
+                              onChange={(e) => handleSerialChange(itemId, idx, e.target.value)}
+                              className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                <button onClick={() => setShowSerialModal(false)} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+                  Back to Cart
+                </button>
+                <button 
+                  onClick={handleCheckout} 
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors shadow-sm disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Processing...' : 'Complete Checkout'}
                 </button>
               </div>
             </motion.div>

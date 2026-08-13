@@ -10,7 +10,7 @@ export default function EmployeeInventory() {
 
   useEffect(() => {
     if (user?.storeId) {
-      fetch(`http://localhost:5000/api/inventory/${user.storeId}`)
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -22,8 +22,9 @@ export default function EmployeeInventory() {
   }, [user]);
 
   const filteredInventory = inventory.filter(item => 
-    item.model.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.specs.toLowerCase().includes(searchQuery.toLowerCase())
+    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    item.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -42,7 +43,7 @@ export default function EmployeeInventory() {
           <input
             type="text"
             className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm"
-            placeholder="Search by Model or Specs..."
+            placeholder="Search by Name, SKU or Category..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -66,8 +67,8 @@ export default function EmployeeInventory() {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 text-slate-600 font-medium">
               <tr>
-                <th className="px-6 py-4">Model Name</th>
-                <th className="px-6 py-4">Specifications</th>
+                <th className="px-6 py-4">Product Name</th>
+                <th className="px-6 py-4">SKU / Category</th>
                 <th className="px-6 py-4 text-center">Available Quantity</th>
                 <th className="px-6 py-4 text-right">Selling Price</th>
               </tr>
@@ -75,16 +76,17 @@ export default function EmployeeInventory() {
             <tbody className="divide-y divide-slate-100">
               {filteredInventory.length > 0 ? (
                 filteredInventory.map((item) => (
-                  <tr key={item._id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={item._id || item.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 font-bold text-slate-800">
-                      {item.model}
+                      {item.name}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 whitespace-normal min-w-[250px]">
-                      {item.specs}
+                    <td className="px-6 py-4 text-slate-600 whitespace-normal">
+                      <div className="font-mono text-xs">{item.sku}</div>
+                      <div className="text-xs mt-1 text-slate-500">{item.category}</div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.quantity > 5 ? 'bg-green-100 text-green-700' : item.quantity > 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                        {item.quantity} in stock
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.availableStock > item.lowStockAlert ? 'bg-green-100 text-green-700' : item.availableStock > 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                        {item.availableStock} in stock
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right font-bold text-slate-800">

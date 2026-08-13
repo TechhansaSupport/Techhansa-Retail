@@ -5,6 +5,7 @@ const FranchisePartner = require('../models/FranchisePartner');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcrypt');
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -155,6 +156,232 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
     client.release();
   }
   */
+});
+
+const StoreProfile = require('../models/StoreProfile');
+const WalletTransaction = require('../models/WalletTransaction');
+const B2BInvoice = require('../models/B2BInvoice');
+const TechhansaCatalog = require('../models/TechhansaCatalog');
+const User = require('../models/User');
+
+// --- NEW API ENDPOINTS FOR FRANCHISE PORTAL ---
+
+// 1. Get Store Profile & Metrics
+router.get('/:storeId/profile', async (req, res) => {
+  try {
+    const profile = await StoreProfile.findOne({ storeId: req.params.storeId });
+    if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
+    res.json({ success: true, data: profile });
+  } catch (error) {
+    console.error('Error fetching store profile:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// 2. Get Wallet Transactions
+router.get('/:storeId/wallet', async (req, res) => {
+  try {
+    const transactions = await WalletTransaction.find({ storeId: req.params.storeId }).sort({ date: -1 });
+    res.json({ success: true, data: transactions });
+  } catch (error) {
+    console.error('Error fetching wallet transactions:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// 3. Add Funds to Wallet
+router.post('/:storeId/wallet/add', async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const storeId = req.params.storeId;
+    
+    const profile = await StoreProfile.findOne({ storeId });
+    if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
+    
+    const newBalance = profile.walletBalance + Number(amount);
+    
+    // Create transaction
+    const txn = new WalletTransaction({
+      storeId,
+      txnId: `TXN-${Date.now()}`,
+      type: 'Credit In',
+      amount: Number(amount),
+      closingBalance: newBalance
+    });
+    await txn.save();
+    
+    // Update profile
+    profile.walletBalance = newBalance;
+    await profile.save();
+    
+    res.json({ success: true, data: txn, newBalance });
+  } catch (error) {
+    console.error('Error adding funds:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// 4. Get B2B Invoices
+router.get('/:storeId/b2b-invoices', async (req, res) => {
+  try {
+    const invoices = await B2BInvoice.find({ storeId: req.params.storeId }).sort({ createdAt: -1 });
+    res.json({ success: true, data: invoices });
+  } catch (error) {
+    console.error('Error fetching b2b invoices:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// 5. Approve B2B Invoice
+router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
+  try {
+    const { storeId, id } = req.params;
+    
+    const invoice = await B2BInvoice.findById(id);
+    if (!invoice) return res.status(404).json({ success: false, message: 'Invoice not found' });
+    if (invoice.status === 'Paid') return res.status(400).json({ success: false, message: 'Invoice already paid' });
+    if (invoice.storeId !== storeId) return res.status(403).json({ success: false, message: 'Unauthorized' });
+    
+    const profile = await StoreProfile.findOne({ storeId });
+    if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
+    
+    if (profile.walletBalance < invoice.amount) {
+      return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+    }
+    
+    // Update invoice
+    invoice.status = 'Paid';
+    await invoice.save();
+    
+    // Update wallet
+    const newBalance = profile.walletBalance - invoice.amount;
+    profile.walletBalance = newBalance;
+    await profile.save();
+    
+    // Log transaction
+    const txn = new WalletTransaction({
+      storeId,
+      txnId: `TXN-${Date.now()}`,
+      type: 'Debit Out',
+      amount: invoice.amount,
+      closingBalance: newBalance
+    });
+    await txn.save();
+    
+    res.json({ success: true, invoice, newBalance, transaction: txn });
+  } catch (error) {
+    console.error('Error approving b2b invoice:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// 6. Get Employees
+router.get('/:storeId/employees', async (req, res) => {
+  try {
+    const employees = await User.find({ storeId: req.params.storeId, role: 'employee' }).sort({ createdAt: -1 });
+    res.json({ success: true, data: employees });
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Create Employee
+router.post('/:storeId/employees', async (req, res) => {
+  try {
+    const { userId, password, name, phone, email } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ userId });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'User ID already exists' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newEmployee = new User({
+      userId,
+      password: hashedPassword,
+      name,
+      phone,
+      email,
+      role: 'employee',
+      storeId: req.params.storeId,
+      status: 'Active'
+    });
+
+    await newEmployee.save();
+    res.status(201).json({ success: true, data: newEmployee });
+  } catch (error) {
+    console.error('Error creating employee:', error);
+    res.status(500).json({ success: false, message: 'Server error creating employee' });
+  }
+});
+
+// Toggle Employee Status
+router.put('/:storeId/employees/:id/status', async (req, res) => {
+  try {
+    const employee = await User.findOne({ _id: req.params.id, storeId: req.params.storeId, role: 'employee' });
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    employee.status = employee.status === 'Active' ? 'Inactive' : 'Active';
+    await employee.save();
+
+    res.json({ success: true, data: employee });
+  } catch (error) {
+    console.error('Error toggling employee status:', error);
+    res.status(500).json({ success: false, message: 'Server error toggling status' });
+  }
+});
+
+const ProcurementRequest = require('../models/ProcurementRequest');
+
+// 8. Get Procurement Requests
+router.get('/:storeId/requests', async (req, res) => {
+  try {
+    const requests = await ProcurementRequest.find({ storeId: req.params.storeId }).sort({ createdAt: -1 });
+    res.json({ success: true, data: requests });
+  } catch (error) {
+    console.error('Error fetching procurement requests:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// 9. Create Procurement Request
+router.post('/:storeId/requests', async (req, res) => {
+  try {
+    const { items, total, date } = req.body;
+    const storeId = req.params.storeId;
+    const requestId = `REQ-${Date.now()}`;
+    
+    const newRequest = new ProcurementRequest({
+      storeId,
+      requestId,
+      date,
+      items,
+      total
+    });
+    
+    await newRequest.save();
+    res.status(201).json({ success: true, data: newRequest });
+  } catch (error) {
+    console.error('Error creating procurement request:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// 7. Get Techhansa Catalog
+router.get('/catalog/all', async (req, res) => {
+  try {
+    const catalog = await TechhansaCatalog.find({});
+    res.json({ success: true, data: catalog });
+  } catch (error) {
+    console.error('Error fetching catalog:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 module.exports = router;

@@ -29,6 +29,7 @@ const procurementRoute = require('./routes/procurement');
 const settingsRoute = require('./routes/settings');
 const inventoryRoute = require('./routes/inventory');
 const salesRoute = require('./routes/sales');
+const adminRoute = require('./routes/admin');
 
 app.use('/api/contact', contactRoute);
 app.use('/api/franchise', franchiseRoute);
@@ -39,6 +40,7 @@ app.use('/api/procurement', procurementRoute);
 app.use('/api/settings', settingsRoute);
 app.use('/api/inventory', inventoryRoute);
 app.use('/api/sales', salesRoute);
+app.use('/api/admin', adminRoute);
 
 // =========================================
 // FRONTEND SERVING (Techhansa Retail)

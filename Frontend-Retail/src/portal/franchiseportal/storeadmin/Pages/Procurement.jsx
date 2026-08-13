@@ -4,7 +4,7 @@ import { Plus, X, Trash2, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Procurement() {
-  const { techhansaCatalog, b2bInvoices, orders, submitOrderRequest } = useFranchise();
+  const { techhansaCatalog, b2bInvoices, approveB2BInvoice, orders, submitOrderRequest, metrics } = useFranchise();
   const [activeTab, setActiveTab] = useState('catalog');
   
   // Modal state
@@ -58,20 +58,23 @@ export default function Procurement() {
     setOrderItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleSubmitOrder = () => {
+  const handleSubmitOrder = async () => {
     if (orderItems.length === 0) {
       toast.error("Order list is empty. Add items first.");
       return;
     }
-    // Simulate API call to send request to Techhansa Admin
-    console.log("Multi-Item Order Submitted: ", orderItems);
+    
     // Add to submitted orders via context
-    submitOrderRequest(orderItems);
+    const success = await submitOrderRequest(orderItems);
 
-    toast.success("Order request sent to Techhansa Admin for verification.");
-    setIsModalOpen(false);
-    setOrderItems([]);
-    setFormData(initialFormState);
+    if (success) {
+      toast.success("Order request sent to Techhansa Admin for verification.");
+      setIsModalOpen(false);
+      setOrderItems([]);
+      setFormData(initialFormState);
+    } else {
+      toast.error("Failed to submit order request. Please try again.");
+    }
   };
 
   const renderDynamicSpecs = () => {
@@ -190,10 +193,10 @@ export default function Procurement() {
           {orders.length > 0 ? (
             <div className="space-y-6">
                 {orders.map(order => (
-                  <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                  <div key={order._id || order.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
                       <div>
-                        <span className="font-bold text-slate-800 mr-4">Request {order.id}</span>
+                        <span className="font-bold text-slate-800 mr-4">Request {order.requestId || order.id}</span>
                         <span className="text-sm text-slate-500">Submitted on: {order.date}</span>
                       </div>
                       <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
@@ -212,7 +215,7 @@ export default function Procurement() {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                           {Array.isArray(order.items) ? order.items.map(item => (
-                            <tr key={item.id}>
+                            <tr key={item._id || item.id}>
                               <td className="py-3 font-medium text-slate-800">
                                 {item.hardwareType === 'Others' ? item.otherType : item.hardwareType}
                               </td>
@@ -265,17 +268,20 @@ export default function Procurement() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 text-slate-500 text-xs uppercase">
+                <th className="px-4 py-3">Request ID</th>
                 <th className="px-4 py-3">Invoice No</th>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3 text-right">Amount</th>
                 <th className="px-4 py-3 text-center">Status</th>
+                <th className="px-4 py-3 text-center">Invoice</th>
                 <th className="px-4 py-3 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {b2bInvoices.map(inv => (
-                <tr key={inv.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-semibold text-slate-800">{inv.id}</td>
+                <tr key={inv._id || inv.id} className="hover:bg-slate-50">
+                  <td className="px-4 py-3 text-sm text-slate-600">{inv.requestId || 'N/A'}</td>
+                  <td className="px-4 py-3 font-semibold text-slate-800">{inv.invoiceNo || inv.id}</td>
                   <td className="px-4 py-3 text-sm">{inv.date}</td>
                   <td className="px-4 py-3 text-right font-medium text-rose-600">₹{inv.amount.toLocaleString()}</td>
                   <td className="px-4 py-3 text-center">
@@ -284,9 +290,32 @@ export default function Procurement() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
+                    {inv.invoiceFile ? (
+                      <a href={`#${inv.invoiceFile}`} className="text-indigo-600 hover:underline flex items-center justify-center gap-1 text-sm font-medium">
+                         📄 PDF
+                      </a>
+                    ) : (
+                      <span className="text-slate-400 text-sm">N/A</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-center">
                     {inv.status === 'Pending' && (
-                      <button className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100">
-                        Approve & Pay
+                      <button 
+                        onClick={async () => {
+                          if (inv.amount > metrics.walletBalance) {
+                            toast.error(`Cannot approve. Invoice amount (₹${inv.amount}) exceeds available credit (₹${metrics.walletBalance}).`);
+                            return;
+                          }
+                          try {
+                            await approveB2BInvoice(inv._id);
+                            toast.success(`Order ${inv.invoiceNo || inv.id} approved successfully!`);
+                          } catch (err) {
+                            toast.error(`Failed to approve order ${inv.invoiceNo || inv.id}`);
+                          }
+                        }}
+                        className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"
+                      >
+                        Approve
                       </button>
                     )}
                   </td>

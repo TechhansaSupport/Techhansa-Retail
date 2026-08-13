@@ -25,14 +25,14 @@ router.post('/seed', async (req, res) => {
       userId: 'franchise123',
       password: hashedPassword,
       role: 'franchise',
-      storeId: 'store-001'
+      storeId: 'STORE-001'
     });
 
     const employeeUser = new User({
       userId: 'employee123',
       password: hashedPassword,
       role: 'employee',
-      storeId: 'store-001'
+      storeId: 'STORE-001'
     });
 
     const channelUser = new User({
@@ -64,6 +64,10 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid User ID or Password' });
     }
 
+    if (user.status === 'Suspended') {
+      return res.status(403).json({ message: 'Account Suspended: Please contact the Super Admin.' });
+    }
+
     // 2. Verify password using bcrypt
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -75,7 +79,10 @@ router.post('/login', async (req, res) => {
       user.isStoreActive = true;
       await user.save();
     } else if (user.role === 'employee') {
-      const franchiseAdmin = await User.findOne({ role: 'franchise', storeId: user.storeId });
+      const franchiseAdmin = await User.findOne({ 
+        role: 'franchise', 
+        storeId: { $regex: new RegExp(`^${user.storeId}$`, 'i') } 
+      });
       if (!franchiseAdmin || !franchiseAdmin.isStoreActive) {
         return res.status(403).json({ message: 'Store is closed' });
       }

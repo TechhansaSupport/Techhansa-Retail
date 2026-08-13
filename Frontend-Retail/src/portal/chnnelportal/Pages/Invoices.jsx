@@ -33,7 +33,7 @@ export default function Invoices() {
 
   const fetchCompanySettings = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/settings/company`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/settings/company`);
       const data = await res.json();
       setCompanySettings(data);
     } catch (err) {
@@ -44,7 +44,7 @@ export default function Invoices() {
   const fetchInvoices = async () => {
     if (!user?.userId) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/procurement/invoices?userId=${user.userId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/invoices?userId=${user.userId}`);
       const data = await res.json();
       setInvoices(data);
     } catch (err) {
@@ -55,7 +55,7 @@ export default function Invoices() {
   const fetchRfps = async () => {
     if (!user?.userId) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`);
       const data = await res.json();
       setRfps(data);
     } catch (err) {

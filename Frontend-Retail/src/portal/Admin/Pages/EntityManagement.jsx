@@ -1,0 +1,498 @@
+import React, { useState, useEffect } from 'react';
+import axios from '../../../api/axios';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShieldAlert, ShieldCheck, Search, Users, Plus, Trash2, X, AlertTriangle, Wallet } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export default function EntityManagement() {
+  const [entities, setEntities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modal states
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Credit Assignment Modal States
+  const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
+  const [creditUserId, setCreditUserId] = useState(null);
+  const [creditAmount, setCreditAmount] = useState('');
+
+  const [formData, setFormData] = useState({
+    userId: '',
+    email: '',
+    name: '',
+    password: '',
+    role: 'franchise',
+    storeId: ''
+  });
+
+  useEffect(() => {
+    fetchEntities();
+  }, []);
+
+  const fetchEntities = async () => {
+    try {
+      const response = await axios.get(`/api/admin/entities`);
+      setEntities(response.data);
+    } catch (error) {
+      toast.error('Failed to load entities');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleStatus = async (userId, currentStatus) => {
+    const newStatus = currentStatus === 'Active' ? 'Suspended' : 'Active';
+    try {
+      await axios.put(`/api/admin/entities/${userId}/status`, { status: newStatus });
+      toast.success(`Entity status updated to ${newStatus}`);
+      fetchEntities(); // Refresh list
+    } catch (error) {
+      toast.error('Failed to update status');
+    }
+  };
+
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await axios.post(`/api/admin/entities`, formData);
+      toast.success('Partner created successfully!');
+      setIsCreateModalOpen(false);
+      setFormData({
+        userId: '',
+        email: '',
+        name: '',
+        password: '',
+        role: 'franchise',
+        storeId: ''
+      });
+      fetchEntities();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create partner');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirmId) return;
+    try {
+      await axios.delete(`/api/admin/entities/${deleteConfirmId}`);
+      toast.success('Partner deleted permanently');
+      setDeleteConfirmId(null);
+      fetchEntities();
+    } catch (error) {
+      toast.error('Failed to delete partner');
+    }
+  };
+
+  const handleCreditSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await axios.put(`/api/admin/entities/${creditUserId}/credit`, { totalCredit: Number(creditAmount) });
+      toast.success('Credit limit updated successfully!');
+      setIsCreditModalOpen(false);
+      setCreditUserId(null);
+      setCreditAmount('');
+      fetchEntities();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to assign credit');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openCreditModal = (userId, currentCredit) => {
+    setCreditUserId(userId);
+    setCreditAmount(currentCredit || 0);
+    setIsCreditModalOpen(true);
+  };
+
+  const filteredEntities = entities.filter(entity => 
+    entity.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (entity.email && entity.email.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+            <Users className="mr-2 text-blue-500" size={28} />
+            Entity Management
+          </h2>
+          <p className="text-gray-500 mt-1">Provision, suspend, and manage Franchise and B2B Distributor accounts.</p>
+        </div>
+        
+        <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by ID or Email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm w-full sm:w-64"
+            />
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+          </div>
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-700 transition-colors"
+          >
+            <Plus size={18} /> Create Partner
+          </button>
+        </div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+      >
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User / Entity</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Store ID</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Credit Limit</th>
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center">
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredEntities.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500 font-medium">
+                    No entities found
+                  </td>
+                </tr>
+              ) : (
+                filteredEntities.map((entity, idx) => (
+                  <motion.tr 
+                    key={entity.userId}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="hover:bg-blue-50/50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600 shadow-inner">
+                          {entity.userId.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{entity.userId}</div>
+                          <div className="text-sm text-gray-500">{entity.email || 'No email provided'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        entity.role === 'channel' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {entity.role.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {entity.storeId || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">
+                      ₹{(entity.totalCredit || 0).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${
+                        entity.status === 'Active' 
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                          : 'bg-red-50 text-red-700 border-red-200'
+                      }`}>
+                        {entity.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => openCreditModal(entity.userId, entity.totalCredit)}
+                          title="Assign Credit Limit"
+                          className="inline-flex items-center p-2 border border-gray-200 text-indigo-600 bg-white hover:bg-indigo-50 hover:border-indigo-200 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                          <Wallet size={18} />
+                        </button>
+                        <button
+                          onClick={() => toggleStatus(entity.userId, entity.status)}
+                          title={entity.status === 'Active' ? 'Suspend' : 'Activate'}
+                          className={`inline-flex items-center p-2 border rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                            entity.status === 'Active'
+                              ? 'border-red-200 text-red-600 bg-white hover:bg-red-50 focus:ring-red-500'
+                              : 'border-emerald-200 text-emerald-600 bg-white hover:bg-emerald-50 focus:ring-emerald-500'
+                          }`}
+                        >
+                          {entity.status === 'Active' ? <ShieldAlert size={18} /> : <ShieldCheck size={18} />}
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmId(entity.userId)}
+                          title="Delete Permanent"
+                          className="inline-flex items-center p-2 border border-gray-200 text-gray-500 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+
+      {/* Credit Assignment Modal */}
+      <AnimatePresence>
+        {isCreditModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-indigo-50/50">
+                <div className="flex items-center">
+                   <Wallet className="text-indigo-600 mr-2" size={20} />
+                   <h3 className="text-lg font-bold text-gray-800">Assign Credit Limit</h3>
+                </div>
+                <button onClick={() => setIsCreditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleCreditSubmit} className="p-6">
+                <p className="text-sm text-gray-500 mb-4">
+                  Update the maximum operating credit line for <span className="font-bold text-gray-800">{creditUserId}</span>.
+                </p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Total Credit Line (₹)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-gray-500 font-medium">₹</span>
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={creditAmount}
+                      onChange={(e) => setCreditAmount(e.target.value)}
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-bold"
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setIsCreditModalOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200"
+                  >
+                    {isSubmitting ? 'Updating...' : 'Assign Limit'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirmId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4 mx-auto">
+                  <AlertTriangle className="text-red-600" size={24} />
+                </div>
+                <h3 className="text-lg font-bold text-center text-gray-900 mb-2">Delete Partner</h3>
+                <p className="text-center text-gray-500 text-sm">
+                  Are you sure you want to permanently delete the partner <span className="font-bold text-gray-800">"{deleteConfirmId}"</span>? This action cannot be undone and will revoke all access.
+                </p>
+              </div>
+              <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
+                <button 
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDelete}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-sm shadow-red-200"
+                >
+                  Delete Partner
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Create Partner Slide-over Modal */}
+      <AnimatePresence>
+        {isCreateModalOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCreateModalOpen(false)}
+              className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col"
+            >
+              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-gray-800">Provision New Partner</h3>
+                <button 
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-6">
+                <form onSubmit={handleCreateSubmit} id="create-partner-form" className="space-y-5">
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Partner Role</label>
+                    <select
+                      required
+                      value={formData.role}
+                      onChange={(e) => setFormData({...formData, role: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="franchise">Franchise Network</option>
+                      <option value="channel">B2B Channel Distributor</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+                    <input
+                      required
+                      type="text"
+                      placeholder="e.g. fran_nyc_01"
+                      value={formData.userId}
+                      onChange={(e) => setFormData({...formData, userId: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Temporary Password</label>
+                    <input
+                      required
+                      type="password"
+                      placeholder="Enter secure password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company / Partner Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Acme Retailers"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
+                    <input
+                      type="email"
+                      placeholder="partner@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {formData.role === 'franchise' && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Store ID</label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="e.g. store-005"
+                        value={formData.storeId}
+                        onChange={(e) => setFormData({...formData, storeId: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </motion.div>
+                  )}
+                  
+                </form>
+              </div>
+              
+              <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  form="create-partner-form"
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm shadow-blue-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Provisioning...
+                    </>
+                  ) : (
+                    'Provision Partner'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

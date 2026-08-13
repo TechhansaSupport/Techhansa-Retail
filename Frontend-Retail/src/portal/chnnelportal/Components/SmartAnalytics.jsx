@@ -41,8 +41,8 @@ export default function SmartAnalytics() {
       setIsLoading(true);
       try {
         const [rfpRes, reportsRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`),
-          fetch(`http://localhost:5000/api/procurement/reports?userId=${user.userId}`)
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`),
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/reports?userId=${user.userId}`)
         ]);
 
         if (rfpRes.ok) {
