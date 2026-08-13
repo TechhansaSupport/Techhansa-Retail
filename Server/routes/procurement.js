@@ -6,11 +6,12 @@ const Order = require('../models/Order');
 const Invoice = require('../models/Invoice');
 const User = require('../models/User');
 const CompanySettings = require('../models/CompanySettings');
+const CreditTransaction = require('../models/CreditTransaction');
 
 async function generateInvoiceNumber() {
   let stateCode = 'DL'; // default
   const settings = await CompanySettings.findOne();
-  
+
   if (settings) {
     const addr = (settings.stateName || settings.registeredAddress || '').toUpperCase();
     if (addr.includes('UTTAR PRADESH') || addr.includes(' UP') || addr.includes('U.P') || addr.includes(', UP')) stateCode = 'UP';
@@ -68,9 +69,9 @@ router.get('/dashboard-stats', async (req, res) => {
     const deliveredOrders = await Order.countDocuments({ ...filter, status: 'Delivered' });
     const totalInvoices = await Invoice.countDocuments(filter);
 
-    // Calculate total spending (sum of all Invoice amounts)
-    const invoices = await Invoice.find(filter);
-    const totalSpending = invoices.reduce((acc, curr) => acc + curr.amount, 0);
+    // Calculate total spending (actual deducted credit)
+    const user = await User.findOne({ userId });
+    const totalSpending = user?.usedCredit || 0;
 
     res.json({
       pendingRFPs,
@@ -168,12 +169,43 @@ router.get('/orders', async (req, res) => {
   }
 });
 
+// GET specific Order by orderNumber (with deep population)
+router.get('/orders/:orderNumber', async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber })
+      .populate({
+        path: 'quotationReference',
+        populate: {
+          path: 'rfpReference'
+        }
+      });
+    
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    res.json(order);
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET all Invoices
 router.get('/invoices', async (req, res) => {
   try {
     if (!req.query.userId) return res.json([]);
     const filter = { userId: req.query.userId };
-    const invoices = await Invoice.find(filter).populate('orderReference').sort({ createdAt: -1 });
+    const invoices = await Invoice.find(filter)
+      .populate({
+        path: 'orderReference',
+        populate: {
+          path: 'quotationReference',
+          populate: {
+            path: 'rfpReference'
+          }
+        }
+      })
+      .sort({ createdAt: -1 });
     res.json(invoices);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -327,6 +359,92 @@ router.get('/reports', async (req, res) => {
     res.json({ daily, monthly, yearly });
   } catch (error) {
     console.error('Error generating reports:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST new Order (Checkout)
+router.post('/orders', async (req, res) => {
+  try {
+    const { 
+      quotationReference, 
+      expectedDelivery, 
+      totalAmount, 
+      paymentMethod, 
+      utrNumber, 
+      transactionDate, 
+      receiptUrl, 
+      userId 
+    } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    let paymentStatus = 'None';
+    const orderNumber = `ORD-${Date.now()}`;
+
+    if (paymentMethod === 'Credit') {
+      const user = await User.findOne({ userId });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      
+      const availableCredit = (user.totalCredit || 0) - (user.usedCredit || 0) - (user.reservedCredit || 0);
+      if (availableCredit < totalAmount) {
+        return res.status(400).json({ error: 'Insufficient Credit Limit' });
+      }
+
+      // Reserve the credit
+      user.reservedCredit = (user.reservedCredit || 0) + totalAmount;
+      await user.save();
+      paymentStatus = 'Reserved';
+
+      // Record transaction
+      const transaction = new CreditTransaction({
+        userId,
+        type: 'Reserved',
+        amount: totalAmount,
+        referenceId: orderNumber,
+        description: `Reserved credit for Order ${orderNumber}`
+      });
+      await transaction.save();
+
+    } else if (paymentMethod === 'NEFT' || paymentMethod === 'UPI' || paymentMethod === 'Advance Payment') {
+      paymentStatus = 'Pending Verification';
+    }
+
+    const newOrder = new Order({
+      orderNumber,
+      quotationReference, // Can be null if they skip quotation
+      expectedDelivery: expectedDelivery || new Date(),
+      status: 'Pending',
+      totalAmount,
+      paymentMethod,
+      paymentStatus,
+      utrNumber,
+      transactionDate,
+      receiptUrl,
+      userId
+    });
+
+    await newOrder.save();
+    res.status(201).json(newOrder);
+
+  } catch (error) {
+    console.error('Error creating order:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET Credit Transactions
+router.get('/credit-transactions', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+    
+    const transactions = await CreditTransaction.find({ userId }).sort({ date: -1 });
+    res.json(transactions);
+  } catch (error) {
+    console.error('Error fetching credit transactions:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

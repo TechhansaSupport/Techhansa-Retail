@@ -95,8 +95,15 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   // -----------------------------------------
   
   const invoiceItems = invoice.items || rfp?.products || [];
+  
+  // Calculate an assumed rate per item if it's missing (for mock data or legacy invoices)
+  const totalQtyAcrossAllItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const totalAmountFromInvoice = invoice.amount || 0;
+  // Assume GST is 18%, so base amount is Total / 1.18
+  const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / 1.18) / totalQtyAcrossAllItems : 0;
+
   const tableData = invoiceItems.map((item, index) => {
-    const rate = item.rate || item.unitPrice || 0;
+    const rate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
     const hsn = item.hsn || '-';
     const gstRate = item.taxRate || 18;
@@ -124,7 +131,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   let finalAmt = 0;
 
   invoiceItems.forEach(item => {
-    const rate = item.rate || item.unitPrice || 0;
+    const rate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
     const gstRate = item.taxRate || 18;
     const taxableValue = rate * qty;
@@ -201,7 +208,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   // Taxable Value
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  const taxableValue = invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0)), 0);
+  const taxableValue = invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0)), 0);
   doc.text(`Tax Amount (in words) : INR ${numberToWords(Math.round(totalGstAmt))} Only`, 15, finalY + 5);
   
   doc.text('Taxable Value:', 150, finalY + 5);

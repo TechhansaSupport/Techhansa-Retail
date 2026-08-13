@@ -9,15 +9,18 @@ const tableVariants = {
 
 const getStatusStyles = (status) => {
   switch (status) {
-    case 'Approved': return { bg: 'bg-emerald-50', text: 'text-emerald-700' };
-    case 'Draft': return { bg: 'bg-slate-100', text: 'text-slate-700' };
-    case 'Under Review': return { bg: 'bg-amber-50', text: 'text-amber-700' };
-    case 'Submitted': return { bg: 'bg-blue-50', text: 'text-blue-700' };
-    case 'Quotation Received': return { bg: 'bg-violet-50', text: 'text-violet-700' };
-    case 'Rejected': return { bg: 'bg-red-50', text: 'text-red-700' };
-    case 'Accepted': return { bg: 'bg-emerald-50', text: 'text-emerald-700' };
-    case 'Pending Review': return { bg: 'bg-blue-50', text: 'text-blue-700' };
-    default: return { bg: 'bg-slate-100', text: 'text-slate-700' };
+    case 'Approved': return { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Approved' };
+    case 'Draft': return { bg: 'bg-slate-100', text: 'text-slate-700', label: 'Draft' };
+    case 'Under Review': return { bg: 'bg-indigo-50', text: 'text-indigo-700', label: 'Under Review' };
+    case 'Submitted': return { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pending Admin Approval' };
+    case 'Quotation Received': return { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Quotation Received' };
+    case 'Rejected': return { bg: 'bg-red-50', text: 'text-red-700', label: 'Rejected' };
+    case 'Accepted': return { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Accepted' };
+    case 'Pending Review': return { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pending Review' };
+    case 'Confirmed': return { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Confirmed' };
+    case 'Delivered': return { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Delivered' };
+    case 'Pending': return { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pending' };
+    default: return { bg: 'bg-slate-100', text: 'text-slate-700', label: status };
   }
 };
 
@@ -116,7 +119,7 @@ export default function ProcurementTables() {
                   <span className="font-semibold text-blue-600 text-sm group-hover:underline">{rfp.rfpId}</span>
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${styles.bg} ${styles.text}`}>
                     <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
-                    {rfp.status}
+                    {styles.label || rfp.status}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

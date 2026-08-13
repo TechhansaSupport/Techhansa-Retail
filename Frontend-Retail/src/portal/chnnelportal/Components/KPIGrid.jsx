@@ -10,6 +10,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 const KPI_CARDS = [
   { title: 'Pending RFP', value: 0, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100' },
@@ -37,6 +38,7 @@ import { AuthContext } from '../../../context/AuthContext';
 
 export default function KPIGrid() {
   const { user } = useContext(AuthContext) || { user: null };
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -64,11 +66,11 @@ export default function KPIGrid() {
   };
 
   const displayCards = stats ? [
-    { title: 'Pending RFP', value: stats.pendingRFPs || 0, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100' },
-    { title: 'Approved Orders', value: stats.approvedOrders || 0, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-    { title: 'Delivered Orders', value: stats.deliveredOrders || 0, icon: Truck, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
-    { title: 'Invoices', value: stats.totalInvoices || 0, icon: Receipt, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
-    { title: 'Total Spending', value: formatCurrency(stats.totalSpending || 0), icon: IndianRupee, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+    { title: 'Pending RFP', value: stats.pendingRFPs || 0, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100', route: '/channel/rfp', state: { filter: 'Submitted' } },
+    { title: 'Approved Orders', value: stats.approvedOrders || 0, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', route: '/channel/orders' },
+    { title: 'Delivered Orders', value: stats.deliveredOrders || 0, icon: Truck, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', route: '/channel/orders' },
+    { title: 'Invoices', value: stats.totalInvoices || 0, icon: Receipt, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100', route: '/channel/invoices' },
+    { title: 'Total Spending', value: formatCurrency(stats.totalSpending || 0), icon: IndianRupee, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', route: '/channel/credit-history' },
   ] : KPI_CARDS;
 
   return (
@@ -76,9 +78,10 @@ export default function KPIGrid() {
       {displayCards.map((kpi, i) => (
         <motion.div
           key={i}
+          onClick={() => kpi.route && navigate(kpi.route, { state: kpi.state })}
           variants={itemVariants}
           whileHover={{ y: -4, transition: { duration: 0.2 } }}
-          className="relative bg-white rounded-2xl p-5 shadow-sm border border-slate-100 overflow-hidden group"
+          className={`relative bg-white rounded-2xl p-5 shadow-sm border border-slate-100 overflow-hidden group ${kpi.route ? 'cursor-pointer hover:border-blue-300' : ''}`}
         >
           {/* Background Glow on Hover */}
           <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${kpi.bg}`} />

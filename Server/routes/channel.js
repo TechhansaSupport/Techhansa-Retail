@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
   fileFilter: (req, file, cb) => {
@@ -104,8 +104,8 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
 
   try {
     const {
-      companyName, cinGst, companyPan, companyTan, 
-      registeredAddress, companyContact, authName, 
+      companyName, cinGst, companyPan, companyTan,
+      registeredAddress, companyContact, authName,
       authContact, authEmail, directors
     } = req.body;
 
@@ -120,8 +120,8 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
 
     // 1. Insert Channel Partner Application and Directors (MongoDB embeds them)
     const newApplication = await ChannelPartner.create({
-      companyName, cinGst, companyPan, companyTan, 
-      registeredAddress, companyContact, authName, 
+      companyName, cinGst, companyPan, companyTan,
+      registeredAddress, companyContact, authName,
       authContact, authEmail, documentPath,
       directors: parsedDirectors
     });
@@ -162,10 +162,10 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
       console.error("❌ Failed to send channel email:", emailError);
     }
 
-    res.status(201).json({ 
-      success: true, 
+    res.status(201).json({
+      success: true,
       message: 'Channel Partner application submitted successfully',
-      applicationId 
+      applicationId
     });
 
   } catch (error) {
@@ -174,13 +174,13 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
     await client.query('ROLLBACK');
     */
     console.error('Error submitting channel partner application:', error);
-    
+
     // Clean up uploaded file if DB insertion failed
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: 'Server error while submitting application',
       error: error.message
     });

@@ -21,4 +21,9 @@
       transform: translateX(100%);
     }
   }
+
+  /* Remove default black focus outlines globally, especially for charts */
+  *:focus {
+    outline: none !important;
+  }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { exportToCSV } from '../../../utils/exportUtils';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Plus,
@@ -50,8 +50,9 @@ const itemVariants = {
 
 export default function RfpManagement() {
   const { user } = useContext(AuthContext) || { user: null };
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState(location.state?.filter || 'All');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [rfps, setRfps] = useState([]);
   const [selectedRfp, setSelectedRfp] = useState(null);
