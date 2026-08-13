@@ -69,9 +69,9 @@ router.get('/dashboard-stats', async (req, res) => {
     const deliveredOrders = await Order.countDocuments({ ...filter, status: 'Delivered' });
     const totalInvoices = await Invoice.countDocuments(filter);
 
-    // Calculate total spending (sum of all Invoice amounts)
-    const invoices = await Invoice.find(filter);
-    const totalSpending = invoices.reduce((acc, curr) => acc + curr.amount, 0);
+    // Calculate total spending (actual deducted credit)
+    const user = await User.findOne({ userId });
+    const totalSpending = user?.usedCredit || 0;
 
     res.json({
       pendingRFPs,

@@ -69,7 +69,9 @@ export default function CreditCard() {
             <span className={`font-semibold ${statusColor}`}>{percentage.toFixed(0)}% Left</span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden flex">
-            <div className={`${barColor} h-2.5 rounded-full`} style={{ width: `${percentage}%` }}></div>
+            {used > 0 && (
+              <div className={`${barColor} h-2.5`} style={{ width: `${(used / total) * 100}%` }} title="Used Credit"></div>
+            )}
             {reserved > 0 && (
               <div className="bg-blue-300 h-2.5" style={{ width: `${(reserved / total) * 100}%` }} title="Reserved for pending orders"></div>
             )}

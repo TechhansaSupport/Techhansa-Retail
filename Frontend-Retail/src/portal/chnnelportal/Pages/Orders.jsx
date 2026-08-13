@@ -38,7 +38,11 @@ export default function Orders() {
     }
   };
 
+  const validStatuses = ['Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered'];
+
   const filteredOrders = orders.filter(o => {
+    if (!validStatuses.includes(o.status)) return false;
+
     const orderId = o.orderNumber || o.orderId || '';
     const matchesSearch = orderId.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'All' || o.status === statusFilter;
@@ -72,7 +76,7 @@ export default function Orders() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg text-sm font-medium focus:outline-none focus:border-blue-500 shrink-0 bg-white"
           >
-            <option value="All">All Statuses</option>
+            <option value="All">All Status</option>
             <option value="Confirmed">Confirmed</option>
             <option value="Processing">Processing</option>
             <option value="Dispatched">Dispatched</option>

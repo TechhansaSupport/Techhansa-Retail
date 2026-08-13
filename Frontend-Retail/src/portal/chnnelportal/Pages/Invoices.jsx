@@ -72,6 +72,22 @@ export default function Invoices() {
   const selectedRfp = selectedInvoice?.orderReference?.quotationReference?.rfpReference || (selectedInvoice ? rfps.find(r => r.rfpId === orderRefForRfp?.replace('ORD-', '')) : null);
   const invoiceItems = selectedInvoice?.items || selectedRfp?.products || [];
 
+  const totalQtyAcrossAllItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const totalAmountFromInvoice = selectedInvoice?.amount || 0;
+  const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / 1.18) / totalQtyAcrossAllItems : 0;
+  
+  const calculatedTotalAmount = invoiceItems.reduce((acc, item) => {
+    const rate = item.rate || item.unitPrice || assumedRate;
+    const qty = item.quantity || 0;
+    const taxRate = item.taxRate || 18;
+    return acc + (rate * qty * (1 + (taxRate / 100)));
+  }, 0);
+  const finalTotalAmount = selectedInvoice?.amount || calculatedTotalAmount;
+  const displayReceivedAmount = selectedInvoice?.receivedAmount || 0;
+  const isPaid = selectedInvoice?.paymentStatus === 'Paid';
+  const calculatedBalance = Math.max(0, finalTotalAmount - displayReceivedAmount);
+  const displayBalanceAmount = isPaid ? 0 : (selectedInvoice?.balanceAmount || calculatedBalance);
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -232,12 +248,7 @@ export default function Invoices() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {(() => {
-                          const totalQtyAcrossAllItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
-                          const totalAmountFromInvoice = selectedInvoice.amount || 0;
-                          const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / 1.18) / totalQtyAcrossAllItems : 0;
-                          
-                          return invoiceItems.map((item, i) => {
+                        {invoiceItems.map((item, i) => {
                             const rate = item.rate || item.unitPrice || assumedRate;
                             const qty = item.quantity || 0;
                           const hsn = item.hsn || '-';
@@ -265,8 +276,7 @@ export default function Invoices() {
                               </td>
                             </tr>
                           );
-                          });
-                        })()}
+                        })}
                       </tbody>
                       <tfoot className="bg-slate-50 border-t border-slate-200">
                         <tr>
@@ -345,11 +355,11 @@ export default function Invoices() {
                     <div className="p-4 border-b border-slate-700 flex justify-between bg-white">
                       <div className="text-sm flex items-center gap-2">
                         <span className="text-slate-500">Received Amount:</span>
-                        <span className="font-bold text-emerald-600">₹{(selectedInvoice.receivedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span className="font-bold text-emerald-600">₹{displayReceivedAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div className="text-sm flex items-center gap-2">
                         <span className="text-slate-500">Balance Amount:</span>
-                        <span className="font-bold text-amber-600">₹{(selectedInvoice.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span className="font-bold text-amber-600">₹{displayBalanceAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                     </div>
 
