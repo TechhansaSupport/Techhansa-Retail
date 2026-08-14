@@ -10,7 +10,9 @@ const CreditTransaction = require('../models/CreditTransaction');
 const FranchisePartner = require('../models/FranchisePartner');
 const ChannelPartner = require('../models/ChannelPartner');
 const Order = require('../models/Order');
-
+const ProcurementRequest = require('../models/ProcurementRequest');
+const B2BInvoice = require('../models/B2BInvoice');
+const StoreProfile = require('../models/StoreProfile');
 // Middleware to check if user is admin (Assuming basic auth or we check token in a real scenario)
 // For simplicity and matching current setup, we might rely on the frontend to protect routes,
 // but it's good practice to add a middleware if we were passing tokens.
@@ -195,35 +197,35 @@ router.get('/dashboard/chart', async (req, res) => {
 router.get('/orders', async (req, res) => {
   try {
     const orders = await Order.aggregate([
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: 'userId',
-          as: 'userDetails'
-        }
-      },
-      {
-        $unwind: {
-          path: '$userDetails',
-          preserveNullAndEmptyArrays: true
-        }
-      },
+      { $lookup: { from: 'users', localField: 'userId', foreignField: 'userId', as: 'userDetails' } },
+      { $unwind: { path: '$userDetails', preserveNullAndEmptyArrays: true } },
+      { $addFields: { userRole: '$userDetails.role', orderType: 'Enterprise' } },
+      { $project: { userDetails: 0 } }
+    ]);
+
+    const procurements = await ProcurementRequest.aggregate([
       {
         $addFields: {
-          userRole: '$userDetails.role'
+          orderNumber: '$requestId',
+          userRole: 'franchise',
+          userId: '$storeId',
+          totalAmount: '$total',
+          orderType: 'Franchise Procurement'
         }
-      },
-      {
-        $project: {
-          userDetails: 0
-        }
-      },
-      {
-        $sort: { createdAt: -1 }
       }
     ]);
-    res.json(orders);
+
+    const mappedProcurements = procurements.map(pr => ({
+      ...pr,
+      paymentStatus: pr.status === 'PENDING' ? 'Pending Verification' : 'Verified',
+      status: pr.status === 'PENDING' ? 'Pending' :
+              pr.status === 'APPROVED' ? 'Processing' : 
+              pr.status === 'DISPATCHED' ? 'Dispatched' :
+              pr.status === 'DELIVERED' ? 'Delivered' : pr.status
+    }));
+
+    const allOrders = [...orders, ...mappedProcurements].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(allOrders);
   } catch (error) {
     console.error('Error fetching admin orders:', error);
     res.status(500).json({ message: 'Server error' });
@@ -265,6 +267,50 @@ router.get('/orders/:id', async (req, res) => {
     res.json(order);
   } catch (error) {
     console.error('Error fetching order details:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/admin/procurement-requests/:id
+router.get('/procurement-requests/:id', async (req, res) => {
+  try {
+    const request = await ProcurementRequest.findById(req.params.id);
+    if (!request) return res.status(404).json({ message: 'Procurement Request not found' });
+    res.json(request);
+  } catch (error) {
+    console.error('Error fetching procurement request details:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/admin/procurement-requests/:id/approve
+router.post('/procurement-requests/:id/approve', async (req, res) => {
+  try {
+    const { totalAmount } = req.body;
+    const request = await ProcurementRequest.findById(req.params.id);
+    if (!request) return res.status(404).json({ message: 'Procurement Request not found' });
+    if (request.status !== 'PENDING') {
+      return res.status(400).json({ message: 'Only PENDING requests can be approved and invoiced.' });
+    }
+
+    // Update Procurement Request
+    request.total = totalAmount;
+    request.status = 'APPROVED';
+    await request.save();
+
+    // Generate B2BInvoice
+    const invoice = new B2BInvoice({
+      storeId: request.storeId,
+      invoiceNo: `INV-${Date.now()}`,
+      requestId: request.requestId,
+      amount: totalAmount,
+      status: 'Pending'
+    });
+    await invoice.save();
+
+    res.json({ message: 'Procurement Request approved and Invoice generated successfully', request, invoice });
+  } catch (error) {
+    console.error('Error approving procurement request:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

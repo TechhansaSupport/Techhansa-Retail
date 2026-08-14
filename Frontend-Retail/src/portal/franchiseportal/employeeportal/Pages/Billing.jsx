@@ -15,8 +15,7 @@ export default function EmployeeBilling() {
   const availableItems = inventory.filter(item => 
     item.availableStock > 0 && 
     (item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     item.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     item.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
      item.serialNumber?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -36,7 +35,7 @@ export default function EmployeeBilling() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search products by SKU or Name..."
+              placeholder="Search products by Name or Category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
@@ -62,7 +61,7 @@ export default function EmployeeBilling() {
                 >
                   <div className="flex-1">
                     <h3 className="font-bold text-slate-800 group-hover:text-indigo-700 leading-tight mb-1">{item.name}</h3>
-                    <p className="text-xs text-slate-500 font-mono mb-3">{item.sku}</p>
+
                     <span className={`text-xs font-semibold px-2 py-1 rounded-md ${
                       remainingStock > 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-red-50 text-red-600'
                     }`}>

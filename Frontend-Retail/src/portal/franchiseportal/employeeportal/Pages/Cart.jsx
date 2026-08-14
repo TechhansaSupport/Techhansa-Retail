@@ -101,7 +101,7 @@ export default function Cart() {
                 <div key={item._id || item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm gap-4">
                   <div className="flex-1">
                     <h4 className="font-bold text-slate-800 text-lg">{item.name}</h4>
-                    <p className="text-slate-500 font-mono text-xs">{item.sku}</p>
+
                     <p className="text-indigo-600 font-bold mt-1">₹{item.sellingPrice.toLocaleString()}</p>
                   </div>
                   <div className="flex items-center gap-6">
@@ -210,7 +210,7 @@ export default function Cart() {
                       <tr key={item.productId || idx}>
                         <td className="py-3 text-slate-800 font-medium">
                           {item.name}
-                          <div className="text-xs text-slate-400 font-mono">{item.sku}</div>
+
                         </td>
                         <td className="py-3 text-center text-slate-600">{item.quantity}</td>
                         <td className="py-3 text-right text-slate-600">₹{item.sellingPrice.toLocaleString()}</td>
