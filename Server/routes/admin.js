@@ -9,6 +9,7 @@ const Invoice = require('../models/Invoice');
 const CreditTransaction = require('../models/CreditTransaction');
 const FranchisePartner = require('../models/FranchisePartner');
 const ChannelPartner = require('../models/ChannelPartner');
+const Order = require('../models/Order');
 
 // Middleware to check if user is admin (Assuming basic auth or we check token in a real scenario)
 // For simplicity and matching current setup, we might rely on the frontend to protect routes,
@@ -186,6 +187,84 @@ router.get('/dashboard/chart', async (req, res) => {
     res.json(chartData);
   } catch (error) {
     console.error('Error fetching chart data:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/admin/orders
+router.get('/orders', async (req, res) => {
+  try {
+    const orders = await Order.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: 'userId',
+          as: 'userDetails'
+        }
+      },
+      {
+        $unwind: {
+          path: '$userDetails',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $addFields: {
+          userRole: '$userDetails.role'
+        }
+      },
+      {
+        $project: {
+          userDetails: 0
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching admin orders:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PATCH /api/admin/orders/:id/status
+router.patch('/orders/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    res.json(order);
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/admin/orders/:id
+router.get('/orders/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate({
+        path: 'quotationReference',
+        populate: {
+          path: 'rfpReference'
+        }
+      });
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    res.json(order);
+  } catch (error) {
+    console.error('Error fetching order details:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

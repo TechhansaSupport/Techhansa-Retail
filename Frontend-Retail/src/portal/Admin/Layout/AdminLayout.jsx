@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Package, FileText, LogOut, Bell, User, Menu, X, ChevronDown, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, Package, FileText, LogOut, Bell, User, Menu, X, ChevronDown, Shield, ShoppingCart } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/logo.png';
@@ -33,6 +33,7 @@ export default function AdminLayout() {
     { name: 'Dashboard', path: '/admin', end: true, icon: <LayoutDashboard size={20} /> },
     { name: 'Entity Management', path: '/admin/entities', icon: <Users size={20} /> },
     { name: 'Central Catalog', path: '/admin/catalog', icon: <Package size={20} /> },
+    { name: 'Global Orders', path: '/admin/orders', icon: <ShoppingCart size={20} /> },
     { name: 'Audit Logs', path: '/admin/audit', icon: <FileText size={20} /> },
   ];
 
