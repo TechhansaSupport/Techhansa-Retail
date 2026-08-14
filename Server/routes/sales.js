@@ -44,7 +44,7 @@ router.post('/checkout', async (req, res) => {
     const invoiceItems = cart.map(item => ({
       productId: item._id || item.id,
       name: item.name,
-      sku: item.sku,
+
       quantity: item.quantity,
       sellingPrice: item.sellingPrice,
       serialNumbers: item.serialNumbers || []

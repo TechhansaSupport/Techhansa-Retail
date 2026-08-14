@@ -11,6 +11,7 @@ export default function AllOrders() {
   const [roleFilter, setRoleFilter] = useState('All');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [invoiceTotal, setInvoiceTotal] = useState('');
 
   useEffect(() => {
     fetchOrders();
@@ -29,10 +30,16 @@ export default function AllOrders() {
     }
   };
 
-  const handleViewOrder = async (orderId) => {
+  const handleViewOrder = async (orderId, orderType) => {
     try {
-      const res = await axios.get(`/api/admin/orders/${orderId}`);
-      setSelectedOrder(res.data);
+      if (orderType === 'Franchise Procurement') {
+        const res = await axios.get(`/api/admin/procurement-requests/${orderId}`);
+        setSelectedOrder({ ...res.data, orderType });
+      } else {
+        const res = await axios.get(`/api/admin/orders/${orderId}`);
+        setSelectedOrder({ ...res.data, orderType });
+      }
+      setInvoiceTotal('');
       setIsModalOpen(true);
     } catch (error) {
       console.error('Failed to fetch order details:', error);
@@ -48,6 +55,22 @@ export default function AllOrders() {
     } catch (error) {
       console.error('Failed to update order status:', error);
       toast.error('Failed to update order status');
+    }
+  };
+
+  const handleApproveProcurement = async (orderId) => {
+    if (!invoiceTotal || isNaN(invoiceTotal) || Number(invoiceTotal) <= 0) {
+      toast.error('Please enter a valid invoice total amount');
+      return;
+    }
+    try {
+      await axios.post(`/api/admin/procurement-requests/${orderId}/approve`, { totalAmount: Number(invoiceTotal) });
+      toast.success('Invoice generated and Procurement Request approved');
+      setIsModalOpen(false);
+      fetchOrders();
+    } catch (error) {
+      console.error('Failed to approve procurement request:', error);
+      toast.error(error.response?.data?.message || 'Failed to generate invoice');
     }
   };
 
@@ -201,7 +224,7 @@ export default function AllOrders() {
                           </>
                         )}
                         <button 
-                          onClick={() => handleViewOrder(order._id)}
+                          onClick={() => handleViewOrder(order._id, order.orderType)}
                           className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors inline-flex"
                           title="View Details"
                         >
@@ -259,7 +282,7 @@ export default function AllOrders() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 text-sm font-medium">Expected Delivery</span>
-                      <span className="text-slate-700 text-sm font-bold">{new Date(selectedOrder.expectedDelivery).toLocaleDateString()}</span>
+                      <span className="text-slate-700 text-sm font-bold">{selectedOrder.expectedDelivery ? new Date(selectedOrder.expectedDelivery).toLocaleDateString() : 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -280,7 +303,43 @@ export default function AllOrders() {
               </div>
 
               {/* Items List */}
-              {selectedOrder.quotationReference?.rfpReference?.products && (
+              {selectedOrder.orderType === 'Franchise Procurement' ? (
+                <div>
+                  <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Requested Items</h3>
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          <th className="px-4 py-3">Hardware Type</th>
+                          <th className="px-4 py-3">Brand & Specs</th>
+                          <th className="px-4 py-3 text-right">Quantity</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {selectedOrder.items?.map((item, index) => (
+                          <tr key={index} className="hover:bg-slate-50/50">
+                            <td className="px-4 py-3 font-semibold text-slate-700 text-sm">
+                              {item.hardwareType === 'Other' ? item.otherType : item.hardwareType}
+                            </td>
+                            <td className="px-4 py-3">
+                              <p className="text-sm font-semibold text-slate-700">{item.brand}</p>
+                              {item.specs && Object.keys(item.specs).length > 0 && (
+                                <p className="text-xs text-slate-500 line-clamp-2">
+                                  {Object.entries(item.specs).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                                </p>
+                              )}
+                              {item.comments && (
+                                <p className="text-xs text-amber-600 mt-1 line-clamp-1 italic">"{item.comments}"</p>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-sm font-bold text-slate-700 text-right">{item.quantity}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : selectedOrder.quotationReference?.rfpReference?.products && (
                 <div>
                   <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Ordered Items</h3>
                   <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
@@ -310,10 +369,31 @@ export default function AllOrders() {
               )}
 
               {/* Total Amount Footer */}
-              <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex items-center justify-between">
-                <span className="text-indigo-800 font-bold uppercase tracking-wider">Total Amount</span>
-                <span className="text-2xl font-black text-indigo-900">₹{selectedOrder.totalAmount?.toLocaleString()}</span>
-              </div>
+              {selectedOrder.orderType === 'Franchise Procurement' && selectedOrder.status === 'PENDING' ? (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-indigo-800 font-bold uppercase tracking-wider text-sm mb-1">Set Invoice Amount (₹)</span>
+                    <input 
+                      type="number" 
+                      value={invoiceTotal}
+                      onChange={(e) => setInvoiceTotal(e.target.value)}
+                      placeholder="e.g. 50000"
+                      className="px-4 py-2 rounded-lg border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-900"
+                    />
+                  </div>
+                  <button 
+                    onClick={() => handleApproveProcurement(selectedOrder._id)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-sm transition-colors whitespace-nowrap"
+                  >
+                    Generate B2B Invoice & Approve
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex items-center justify-between">
+                  <span className="text-indigo-800 font-bold uppercase tracking-wider">Total Amount</span>
+                  <span className="text-2xl font-black text-indigo-900">₹{selectedOrder.totalAmount?.toLocaleString()}</span>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

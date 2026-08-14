@@ -22,8 +22,7 @@ export default function EmployeeInventory() {
   }, [user]);
 
   const filteredInventory = inventory.filter(item => 
-    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -43,7 +42,7 @@ export default function EmployeeInventory() {
           <input
             type="text"
             className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm"
-            placeholder="Search by Name, SKU or Category..."
+            placeholder="Search by Name or Category..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -68,7 +67,7 @@ export default function EmployeeInventory() {
             <thead className="bg-slate-50 text-slate-600 font-medium">
               <tr>
                 <th className="px-6 py-4">Product Name</th>
-                <th className="px-6 py-4">SKU / Category</th>
+                <th className="px-6 py-4">Category</th>
                 <th className="px-6 py-4 text-center">Available Quantity</th>
                 <th className="px-6 py-4 text-right">Selling Price</th>
               </tr>
@@ -81,7 +80,7 @@ export default function EmployeeInventory() {
                       {item.name}
                     </td>
                     <td className="px-6 py-4 text-slate-600 whitespace-normal">
-                      <div className="font-mono text-xs">{item.sku}</div>
+
                       <div className="text-xs mt-1 text-slate-500">{item.category}</div>
                     </td>
                     <td className="px-6 py-4 text-center">

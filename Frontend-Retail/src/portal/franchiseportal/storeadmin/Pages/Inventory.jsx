@@ -20,7 +20,7 @@ export default function Inventory() {
     brand: '',
     model: '',
     name: '',
-    sku: '',
+
     serialNumber: '',
     buyingPrice: '',
     mrp: '',
@@ -257,7 +257,7 @@ export default function Inventory() {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-bold text-slate-800 text-lg">{item.name}</div>
-                    <div className="text-xs text-slate-500 font-mono mt-0.5">{item.sku}</div>
+
                   </div>
                   <button 
                     onClick={() => handleOpenModal(item)}
@@ -336,8 +336,7 @@ export default function Inventory() {
                       <input type="text" name="category" value={formData.category} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Laptops" />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">SKU</label>
-                      <input type="text" name="sku" value={formData.sku} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. SKU-12345" />
+
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">Brand *</label>
