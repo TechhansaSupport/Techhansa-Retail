@@ -12,10 +12,7 @@ export default function EmployeeLayout() {
   const mainRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [isStoreMenuOpen, setIsStoreMenuOpen] = useState(false);
-  const [activeStore, setActiveStore] = useState('Lanka Branch');
-  // For employee, they probably only work at one store, but we can keep the UI consistent
-  const stores = ['Lanka Branch'];
+  const storeName = user?.storeId || 'My Store';
 
   useEffect(() => {
     if (mainRef.current) {
@@ -93,30 +90,13 @@ export default function EmployeeLayout() {
               <Menu size={24} />
             </button>
             <h2 className="text-lg md:text-xl font-semibold text-slate-800 hidden sm:block">
-              Welcome back, Employee
+              Welcome back, {user?.name || 'Employee'}
             </h2>
-            <div className="relative ml-4 hidden md:block">
-              <button 
-                onClick={() => setIsStoreMenuOpen(!isStoreMenuOpen)}
-                className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
-              >
+            <div className="ml-4 hidden md:block">
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium">
                 <Store size={16} className="text-indigo-600" />
-                {activeStore}
-                <ChevronDown size={14} className="text-slate-400" />
-              </button>
-              {isStoreMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
-                  {stores.map(store => (
-                    <button
-                      key={store}
-                      onClick={() => { setActiveStore(store); setIsStoreMenuOpen(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                    >
-                      {store}
-                    </button>
-                  ))}
-                </div>
-              )}
+                {storeName}
+              </div>
             </div>
           </div>
           
@@ -135,8 +115,8 @@ export default function EmployeeLayout() {
                   <User size={18} />
                 </div>
                 <div className="text-sm hidden md:block">
-                  <p className="font-semibold text-slate-700">Staff</p>
-                  <p className="text-slate-500 text-xs">ID: {user?.userId || 'EMP-101'}</p>
+                  <p className="font-semibold text-slate-700">{user?.name || 'Staff'}</p>
+                  <p className="text-slate-500 text-xs">ID: {user?.userId || 'N/A'}</p>
                 </div>
                 <ChevronDown size={14} className="text-slate-400 hidden md:block" />
               </button>

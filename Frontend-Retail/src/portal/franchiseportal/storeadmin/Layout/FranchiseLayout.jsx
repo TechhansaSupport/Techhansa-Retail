@@ -2,11 +2,13 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, Bell, User, Receipt, Truck, Menu, X, Wallet, Users, ShoppingBag, ChevronDown, Settings } from 'lucide-react';
 import { AuthContext } from '../../../../context/AuthContext';
+import { FranchiseContext } from '../context/FranchiseContext';
 import { motion } from 'framer-motion';
 import logo from '../../../../assets/logo.png';
 
 export default function FranchiseLayout() {
   const { logout, user } = useContext(AuthContext);
+  const { storeProfileData } = useContext(FranchiseContext);
   const navigate = useNavigate();
   const location = useLocation();
   const mainRef = useRef(null);
@@ -14,14 +16,9 @@ export default function FranchiseLayout() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isStoreMenuOpen, setIsStoreMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [activeStore, setActiveStore] = useState('Lanka Branch');
-  const stores = ['Lanka Branch', 'Shivpur Branch'];
+  const storeName = storeProfileData?.storeName || user?.companyName || user?.storeId || 'My Store';
 
-  const notifications = [
-    { id: 1, title: 'Low Stock Alert', message: 'Dell XPS 13 stock is below threshold.', time: '10 mins ago', unread: true },
-    { id: 2, title: 'Order Update', message: 'Your hardware request ORD-003 is approved.', time: '1 hour ago', unread: true },
-    { id: 3, title: 'New Feature', message: 'Point of Sale system updated to v2.0.', time: 'Yesterday', unread: false }
-  ];
+  const notifications = [];
 
   useEffect(() => {
     if (mainRef.current) {
@@ -104,31 +101,11 @@ export default function FranchiseLayout() {
             <h2 className="text-lg md:text-xl font-semibold text-slate-800 hidden sm:block">
               Welcome back, {user?.userId || 'Partner'}
             </h2>
-            <div className="relative ml-4 hidden md:block">
-              <button 
-                onClick={() => setIsStoreMenuOpen(!isStoreMenuOpen)}
-                className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
-              >
+            <div className="ml-4 hidden md:block">
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium">
                 <Store size={16} className="text-indigo-600" />
-                {activeStore}
-                <ChevronDown size={14} className="text-slate-400" />
-              </button>
-              {isStoreMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsStoreMenuOpen(false)}></div>
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
-                    {stores.map(store => (
-                      <button
-                        key={store}
-                        onClick={() => { setActiveStore(store); setIsStoreMenuOpen(false); }}
-                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 relative z-50"
-                      >
-                        {store}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+                {storeName}
+              </div>
             </div>
           </div>
           
