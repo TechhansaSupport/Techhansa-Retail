@@ -9,6 +9,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { user, login } = useContext(AuthContext); // Need login/refresh to update credit
   const quotation = location.state?.quotation;
+  const passedTotalAmount = location.state?.displayTotalAmount;
 
   const [paymentMethod, setPaymentMethod] = useState(''); // 'Credit' | 'Advance Payment'
   const [advanceSubMethod, setAdvanceSubMethod] = useState(''); // 'NEFT' | 'UPI'
@@ -30,9 +31,9 @@ export default function Checkout() {
     );
   }
 
-  const subtotal = quotation.amount || quotation.totalAmount || 0;
-  const gst = subtotal * 0.18; // Assuming 18% GST for display
-  const totalAmount = subtotal + gst;
+  const totalAmount = passedTotalAmount || ((quotation.amount || quotation.totalAmount || 0) * 1.18);
+  const subtotal = totalAmount / 1.18;
+  const gst = totalAmount - subtotal;
 
   const availableCredit = (user?.totalCredit || 0) - (user?.usedCredit || 0) - (user?.reservedCredit || 0);
   const hasEnoughCredit = availableCredit >= totalAmount;
@@ -89,7 +90,7 @@ export default function Checkout() {
           reservedCredit: (user.reservedCredit || 0) + totalAmount
         };
         // In real app, call a profile refresh API
-        login(localStorage.getItem('token'), updatedUser); 
+        login(updatedUser, localStorage.getItem('token')); 
       }
 
       navigate('/channel/orders', { state: { success: 'Order placed successfully!' } });

@@ -38,7 +38,7 @@ export default function Orders() {
     }
   };
 
-  const validStatuses = ['Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered'];
+  const validStatuses = ['Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered', 'Rejected'];
 
   const filteredOrders = orders.filter(o => {
     if (!validStatuses.includes(o.status)) return false;

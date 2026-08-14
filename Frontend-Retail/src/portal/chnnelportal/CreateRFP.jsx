@@ -12,10 +12,6 @@ export default function CreateRFP() {
   // Form state
   const [title, setTitle] = useState(rfp?.title || '');
   const [requirementName, setRequirementName] = useState(rfp?.requirementName || '');
-  const [priority, setPriority] = useState(rfp?.priority || 'Medium');
-  
-  const formattedDate = rfp?.expectedDeliveryDate ? new Date(rfp.expectedDeliveryDate).toISOString().split('T')[0] : '';
-  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(formattedDate);
   
   const [remarks, setRemarks] = useState(rfp?.remarks || '');
   const [products, setProducts] = useState(
@@ -68,7 +64,6 @@ export default function CreateRFP() {
   const validateForm = () => {
     if (!title.trim()) return 'RFP Title is required.';
     if (!requirementName.trim()) return 'Requirement Name is required.';
-    if (!expectedDeliveryDate) return 'Expected Delivery Date is required.';
 
     for (let i = 0; i < products.length; i++) {
       const p = products[i];
@@ -89,8 +84,8 @@ export default function CreateRFP() {
       rfpId: generateRfpId(),
       title: title.trim(),
       requirementName: requirementName.trim(),
-      expectedDeliveryDate,
-      priority,
+      expectedDeliveryDate: new Date().toISOString(),
+      priority: 'Medium',
       remarks: remarks.trim(),
       status,
       products: products.map(p => ({
@@ -268,32 +263,6 @@ export default function CreateRFP() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"
-                >
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Expected Delivery Date <span className="text-red-500">*</span></label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={expectedDeliveryDate}
-                    onChange={(e) => setExpectedDeliveryDate(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                  <Calendar className="w-4 h-4 text-gray-400 absolute left-3 top-2.5 pointer-events-none" />
-                </div>
-              </div>
-
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Remarks / Special Instructions</label>
                 <textarea
@@ -424,14 +393,6 @@ export default function CreateRFP() {
               <div className="flex justify-between items-center">
                 <span className="text-gray-500 text-sm">Total Quantity</span>
                 <span className="font-semibold text-gray-900">{totalQty}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-sm">Priority</span>
-                <span className={`font-semibold text-sm px-2 py-0.5 rounded-full ${priority === 'High' ? 'bg-red-50 text-red-700' : priority === 'Medium' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{priority}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-sm">Expected Delivery</span>
-                <span className="font-medium text-gray-900 text-sm">{expectedDeliveryDate || 'Not set'}</span>
               </div>
             </div>
 

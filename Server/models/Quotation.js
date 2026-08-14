@@ -11,6 +11,15 @@ const QuotationSchema = new mongoose.Schema({
     enum: ['Pending', 'Approved', 'Rejected'],
     default: 'Pending'
   },
+  items: [{
+    productName: String,
+    brand: String,
+    model: String,
+    configuration: String,
+    quantity: Number,
+    unitPrice: Number,
+    totalAmount: Number
+  }],
   userId: { type: String, required: false }
 }, { timestamps: true });
 

@@ -25,9 +25,9 @@ router.get('/dashboard-stats', async (req, res) => {
     const approvedOrders = await Order.countDocuments({ ...filter, status: 'Confirmed' });
     const deliveredOrders = await Order.countDocuments({ ...filter, status: 'Delivered' });
 
-    // Calculate total spending (actual deducted credit)
+    // Calculate total spending (actual deducted + reserved credit)
     const user = await User.findOne({ userId });
-    const totalSpending = user?.usedCredit || 0;
+    const totalSpending = (user?.usedCredit || 0) + (user?.reservedCredit || 0);
 
     res.json({
       pendingRFPs,
@@ -207,6 +207,32 @@ router.put('/rfp/:id', async (req, res) => {
 
       }
     }
+
+    // Sync statuses if RFP gets Approved or Rejected
+    if (updatedRFP.status === 'Approved') {
+      const prodDetails = (updatedRFP.products || []).map(p => {
+        const rate = Math.floor(Math.random() * 40000) + 10000; // Realistic random price 10k-50k
+        const quantity = p.quantity || 1;
+        const totalAmount = rate * quantity;
+        return {
+          productName: p.category || '',
+          brand: p.brand || '',
+          model: p.model || '',
+          configuration: p.configuration || '',
+          quantity,
+          unitPrice: rate,
+          totalAmount
+        };
+      });
+      const grandTotal = prodDetails.reduce((sum, item) => sum + item.totalAmount, 0);
+
+      await Quotation.findOneAndUpdate({ quotationNo: `QT-${updatedRFP.rfpId}` }, { status: 'Approved', items: prodDetails, amount: grandTotal });
+      await Order.findOneAndUpdate({ orderNumber: `ORD-${updatedRFP.rfpId}` }, { status: 'Confirmed', items: prodDetails, totalAmount: grandTotal });
+    } else if (updatedRFP.status === 'Rejected') {
+      await Quotation.findOneAndUpdate({ quotationNo: `QT-${updatedRFP.rfpId}` }, { status: 'Rejected' });
+      await Order.findOneAndUpdate({ orderNumber: `ORD-${updatedRFP.rfpId}` }, { status: 'Rejected' });
+    }
+
     res.json(updatedRFP);
   } catch (error) {
     console.error('Error updating RFP:', error);
