@@ -13,6 +13,8 @@ const Order = require('../models/Order');
 const ProcurementRequest = require('../models/ProcurementRequest');
 const B2BInvoice = require('../models/B2BInvoice');
 const StoreProfile = require('../models/StoreProfile');
+const Quotation = require('../models/Quotation');
+const RFP = require('../models/RFP');
 // Middleware to check if user is admin (Assuming basic auth or we check token in a real scenario)
 // For simplicity and matching current setup, we might rely on the frontend to protect routes,
 // but it's good practice to add a middleware if we were passing tokens.
