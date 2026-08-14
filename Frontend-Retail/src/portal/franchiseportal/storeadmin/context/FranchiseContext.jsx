@@ -24,7 +24,7 @@ export function FranchiseProvider({ children }) {
   const refreshData = async () => {
     if (!storeId) return;
     try {
-      const [profileRes, inventoryRes, walletRes, invoicesRes, employeesRes, catalogRes, requestsRes, salesRes] = await Promise.all([
+      const results = await Promise.allSettled([
         axios.get(`http://localhost:5000/api/franchise/${storeId}/profile`),
         axios.get(`http://localhost:5000/api/inventory/${storeId}`),
         axios.get(`http://localhost:5000/api/franchise/${storeId}/wallet`),
@@ -35,23 +35,25 @@ export function FranchiseProvider({ children }) {
         axios.get(`http://localhost:5000/api/sales/store/${storeId}`) // Fetch Store Sales
       ]);
 
-      if (profileRes.data.success) {
-         setStoreProfileData(profileRes.data.data);
+      const [profileRes, inventoryRes, walletRes, invoicesRes, employeesRes, catalogRes, requestsRes, salesRes] = results;
+
+      if (profileRes.status === 'fulfilled' && profileRes.value.data.success) {
+         setStoreProfileData(profileRes.value.data.data);
          setMetrics({
-           todaysSales: profileRes.data.data.todaysSales || 0,
-           monthlySales: profileRes.data.data.monthlySales || 0,
-           walletBalance: profileRes.data.data.walletBalance || 0,
-           completedOrders: profileRes.data.data.completedOrders || 0,
-           pendingOrders: profileRes.data.data.pendingOrders || 0,
+           todaysSales: profileRes.value.data.data.todaysSales || 0,
+           monthlySales: profileRes.value.data.data.monthlySales || 0,
+           walletBalance: profileRes.value.data.data.walletBalance || 0,
+           completedOrders: profileRes.value.data.data.completedOrders || 0,
+           pendingOrders: profileRes.value.data.data.pendingOrders || 0,
          });
       }
-      if (inventoryRes.data.success) setInventory(inventoryRes.data.data);
-      if (walletRes.data.success) setWalletTransactions(walletRes.data.data);
-      if (invoicesRes.data.success) setB2bInvoices(invoicesRes.data.data);
-      if (employeesRes.data.success) setEmployees(employeesRes.data.data);
-      if (catalogRes.data.success) setTechhansaCatalog(catalogRes.data.data);
-      if (requestsRes.data.success) setOrders(requestsRes.data.data);
-      if (salesRes.data.success) setInvoices(salesRes.data.data); // Set Sales Invoices
+      if (inventoryRes.status === 'fulfilled' && inventoryRes.value.data.success) setInventory(inventoryRes.value.data.data);
+      if (walletRes.status === 'fulfilled' && walletRes.value.data.success) setWalletTransactions(walletRes.value.data.data);
+      if (invoicesRes.status === 'fulfilled' && invoicesRes.value.data.success) setB2bInvoices(invoicesRes.value.data.data);
+      if (employeesRes.status === 'fulfilled' && employeesRes.value.data.success) setEmployees(employeesRes.value.data.data);
+      if (catalogRes.status === 'fulfilled' && catalogRes.value.data.success) setTechhansaCatalog(catalogRes.value.data.data);
+      if (requestsRes.status === 'fulfilled' && requestsRes.value.data.success) setOrders(requestsRes.value.data.data);
+      if (salesRes.status === 'fulfilled' && salesRes.value.data.success) setInvoices(salesRes.value.data.data); // Set Sales Invoices
 
     } catch (error) {
       console.error("Failed to fetch franchise data", error);

@@ -308,6 +308,24 @@ router.post('/entities', async (req, res) => {
 
     await newUser.save();
     
+    // Create StoreProfile if role is franchise
+    if (role === 'franchise' && storeId) {
+      const StoreProfile = require('../models/StoreProfile');
+      // Check if one already exists just in case
+      const existingProfile = await StoreProfile.findOne({ storeId });
+      if (!existingProfile) {
+        await StoreProfile.create({
+          storeId,
+          storeName: `${name} Store`,
+          manager: name,
+          email,
+          contact: '',
+          address: '',
+          walletBalance: 0,
+        });
+      }
+    }
+    
     // Don't send the password back
     const userResponse = newUser.toObject();
     delete userResponse.password;
