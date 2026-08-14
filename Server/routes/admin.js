@@ -531,10 +531,18 @@ router.get('/catalog', async (req, res) => {
 // POST /api/admin/catalog
 router.post('/catalog', async (req, res) => {
   try {
-    const product = new GlobalProduct(req.body);
+    const payload = { ...req.body };
+    if (payload.serialNumber === '' || payload.serialNumber === undefined) {
+      delete payload.serialNumber;
+    }
+    const stock = Number(payload.availableStock) || 0;
+    payload.quantity = stock;
+    payload.availableStock = stock;
+    const product = new GlobalProduct(payload);
     await product.save();
     res.status(201).json(product);
   } catch (error) {
+    console.error('Error creating product', error);
     res.status(400).json({ message: 'Error creating product', error });
   }
 });
@@ -542,14 +550,23 @@ router.post('/catalog', async (req, res) => {
 // PUT /api/admin/catalog/:id
 router.put('/catalog/:id', async (req, res) => {
   try {
+    const payload = { ...req.body };
+    if (payload.serialNumber === '' || payload.serialNumber === undefined) {
+      delete payload.serialNumber;
+    }
+    // sync stock
+    if (payload.availableStock !== undefined) {
+       payload.quantity = Number(payload.availableStock) || 0;
+    }
     const product = await GlobalProduct.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      payload,
       { new: true }
     );
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product);
   } catch (error) {
+    console.error('Error updating product', error);
     res.status(400).json({ message: 'Error updating product', error });
   }
 });
