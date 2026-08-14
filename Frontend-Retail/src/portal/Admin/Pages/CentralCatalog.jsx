@@ -11,6 +11,7 @@ export default function CentralCatalog() {
   
   const [formData, setFormData] = useState({
     itemName: '',
+    brand: '',
     serialNumber: '',
     model: '',
     specs: '',
@@ -49,7 +50,7 @@ export default function CentralCatalog() {
         toast.success('Product created successfully');
       }
       setIsModalOpen(false);
-      setFormData({ itemName: '', serialNumber: '', model: '', specs: '', taxCode: '', basePurchasePrice: '' });
+      setFormData({ itemName: '', brand: '', serialNumber: '', model: '', specs: '', taxCode: '', basePurchasePrice: '' });
       setEditId(null);
       fetchCatalog();
     } catch (error) {
@@ -88,7 +89,7 @@ export default function CentralCatalog() {
         
         <button
           onClick={() => {
-            setFormData({ itemName: '', serialNumber: '', model: '', specs: '', taxCode: '', basePurchasePrice: '' });
+            setFormData({ itemName: '', brand: '', serialNumber: '', model: '', specs: '', taxCode: '', basePurchasePrice: '' });
             setEditId(null);
             setIsModalOpen(true);
           }}
@@ -124,7 +125,10 @@ export default function CentralCatalog() {
             >
               <div className="p-5">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-bold text-gray-900 leading-tight">{product.itemName}</h3>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 leading-tight">{product.itemName}</h3>
+                    <p className="text-sm text-gray-500 font-medium">{product.brand}</p>
+                  </div>
                   <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-indigo-800 bg-indigo-100 rounded-full">
                     {product.taxCode}
                   </span>
@@ -190,6 +194,11 @@ export default function CentralCatalog() {
                   <input type="text" name="itemName" required value={formData.itemName} onChange={handleChange} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" />
                 </div>
                 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                  <input type="text" name="brand" value={formData.brand} onChange={handleChange} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Serial Number</label>

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const globalProductSchema = new mongoose.Schema({
   itemName: { type: String, required: true },
+  brand: { type: String, default: '' },
   serialNumber: { type: String, required: true, unique: true },
   model: { type: String, required: true },
   specs: { type: String, required: true },
