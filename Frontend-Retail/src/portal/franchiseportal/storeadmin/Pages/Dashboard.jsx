@@ -81,7 +81,7 @@ export default function Dashboard() {
 
   const statCards = [
     { title: "Today's Sales", value: `₹${metrics.todaysSales.toLocaleString()}`, subText: "From invoices today", icon: <TrendingUp size={24} />, color: "text-indigo-600", bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50", iconBg: "bg-indigo-100/50", stroke: "#4f46e5", fill: "#c7d2fe", id: "colorIndigo", data: sparklineData.revenue.length > 0 && sparklineData.revenue.some(d => d.v > 0) ? sparklineData.revenue : [{v:0},{v:0}] },
-    { title: "Available Stock", value: totalAvailableStock.toLocaleString(), subText: `${inventory.length} total SKUs`, icon: <CheckCircle size={24} />, color: "text-emerald-600", bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", iconBg: "bg-emerald-100/50", stroke: "#10b981", fill: "#a7f3d0", id: "colorEmerald", data: [{v: totalAvailableStock}, {v: totalAvailableStock}] },
+    { title: "Available Stock", value: totalAvailableStock.toLocaleString(), subText: `${inventory.length} total items`, icon: <CheckCircle size={24} />, color: "text-emerald-600", bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", iconBg: "bg-emerald-100/50", stroke: "#10b981", fill: "#a7f3d0", id: "colorEmerald", data: [{v: totalAvailableStock}, {v: totalAvailableStock}] },
     { title: "Wallet Balance", value: `₹${metrics.walletBalance?.toLocaleString() || 0}`, subText: "Available for B2B", icon: <IndianRupee size={24} />, color: "text-blue-600", bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50", iconBg: "bg-blue-100/50", stroke: "#2563eb", fill: "#bfdbfe", id: "colorBlue", data: [{v: metrics.walletBalance || 0}, {v: metrics.walletBalance || 0}] },
     { title: "Top Employee", value: topEmployeeThisWeek.name, subText: `₹${topEmployeeThisWeek.sales.toLocaleString()} this week`, icon: <Trophy size={24} />, color: "text-amber-600", bgBox: "bg-amber-50/50 border-amber-100 shadow-amber-100/50", iconBg: "bg-amber-100/50", stroke: "#f59e0b", fill: "#fde68a", id: "colorAmber", data: [{v: topEmployeeThisWeek.sales}, {v: topEmployeeThisWeek.sales}] },
   ];
@@ -306,7 +306,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-800 text-sm">{item.name}</h4>
-                      <p className="text-xs text-slate-500 font-mono mt-0.5">{item.sku}</p>
+
                     </div>
                   </div>
                   <div className="text-right">

@@ -257,6 +257,15 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
     const newBalance = profile.walletBalance - invoice.amount;
     profile.walletBalance = newBalance;
     await profile.save();
+
+    // Update underlying ProcurementRequest if linked
+    if (invoice.requestId) {
+      const ProcurementRequest = require('../models/ProcurementRequest');
+      await ProcurementRequest.findOneAndUpdate(
+        { requestId: invoice.requestId },
+        { status: 'DISPATCHED' }
+      );
+    }
     
     // Log transaction
     const txn = new WalletTransaction({
