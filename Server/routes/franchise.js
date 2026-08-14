@@ -355,7 +355,29 @@ router.post('/:storeId/requests', async (req, res) => {
   try {
     const { items, total, date } = req.body;
     const storeId = req.params.storeId;
-    const requestId = `REQ-${Date.now()}`;
+    
+    // Auto-increment logic
+    const lastRequest = await ProcurementRequest.findOne().sort({ createdAt: -1 });
+    let nextNum = 1;
+    if (lastRequest && lastRequest.requestId && lastRequest.requestId.startsWith('REQ-')) {
+      const match = lastRequest.requestId.match(/REQ-(\d+)/);
+      if (match) {
+        // If there are existing requests that have giant timestamp IDs, we might want to start fresh 
+        // or just increment from the last small number. Let's handle parsing carefully.
+        const parsed = parseInt(match[1]);
+        // If it's a timestamp ID (length > 6), maybe default to 1 or ignore it, but for now we just increment
+        // It's safer to just increment what we find. If they have 'REQ-17866...', next will be 'REQ-17866...+1'
+        // But the user specifically wants REQ-001. We can just count documents as a fallback or enforce 3 digits.
+        if (parsed > 1000000) {
+           // It's a timestamp, let's start fresh based on count
+           const count = await ProcurementRequest.countDocuments();
+           nextNum = count + 1;
+        } else {
+           nextNum = parsed + 1;
+        }
+      }
+    }
+    const requestId = `REQ-${String(nextNum).padStart(3, '0')}`;
     
     const newRequest = new ProcurementRequest({
       storeId,

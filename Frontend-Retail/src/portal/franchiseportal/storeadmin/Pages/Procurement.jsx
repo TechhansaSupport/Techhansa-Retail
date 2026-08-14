@@ -308,14 +308,14 @@ export default function Procurement() {
                           }
                           try {
                             await approveB2BInvoice(inv._id);
-                            toast.success(`Order ${inv.invoiceNo || inv.id} approved successfully!`);
+                            toast.success(`Order ${inv.invoiceNo || inv.id} approved and paid successfully!`);
                           } catch (err) {
                             toast.error(`Failed to approve order ${inv.invoiceNo || inv.id}`);
                           }
                         }}
                         className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"
                       >
-                        Approve
+                        Approve and Pay
                       </button>
                     )}
                   </td>
