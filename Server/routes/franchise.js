@@ -169,8 +169,12 @@ const User = require('../models/User');
 // 1. Get Store Profile & Metrics
 router.get('/:storeId/profile', async (req, res) => {
   try {
-    const profile = await StoreProfile.findOne({ storeId: req.params.storeId });
+    const profile = await StoreProfile.findOne({ storeId: req.params.storeId }).lean();
     if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
+    
+    // Map credit logic to walletBalance for frontend compatibility
+    profile.walletBalance = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
+    
     res.json({ success: true, data: profile });
   } catch (error) {
     console.error('Error fetching store profile:', error);
@@ -188,38 +192,7 @@ router.get('/:storeId/wallet', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
-
-// 3. Add Funds to Wallet
-router.post('/:storeId/wallet/add', async (req, res) => {
-  try {
-    const { amount } = req.body;
-    const storeId = req.params.storeId;
-    
-    const profile = await StoreProfile.findOne({ storeId });
-    if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
-    
-    const newBalance = profile.walletBalance + Number(amount);
-    
-    // Create transaction
-    const txn = new WalletTransaction({
-      storeId,
-      txnId: `TXN-${Date.now()}`,
-      type: 'Credit In',
-      amount: Number(amount),
-      closingBalance: newBalance
-    });
-    await txn.save();
-    
-    // Update profile
-    profile.walletBalance = newBalance;
-    await profile.save();
-    
-    res.json({ success: true, data: txn, newBalance });
-  } catch (error) {
-    console.error('Error adding funds:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
+// Removed: Add Funds to Wallet (Button removed per user request)
 
 // 4. Get B2B Invoices
 router.get('/:storeId/b2b-invoices', async (req, res) => {
@@ -245,33 +218,39 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
     const profile = await StoreProfile.findOne({ storeId });
     if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
     
-    if (profile.walletBalance < invoice.amount) {
-      return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+    const availableCredit = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
+    
+    // In original request, credit was reserved.
+    // If invoice amount is different, we adjust usedCredit but how much was reserved?
+    // We assume the original request total was reserved, we can deduct the invoice amount from reserved? 
+    // Wait, the safest way is just to add invoice.amount to usedCredit, and look up the original request to deduct the reserved amount.
+    const ProcurementRequest = require('../models/ProcurementRequest');
+    let originalReserved = invoice.amount; // default fallback
+    
+    if (invoice.requestId) {
+       const reqst = await ProcurementRequest.findOne({ requestId: invoice.requestId });
+       if (reqst) {
+          originalReserved = reqst.total || invoice.amount;
+          reqst.status = 'DISPATCHED';
+          await reqst.save();
+       }
     }
+
+    // Adjust credits
+    profile.reservedCredit = Math.max(0, (profile.reservedCredit || 0) - originalReserved);
+    profile.usedCredit = (profile.usedCredit || 0) + invoice.amount;
+    await profile.save();
     
     // Update invoice
     invoice.status = 'Paid';
     await invoice.save();
-    
-    // Update wallet
-    const newBalance = profile.walletBalance - invoice.amount;
-    profile.walletBalance = newBalance;
-    await profile.save();
 
-    // Update underlying ProcurementRequest if linked
-    if (invoice.requestId) {
-      const ProcurementRequest = require('../models/ProcurementRequest');
-      await ProcurementRequest.findOneAndUpdate(
-        { requestId: invoice.requestId },
-        { status: 'DISPATCHED' }
-      );
-    }
-    
     // Log transaction
+    const newBalance = profile.totalCredit - profile.usedCredit - profile.reservedCredit;
     const txn = new WalletTransaction({
       storeId,
       txnId: `TXN-${Date.now()}`,
-      type: 'Debit Out',
+      type: 'Deducted',
       amount: invoice.amount,
       closingBalance: newBalance
     });
@@ -388,6 +367,31 @@ router.post('/:storeId/requests', async (req, res) => {
     }
     const requestId = `REQ-${String(nextNum).padStart(3, '0')}`;
     
+    // Credit Limit Logic
+    const profile = await StoreProfile.findOne({ storeId });
+    if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
+    
+    const availableCredit = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
+    if (availableCredit < total) {
+      return res.status(400).json({ success: false, message: 'Insufficient Available Credit' });
+    }
+    
+    // Reserve credit
+    profile.reservedCredit = (profile.reservedCredit || 0) + total;
+    await profile.save();
+    
+    const newBalance = profile.totalCredit - profile.usedCredit - profile.reservedCredit;
+    
+    // Log reservation transaction
+    const txn = new WalletTransaction({
+      storeId,
+      txnId: `TXN-${Date.now()}`,
+      type: 'Reserved',
+      amount: total,
+      closingBalance: newBalance
+    });
+    await txn.save();
+
     const newRequest = new ProcurementRequest({
       storeId,
       requestId,
