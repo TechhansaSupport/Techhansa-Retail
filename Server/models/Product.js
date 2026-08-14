@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
   storeId: { type: String, required: true },
-  serialNumber: { type: String, required: false },
+  serialNumber: { type: String, required: false, unique: true, sparse: true },
   sku: { type: String, required: false },
   name: { type: String, required: true },
   brand: { type: String, required: false },

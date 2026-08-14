@@ -43,6 +43,9 @@ router.post('/:storeId', async (req, res) => {
     if (payload.serialNumber === '' || payload.serialNumber === undefined) {
       delete payload.serialNumber;
     }
+    if (payload.sku === '' || payload.sku === undefined) {
+      delete payload.sku;
+    }
     // Keep quantity and availableStock in sync on creation
     const stock = Number(payload.availableStock) || 0;
     payload.quantity = stock;
@@ -64,6 +67,9 @@ router.put('/:storeId/:id', async (req, res) => {
     const payload = { ...req.body };
     if (payload.serialNumber === '' || payload.serialNumber === undefined) {
       delete payload.serialNumber;
+    }
+    if (payload.sku === '' || payload.sku === undefined) {
+      delete payload.sku;
     }
     // Keep quantity and availableStock in sync when admin edits stock
     if (payload.availableStock !== undefined) {
