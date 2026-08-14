@@ -11,30 +11,121 @@ export default function Sales() {
   const [timeRange, setTimeRange] = useState('Last 7 Days');
 
   const chartData = useMemo(() => {
-    if (timeRange === 'Last 7 Days') return salesHistory;
-    // Mocking other ranges
-    if (timeRange === 'This Month') {
-      return Array.from({ length: 15 }, (_, i) => ({
-        date: `Aug ${i + 1}`,
-        sales: Math.floor(Math.random() * 100000) + 50000,
-        orders: Math.floor(Math.random() * 10) + 5
-      }));
+    if (!invoices || invoices.length === 0) return [];
+
+    const now = new Date();
+    const dataMap = new Map(); 
+
+    const formatDate = (date, range) => {
+      if (range === 'This Month' || range === 'Last Month') {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    };
+
+    let startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+
+    if (timeRange === 'Last 7 Days') {
+      startDate.setDate(startDate.getDate() - 6);
+      for(let i=0; i<7; i++) {
+        let d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        dataMap.set(formatDate(d, timeRange), { date: formatDate(d, timeRange), sales: 0, orders: 0 });
+      }
+    } else if (timeRange === 'This Month') {
+      startDate.setDate(1); 
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(now.getFullYear(), now.getMonth(), i);
+        dataMap.set(formatDate(d, timeRange), { date: formatDate(d, timeRange), sales: 0, orders: 0 });
+      }
+    } else if (timeRange === 'Last Month') {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+      for(let i=1; i<=daysInMonth; i++) {
+        let d = new Date(now.getFullYear(), now.getMonth() - 1, i);
+        dataMap.set(formatDate(d, timeRange), { date: formatDate(d, timeRange), sales: 0, orders: 0 });
+      }
     }
-    if (timeRange === 'Last Month') {
-      return Array.from({ length: 30 }, (_, i) => ({
-        date: `Jul ${i + 1}`,
-        sales: Math.floor(Math.random() * 100000) + 50000,
-        orders: Math.floor(Math.random() * 10) + 5
-      }));
+    
+    let endDate = new Date(startDate);
+    if (timeRange === 'Last 7 Days') {
+       endDate = new Date();
+    } else if (timeRange === 'This Month') {
+       endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    } else if (timeRange === 'Last Month') {
+       endDate = new Date(now.getFullYear(), now.getMonth(), 0);
     }
-    return salesHistory;
-  }, [timeRange, salesHistory]);
+    endDate.setHours(23, 59, 59, 999);
+
+    invoices.forEach(inv => {
+      const invDate = new Date(inv.createdAt);
+      if (invDate >= startDate && invDate <= endDate) {
+        const dateKey = formatDate(invDate, timeRange);
+        if (dataMap.has(dateKey)) {
+          const existing = dataMap.get(dateKey);
+          existing.sales += inv.amount;
+          existing.orders += 1;
+        }
+      }
+    });
+
+    return Array.from(dataMap.values());
+  }, [timeRange, invoices]);
+
+  const totalItemsSoldThisMonth = useMemo(() => {
+    if (!invoices) return 0;
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    return invoices.reduce((total, inv) => {
+      const invDate = new Date(inv.createdAt);
+      if (invDate >= startOfMonth) {
+        const itemsCount = (inv.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+        return total + itemsCount;
+      }
+      return total;
+    }, 0);
+  }, [invoices]);
+
+  const sparklineData = useMemo(() => {
+    const revenue = [];
+    const items = [];
+    
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    
+    for(let i=6; i>=0; i--) {
+       const d = new Date(now);
+       d.setDate(d.getDate() - i);
+       
+       let dayRevenue = 0;
+       let dayItems = 0;
+       
+       if (invoices) {
+         invoices.forEach(inv => {
+           const invDate = new Date(inv.createdAt);
+           if (invDate.toLocaleDateString() === d.toLocaleDateString()) {
+              dayRevenue += inv.amount;
+              const itemsCount = (inv.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+              dayItems += itemsCount;
+           }
+         });
+       }
+       
+       revenue.push({v: dayRevenue});
+       items.push({v: dayItems});
+    }
+    
+    return { revenue, items };
+  }, [invoices]);
 
   const salesStatCards = [
     { 
       title: "Monthly Revenue", 
       value: `₹${metrics.monthlySales.toLocaleString()}`, 
-      subText: "+12% from last month", 
+      subText: "This month's revenue", 
       icon: <IndianRupee size={24} />, 
       color: "text-indigo-600", 
       bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50", 
@@ -42,7 +133,7 @@ export default function Sales() {
       stroke: "#4f46e5", 
       fill: "#c7d2fe", 
       id: "colorRevenue", 
-      data: [{v:30},{v:40},{v:45},{v:50},{v:49},{v:60},{v:70}] 
+      data: sparklineData.revenue
     },
     { 
       title: "Avg. Daily Sales", 
@@ -55,11 +146,11 @@ export default function Sales() {
       stroke: "#2563eb", 
       fill: "#bfdbfe", 
       id: "colorDaily", 
-      data: [{v:40},{v:30},{v:45},{v:35},{v:50},{v:40},{v:60}] 
+      data: sparklineData.revenue
     },
     { 
       title: "Total Items Sold (Month)", 
-      value: "342", 
+      value: totalItemsSoldThisMonth.toString(), 
       subText: "Across all categories", 
       icon: <TrendingUp size={24} />, 
       color: "text-emerald-600", 
@@ -68,7 +159,7 @@ export default function Sales() {
       stroke: "#10b981", 
       fill: "#a7f3d0", 
       id: "colorItems", 
-      data: [{v:10},{v:15},{v:12},{v:20},{v:18},{v:25},{v:22}] 
+      data: sparklineData.items
     }
   ];
 

@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 
 export default function Dashboard() {
-  const { metrics, salesHistory, orders, inventory } = useFranchise();
+  const { metrics, orders, inventory, invoices } = useFranchise();
   const navigate = useNavigate();
   const [activeRevenueRange, setActiveRevenueRange] = useState('7 Days');
 
@@ -28,26 +28,99 @@ export default function Dashboard() {
 
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9'];
 
+  const totalAvailableStock = useMemo(() => {
+    return inventory.reduce((sum, item) => sum + (item.availableStock || 0), 0);
+  }, [inventory]);
+
+  const topEmployeeThisWeek = useMemo(() => {
+    if (!invoices) return { name: 'N/A', sales: 0 };
+    const now = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    
+    const employeeSales = {};
+    invoices.forEach(inv => {
+      const invDate = new Date(inv.createdAt);
+      if (invDate >= sevenDaysAgo) {
+         const empId = inv.employeeId || 'N/A';
+         employeeSales[empId] = (employeeSales[empId] || 0) + inv.amount;
+      }
+    });
+    
+    let topEmp = 'N/A';
+    let maxSales = 0;
+    for (const emp in employeeSales) {
+       if (employeeSales[emp] > maxSales) {
+          maxSales = employeeSales[emp];
+          topEmp = emp;
+       }
+    }
+    return { name: topEmp, sales: maxSales };
+  }, [invoices]);
+
+  const sparklineData = useMemo(() => {
+    const revenue = [];
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    for(let i=6; i>=0; i--) {
+       const d = new Date(now);
+       d.setDate(d.getDate() - i);
+       let dayRevenue = 0;
+       if (invoices) {
+         invoices.forEach(inv => {
+           const invDate = new Date(inv.createdAt);
+           if (invDate.toLocaleDateString() === d.toLocaleDateString()) {
+              dayRevenue += inv.amount;
+           }
+         });
+       }
+       revenue.push({v: dayRevenue});
+    }
+    return { revenue };
+  }, [invoices]);
+
   const statCards = [
-    { title: "Today's Sales", value: `₹${metrics.todaysSales.toLocaleString()}`, subText: "+14% from yesterday", icon: <TrendingUp size={24} />, color: "text-indigo-600", bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50", iconBg: "bg-indigo-100/50", stroke: "#4f46e5", fill: "#c7d2fe", id: "colorIndigo", data: [{v:20},{v:40},{v:30},{v:70},{v:50},{v:90}] },
-    { title: "Available Stock", value: metrics.availableStock, subText: `${inventory.length} total SKUs`, icon: <CheckCircle size={24} />, color: "text-emerald-600", bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", iconBg: "bg-emerald-100/50", stroke: "#10b981", fill: "#a7f3d0", id: "colorEmerald", data: [{v:85},{v:82},{v:84},{v:81},{v:83},{v:83}] },
-    { title: "Wallet Balance", value: `₹${metrics.walletBalance?.toLocaleString() || 0}`, subText: "Available for B2B", icon: <IndianRupee size={24} />, color: "text-blue-600", bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50", iconBg: "bg-blue-100/50", stroke: "#2563eb", fill: "#bfdbfe", id: "colorBlue", data: [{v:60},{v:60},{v:40},{v:90},{v:90},{v:90}] },
-    { title: "Top Employee", value: metrics.topEmployee?.name || 'N/A', subText: `₹${metrics.topEmployee?.sales?.toLocaleString() || 0} this week`, icon: <Trophy size={24} />, color: "text-amber-600", bgBox: "bg-amber-50/50 border-amber-100 shadow-amber-100/50", iconBg: "bg-amber-100/50", stroke: "#f59e0b", fill: "#fde68a", id: "colorAmber", data: [{v:10},{v:20},{v:15},{v:30},{v:25},{v:45}] },
+    { title: "Today's Sales", value: `₹${metrics.todaysSales.toLocaleString()}`, subText: "From invoices today", icon: <TrendingUp size={24} />, color: "text-indigo-600", bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50", iconBg: "bg-indigo-100/50", stroke: "#4f46e5", fill: "#c7d2fe", id: "colorIndigo", data: sparklineData.revenue.length > 0 && sparklineData.revenue.some(d => d.v > 0) ? sparklineData.revenue : [{v:0},{v:0}] },
+    { title: "Available Stock", value: totalAvailableStock.toLocaleString(), subText: `${inventory.length} total SKUs`, icon: <CheckCircle size={24} />, color: "text-emerald-600", bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", iconBg: "bg-emerald-100/50", stroke: "#10b981", fill: "#a7f3d0", id: "colorEmerald", data: [{v: totalAvailableStock}, {v: totalAvailableStock}] },
+    { title: "Wallet Balance", value: `₹${metrics.walletBalance?.toLocaleString() || 0}`, subText: "Available for B2B", icon: <IndianRupee size={24} />, color: "text-blue-600", bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50", iconBg: "bg-blue-100/50", stroke: "#2563eb", fill: "#bfdbfe", id: "colorBlue", data: [{v: metrics.walletBalance || 0}, {v: metrics.walletBalance || 0}] },
+    { title: "Top Employee", value: topEmployeeThisWeek.name, subText: `₹${topEmployeeThisWeek.sales.toLocaleString()} this week`, icon: <Trophy size={24} />, color: "text-amber-600", bgBox: "bg-amber-50/50 border-amber-100 shadow-amber-100/50", iconBg: "bg-amber-100/50", stroke: "#f59e0b", fill: "#fde68a", id: "colorAmber", data: [{v: topEmployeeThisWeek.sales}, {v: topEmployeeThisWeek.sales}] },
   ];
 
   const chartData = useMemo(() => {
-    if (activeRevenueRange === '7 Days') return salesHistory;
-    // Generate 30 days mock data
-    return Array.from({ length: 30 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (29 - i));
-      return {
-        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        sales: Math.floor(Math.random() * 100000) + 50000,
-        orders: Math.floor(Math.random() * 10) + 5
-      };
+    if (!invoices || invoices.length === 0) return [];
+    
+    const numDays = activeRevenueRange === '7 Days' ? 7 : 30;
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    
+    const dataMap = new Map();
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - (numDays - 1));
+    
+    for(let i=0; i<numDays; i++) {
+      let d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const dateKey = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      dataMap.set(dateKey, { date: dateKey, sales: 0, orders: 0 });
+    }
+    
+    const endDate = new Date(now);
+    endDate.setHours(23, 59, 59, 999);
+    
+    invoices.forEach(inv => {
+      const invDate = new Date(inv.createdAt);
+      if (invDate >= startDate && invDate <= endDate) {
+        const dateKey = invDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (dataMap.has(dateKey)) {
+          const existing = dataMap.get(dateKey);
+          existing.sales += inv.amount;
+          existing.orders += 1;
+        }
+      }
     });
-  }, [activeRevenueRange, salesHistory]);
+    
+    return Array.from(dataMap.values());
+  }, [activeRevenueRange, invoices]);
 
   return (
     <div className="space-y-6 md:space-y-8 pb-4 md:pb-8">
@@ -186,7 +259,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
             {/* Center Text for Donut Chart */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-black text-slate-800">{metrics.availableStock}</span>
+              <span className="text-3xl font-black text-slate-800">{totalAvailableStock}</span>
               <span className="text-xs text-slate-500 font-semibold uppercase">Total Units</span>
             </div>
           </div>

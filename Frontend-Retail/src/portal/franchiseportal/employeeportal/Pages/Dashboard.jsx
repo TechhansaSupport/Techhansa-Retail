@@ -8,32 +8,6 @@ import {
   PieChart, Pie, Cell 
 } from 'recharts';
 
-// --- MOCK DATA ---
-const MOCK_PERFORMANCE_HISTORY = [
-  { day: 'Mon', sales: 12000, target: 15000 },
-  { day: 'Tue', sales: 18000, target: 15000 },
-  { day: 'Wed', sales: 14500, target: 15000 },
-  { day: 'Thu', sales: 21000, target: 15000 },
-  { day: 'Fri', sales: 19500, target: 15000 },
-  { day: 'Sat', sales: 28000, target: 15000 },
-  { day: 'Sun', sales: 25000, target: 15000 }
-];
-
-const MOCK_CATEGORY_DISTRIBUTION = [
-  { name: 'Laptops', value: 45 },
-  { name: 'Accessories', value: 30 },
-  { name: 'Networking', value: 15 },
-  { name: 'Components', value: 10 }
-];
-
-const MOCK_RECENT_BILLS = [
-  { id: 'INV-7041', time: '10 mins ago', amount: 4500, items: 3 },
-  { id: 'INV-7042', time: '1 hour ago', amount: 1200, items: 1 },
-  { id: 'INV-7043', time: '3 hours ago', amount: 8500, items: 5 },
-  { id: 'INV-7044', time: '4 hours ago', amount: 3200, items: 2 },
-  { id: 'INV-7045', time: '5 hours ago', amount: 6400, items: 4 },
-];
-
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function EmployeeDashboard() {
@@ -42,8 +16,12 @@ export default function EmployeeDashboard() {
 
   const [salesToday, setSalesToday] = useState(0);
   const [targetToday, setTargetToday] = useState(100000);
-  const [ordersProcessed, setOrdersProcessed] = useState(14);
-  const [aov, setAov] = useState(4250);
+  const [ordersProcessed, setOrdersProcessed] = useState(0);
+  const [aov, setAov] = useState(0);
+  const [performanceHistory, setPerformanceHistory] = useState([]);
+  const [categoryDistribution, setCategoryDistribution] = useState([]);
+  const [recentBills, setRecentBills] = useState([]);
+  const [totalWeeklyItems, setTotalWeeklyItems] = useState(0);
 
   useEffect(() => {
     if (user?.userId) {
@@ -53,6 +31,12 @@ export default function EmployeeDashboard() {
           if (data.success) {
             setSalesToday(data.salesToday || 0);
             setTargetToday(data.targetToday || 100000);
+            setOrdersProcessed(data.ordersProcessed || 0);
+            setAov(data.aov || 0);
+            setPerformanceHistory(data.performanceHistory || []);
+            setCategoryDistribution(data.categoryDistribution || []);
+            setRecentBills(data.recentBills || []);
+            setTotalWeeklyItems(data.totalWeeklyItems || 0);
           }
         })
         .catch(err => console.error("Error fetching dashboard data:", err));
@@ -139,7 +123,7 @@ export default function EmployeeDashboard() {
           </div>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={MOCK_PERFORMANCE_HISTORY} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={performanceHistory} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.4}/>
@@ -175,7 +159,7 @@ export default function EmployeeDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={MOCK_CATEGORY_DISTRIBUTION}
+                  data={categoryDistribution}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -183,7 +167,7 @@ export default function EmployeeDashboard() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {MOCK_CATEGORY_DISTRIBUTION.map((entry, index) => (
+                  {categoryDistribution.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -196,13 +180,13 @@ export default function EmployeeDashboard() {
             </ResponsiveContainer>
             {/* Center Text for Donut Chart */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-black text-slate-800">{ordersProcessed}</span>
+              <span className="text-3xl font-black text-slate-800">{totalWeeklyItems}</span>
               <span className="text-xs text-slate-500 font-semibold uppercase">Items</span>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-3 mt-2">
-            {MOCK_CATEGORY_DISTRIBUTION.map((entry, idx) => (
+            {categoryDistribution.map((entry, idx) => (
               <div key={entry.name} className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
                 <span className="text-xs font-medium text-slate-600 truncate">{entry.name}</span>
@@ -249,7 +233,7 @@ export default function EmployeeDashboard() {
             <button className="text-indigo-600 text-sm font-semibold hover:text-indigo-800">View History</button>
           </div>
           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-            {MOCK_RECENT_BILLS.map((bill) => (
+            {recentBills.map((bill) => (
               <div key={bill.id} className="p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/30 transition-colors bg-white flex justify-between items-center group">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-indigo-500 group-hover:bg-indigo-100 transition-colors">

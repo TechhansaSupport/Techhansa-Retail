@@ -5,7 +5,7 @@ import { Minus, Plus, Trash2, Printer, CheckCircle2, User, Phone, ArrowLeft, Sho
 import { useNavigate } from 'react-router-dom';
 
 export default function Cart() {
-  const { globalCart, updateGlobalCartQuantity, removeGlobalCartItem, clearGlobalCart, processSale } = useFranchise();
+  const { globalCart, updateGlobalCartQuantity, removeGlobalCartItem, clearGlobalCart, processSale, storeProfileData } = useFranchise();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
   const [generatedInvoice, setGeneratedInvoice] = useState(null);
@@ -183,7 +183,7 @@ export default function Cart() {
               <div className="p-8 flex-1 overflow-y-auto bg-white" id="invoice-print-area">
                 <div className="text-center mb-8 border-b border-slate-100 pb-6">
                   <h2 className="text-2xl font-bold text-slate-800">Techhansa Retail</h2>
-                  <p className="text-slate-500 text-sm">Downtown Store</p>
+                  <p className="text-slate-500 text-sm">{storeProfileData?.storeName || 'Store'}</p>
                   <p className="text-slate-400 text-xs mt-2">Invoice: {generatedInvoice.invoiceNumber}</p>
                   <p className="text-slate-400 text-xs">{new Date(generatedInvoice.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                 </div>
