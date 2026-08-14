@@ -16,14 +16,19 @@ export default function Dashboard() {
     totalInventoryValue: 0,
     totalRevenue: 0
   });
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeRevenueRange, setActiveRevenueRange] = useState('7 Days');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await axios.get(`/api/admin/dashboard`);
-        setStats(response.data);
+        const [statsRes, chartRes] = await Promise.all([
+          axios.get(`/api/admin/dashboard`),
+          axios.get(`/api/admin/dashboard/chart`)
+        ]);
+        setStats(statsRes.data);
+        setChartData(chartRes.data);
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
       } finally {
@@ -36,17 +41,10 @@ export default function Dashboard() {
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9'];
 
   const statCards = [
-    { title: "Total Users", value: stats.totalUsers, subText: "Active Franchise & B2B", icon: <Users size={24} />, color: "text-indigo-600", bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50", iconBg: "bg-indigo-100/50", stroke: "#4f46e5", fill: "#c7d2fe", id: "colorAdminIndigo", data: [{v:20},{v:40},{v:30},{v:70},{v:50},{v:90}] },
-    { title: "Distributed Credit", value: `₹${(stats.totalCreditDistributed || 0).toLocaleString()}`, subText: "Overall credit line", icon: <Wallet size={24} />, color: "text-emerald-600", bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", iconBg: "bg-emerald-100/50", stroke: "#10b981", fill: "#a7f3d0", id: "colorAdminEmerald", data: [{v:85},{v:82},{v:84},{v:81},{v:83},{v:83}] },
-    { title: "Used Credit", value: `₹${(stats.totalUsedCredit || 0).toLocaleString()}`, subText: "Outstanding B2B", icon: <Activity size={24} />, color: "text-amber-600", bgBox: "bg-amber-50/50 border-amber-100 shadow-amber-100/50", iconBg: "bg-amber-100/50", stroke: "#f59e0b", fill: "#fde68a", id: "colorAdminAmber", data: [{v:10},{v:20},{v:15},{v:30},{v:25},{v:45}] },
-    { title: "Total Revenue", value: `₹${(stats.totalRevenue || 0).toLocaleString()}`, subText: "Gross platform sales", icon: <TrendingUp size={24} />, color: "text-blue-600", bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50", iconBg: "bg-blue-100/50", stroke: "#2563eb", fill: "#bfdbfe", id: "colorAdminBlue", data: [{v:60},{v:60},{v:40},{v:90},{v:90},{v:90}] },
-  ];
-
-  const chartData = [
-    { name: 'Q1', Franchise: 120, B2B: 90 },
-    { name: 'Q2', Franchise: 150, B2B: 110 },
-    { name: 'Q3', Franchise: 180, B2B: 160 },
-    { name: 'Q4', Franchise: 210, B2B: 230 },
+    { title: "Total Users", value: stats.totalUsers, subText: "Active Franchise & B2B", icon: <Users size={24} />, color: "text-indigo-600", bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50", iconBg: "bg-indigo-100/50", stroke: "#4f46e5", fill: "#c7d2fe", id: "colorAdminIndigo", data: stats.userSparkline || [] },
+    { title: "Distributed Credit", value: `₹${(stats.totalCreditDistributed || 0).toLocaleString()}`, subText: "Overall credit line", icon: <Wallet size={24} />, color: "text-emerald-600", bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", iconBg: "bg-emerald-100/50", stroke: "#10b981", fill: "#a7f3d0", id: "colorAdminEmerald", data: stats.distributedCreditSparkline || [] },
+    { title: "Used Credit", value: `₹${(stats.totalUsedCredit || 0).toLocaleString()}`, subText: "Outstanding B2B", icon: <Activity size={24} />, color: "text-amber-600", bgBox: "bg-amber-50/50 border-amber-100 shadow-amber-100/50", iconBg: "bg-amber-100/50", stroke: "#f59e0b", fill: "#fde68a", id: "colorAdminAmber", data: stats.usedCreditSparkline || [] },
+    { title: "Total Revenue", value: `₹${(stats.totalRevenue || 0).toLocaleString()}`, subText: "Gross platform sales", icon: <TrendingUp size={24} />, color: "text-blue-600", bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50", iconBg: "bg-blue-100/50", stroke: "#2563eb", fill: "#bfdbfe", id: "colorAdminBlue", data: stats.revenueSparkline || [] },
   ];
 
   if (loading) {
