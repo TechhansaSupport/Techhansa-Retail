@@ -1,19 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useFranchise } from '../context/FranchiseContext';
-import { IndianRupee, Plus, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { IndianRupee, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export default function Wallet() {
-  const { metrics, walletTransactions, addFundsToWallet } = useFranchise();
-  const [showAddFunds, setShowAddFunds] = useState(false);
-  const [amount, setAmount] = useState('');
-
-  const handleAddFunds = (e) => {
-    e.preventDefault();
-    if (!amount || isNaN(amount) || amount <= 0) return;
-    addFundsToWallet(amount);
-    setShowAddFunds(false);
-    setAmount('');
-  };
+  const { metrics, walletTransactions } = useFranchise();
 
   return (
     <div className="space-y-6">
@@ -35,54 +25,10 @@ export default function Wallet() {
               </h2>
             </div>
             
-            <div className="mt-8 flex gap-4">
-              <button 
-                onClick={() => setShowAddFunds(true)}
-                className="bg-white text-indigo-900 px-6 py-3 rounded-xl font-bold text-sm shadow-sm hover:bg-indigo-50 transition-colors flex items-center gap-2"
-              >
-                <Plus size={18} />
-                Add Funds
-              </button>
-            </div>
+            
           </div>
         </div>
       </div>
-
-      {showAddFunds && (
-        <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Add Funds to Wallet</h3>
-            <form onSubmit={handleAddFunds}>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-slate-600 mb-1">Amount (₹)</label>
-                <input 
-                  type="number" 
-                  required
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  placeholder="Enter amount"
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button 
-                  type="button" 
-                  onClick={() => setShowAddFunds(false)}
-                  className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700"
-                >
-                  Proceed to Pay
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="p-6 border-b border-slate-100">

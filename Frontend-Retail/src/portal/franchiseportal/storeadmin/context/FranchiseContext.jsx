@@ -102,20 +102,6 @@ export function FranchiseProvider({ children }) {
     setStoreProfileData(newProfile);
   };
 
-  const addFundsToWallet = async (amount) => {
-    try {
-      const res = await axios.post(`http://localhost:5000/api/franchise/${storeId}/wallet/add`, { amount });
-      if (res.data.success) {
-        setMetrics(prev => ({ ...prev, walletBalance: res.data.newBalance }));
-        setWalletTransactions(prev => [res.data.data, ...prev]);
-        return true;
-      }
-    } catch (error) {
-      console.error("Failed to add funds", error);
-      return false;
-    }
-  };
-
   const approveB2BInvoice = async (invoiceId) => {
     try {
       const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/b2b-invoices/${invoiceId}/approve`);
@@ -260,7 +246,6 @@ export function FranchiseProvider({ children }) {
       updateGlobalCartQuantity,
       removeGlobalCartItem,
       clearGlobalCart,
-      addFundsToWallet,
       submitOrderRequest,
       refreshData,
       approveB2BInvoice,
