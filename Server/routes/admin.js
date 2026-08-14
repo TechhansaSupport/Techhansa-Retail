@@ -10,6 +10,8 @@ const CreditTransaction = require('../models/CreditTransaction');
 const FranchisePartner = require('../models/FranchisePartner');
 const ChannelPartner = require('../models/ChannelPartner');
 const Order = require('../models/Order');
+const Quotation = require('../models/Quotation');
+const RFP = require('../models/RFP');
 
 // Middleware to check if user is admin (Assuming basic auth or we check token in a real scenario)
 // For simplicity and matching current setup, we might rely on the frontend to protect routes,
@@ -238,10 +240,26 @@ router.patch('/orders/:id/status', async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    );
+    ).populate('quotationReference');
+    
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
+
+    if (order.quotationReference) {
+      if (status === 'Confirmed') {
+        await Quotation.findByIdAndUpdate(order.quotationReference._id, { status: 'Approved' });
+        if (order.quotationReference.rfpReference) {
+          await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, { status: 'Approved' });
+        }
+      } else if (status === 'Declined') {
+        await Quotation.findByIdAndUpdate(order.quotationReference._id, { status: 'Rejected' });
+        if (order.quotationReference.rfpReference) {
+          await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, { status: 'Rejected' });
+        }
+      }
+    }
+
     res.json(order);
   } catch (error) {
     console.error('Error updating order status:', error);
