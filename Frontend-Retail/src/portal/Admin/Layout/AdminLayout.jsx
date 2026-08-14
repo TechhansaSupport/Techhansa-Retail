@@ -4,6 +4,8 @@ import { LayoutDashboard, Users, Package, FileText, LogOut, Bell, User, Menu, X,
 import { AuthContext } from '../../../context/AuthContext';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/logo.png';
+import toast from 'react-hot-toast';
+import axios from '../../../api/axios';
 
 export default function AdminLayout() {
   const { logout, user } = useContext(AuthContext);
@@ -34,10 +36,39 @@ export default function AdminLayout() {
     { name: 'Audit Logs', path: '/admin/audit', icon: <FileText size={20} /> },
   ];
 
-  const notifications = [
-    { id: 1, title: 'New Franchise Request', message: 'User fran123 has registered.', time: '10 mins ago', unread: true },
-    { id: 2, title: 'System Update', message: 'Central database synced successfully.', time: '1 hour ago', unread: false },
-  ];
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await axios.get('/api/notifications');
+        setNotifications(response.data);
+      } catch (err) {
+        console.error('Failed to fetch notifications', err);
+      }
+    };
+    fetchNotifications();
+  }, []);
+
+  const unreadCount = notifications.filter(n => n.unread).length;
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await axios.patch('/api/notifications/read-all');
+      setNotifications(notifications.map(n => ({ ...n, unread: false })));
+    } catch (err) {
+      toast.error('Failed to mark notifications as read');
+    }
+  };
+
+  const handleNotificationClick = async (id) => {
+    try {
+      await axios.patch(`/api/notifications/${id}/read`);
+      setNotifications(notifications.map(n => n._id === id ? { ...n, unread: false } : n));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div style={{ zoom: 0.75, height: '133.333vh', width: '133.333vw' }} className="flex bg-slate-100 md:p-4 md:gap-4 text-slate-800 font-sans overflow-hidden">
@@ -99,6 +130,7 @@ export default function AdminLayout() {
             </h2>
             <div className="relative ml-4 hidden md:block">
               <button 
+                onClick={() => toast.success("Command Center coming soon!")}
                 className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors"
               >
                 <Shield size={16} className="text-indigo-600" />
@@ -114,7 +146,7 @@ export default function AdminLayout() {
                 className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50"
               >
                 <Bell size={20} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>}
               </button>
               
               {isNotificationOpen && (
@@ -123,11 +155,15 @@ export default function AdminLayout() {
                   <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
                     <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center relative z-50">
                       <h3 className="font-bold text-slate-800">Notifications</h3>
-                      <button className="text-xs text-indigo-600 font-medium hover:text-indigo-700">Mark all as read</button>
+                      <button onClick={handleMarkAllAsRead} className="text-xs text-indigo-600 font-medium hover:text-indigo-700">Mark all as read</button>
                     </div>
                     <div className="max-h-80 overflow-y-auto relative z-50">
-                      {notifications.map(note => (
-                        <div key={note.id} className={`px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer ${note.unread ? 'bg-indigo-50/30' : ''}`}>
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-6 text-center text-slate-500 text-sm">
+                          No notifications yet.
+                        </div>
+                      ) : notifications.map(note => (
+                        <div key={note._id} onClick={() => handleNotificationClick(note._id)} className={`px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors ${note.unread ? 'bg-indigo-50/30' : ''}`}>
                           <div className="flex justify-between items-start mb-1">
                             <h4 className={`text-sm font-semibold ${note.unread ? 'text-slate-800' : 'text-slate-600'}`}>{note.title}</h4>
                             <span className="text-[10px] text-slate-400">{note.time}</span>
@@ -137,7 +173,12 @@ export default function AdminLayout() {
                       ))}
                     </div>
                     <div className="px-4 py-2 border-t border-slate-100 text-center relative z-50">
-                      <button className="text-xs text-indigo-600 font-bold hover:text-indigo-700">View All Notifications</button>
+                      <button 
+                        onClick={() => { setIsNotificationOpen(false); navigate('/admin/notifications'); }} 
+                        className="text-xs text-indigo-600 font-bold hover:text-indigo-700"
+                      >
+                        View All Notifications
+                      </button>
                     </div>
                   </div>
                 </>
@@ -163,6 +204,10 @@ export default function AdminLayout() {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)}></div>
                   <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+                    <button onClick={() => { setIsProfileMenuOpen(false); navigate('/admin/settings'); }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 font-medium relative z-50">
+                      <User size={16} /> Account Settings
+                    </button>
+                    <div className="h-px bg-slate-100 my-1 relative z-50"></div>
                     <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium relative z-50">
                       <LogOut size={16} /> Sign Out
                     </button>

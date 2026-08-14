@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from '../../../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, ShieldCheck, Search, Users, Plus, Trash2, X, AlertTriangle, Wallet } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Search, Users, Plus, Trash2, X, AlertTriangle, Wallet, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function EntityManagement() {
   const [entities, setEntities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All');
   
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -27,6 +30,16 @@ export default function EntityManagement() {
     role: 'franchise',
     storeId: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [storeIds, setStoreIds] = useState(['']);
+
+  const handleAddStoreId = () => setStoreIds([...storeIds, '']);
+  const handleRemoveStoreId = (index) => setStoreIds(storeIds.filter((_, i) => i !== index));
+  const handleStoreIdChange = (index, value) => {
+    const newStoreIds = [...storeIds];
+    newStoreIds[index] = value;
+    setStoreIds(newStoreIds);
+  };
 
   useEffect(() => {
     fetchEntities();
@@ -58,8 +71,19 @@ export default function EntityManagement() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await axios.post(`/api/admin/entities`, formData);
-      toast.success('Partner created successfully!');
+      const payload = { ...formData };
+      if (payload.role === 'franchise') {
+        payload.storeId = storeIds.filter(id => id.trim() !== '').join(', ');
+      }
+      
+      if (editMode) {
+        await axios.put(`/api/admin/entities/${payload.userId}`, payload);
+        toast.success('Partner updated successfully!');
+      } else {
+        await axios.post(`/api/admin/entities`, payload);
+        toast.success('Partner created successfully!');
+      }
+      
       setIsCreateModalOpen(false);
       setFormData({
         userId: '',
@@ -69,12 +93,27 @@ export default function EntityManagement() {
         role: 'franchise',
         storeId: ''
       });
+      setStoreIds(['']);
       fetchEntities();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create partner');
+      toast.error(error.response?.data?.message || `Failed to ${editMode ? 'update' : 'create'} partner`);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEditClick = (entity) => {
+    setEditMode(true);
+    setFormData({
+      userId: entity.userId,
+      email: entity.email || '',
+      name: entity.name || '',
+      password: '', // Blank password unless they want to change it
+      role: entity.role,
+      storeId: entity.storeId || ''
+    });
+    setStoreIds(entity.storeId ? entity.storeId.split(',').map(s => s.trim()) : ['']);
+    setIsCreateModalOpen(true);
   };
 
   const handleDelete = async () => {
@@ -112,10 +151,11 @@ export default function EntityManagement() {
     setIsCreditModalOpen(true);
   };
 
-  const filteredEntities = entities.filter(entity => 
-    entity.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (entity.email && entity.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredEntities = entities.filter(entity => {
+    const matchesSearch = entity.userId.toLowerCase().includes(searchTerm.toLowerCase()) || (entity.email && entity.email.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesRole = roleFilter === 'All' ? true : entity.role === roleFilter.toLowerCase();
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <div className="space-y-6">
@@ -130,6 +170,17 @@ export default function EntityManagement() {
         
         <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
           <div className="relative">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm w-full sm:w-auto bg-white"
+            >
+              <option value="All">All Roles</option>
+              <option value="Franchise">Franchise</option>
+              <option value="Channel">B2B Channel</option>
+            </select>
+          </div>
+          <div className="relative">
             <input
               type="text"
               placeholder="Search by ID or Email..."
@@ -140,7 +191,12 @@ export default function EntityManagement() {
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
           <button 
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => {
+              setEditMode(false);
+              setFormData({ userId: '', email: '', name: '', password: '', role: 'franchise', storeId: '' });
+              setStoreIds(['']);
+              setIsCreateModalOpen(true);
+            }}
             className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-700 transition-colors"
           >
             <Plus size={18} /> Create Partner
@@ -209,7 +265,15 @@ export default function EntityManagement() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {entity.storeId || 'N/A'}
+                      {entity.storeId ? (
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {entity.storeId.split(',').map((id, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-gray-100 border border-gray-200 text-gray-700 rounded-md text-[10px] font-medium">
+                              {id.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      ) : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">
                       ₹{(entity.totalCredit || 0).toLocaleString()}
@@ -225,6 +289,13 @@ export default function EntityManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEditClick(entity)}
+                          title="Edit Partner"
+                          className="inline-flex items-center p-2 border border-gray-200 text-blue-600 bg-white hover:bg-blue-50 hover:border-blue-200 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                        </button>
                         <button
                           onClick={() => openCreditModal(entity.userId, entity.totalCredit)}
                           title="Assign Credit Limit"
@@ -261,9 +332,10 @@ export default function EntityManagement() {
       </motion.div>
 
       {/* Credit Assignment Modal */}
-      <AnimatePresence>
-        {isCreditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+      {createPortal(
+        <AnimatePresence>
+          {isCreditModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -318,12 +390,15 @@ export default function EntityManagement() {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {deleteConfirmId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+      {createPortal(
+        <AnimatePresence>
+          {deleteConfirmId && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -356,28 +431,31 @@ export default function EntityManagement() {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Create Partner Slide-over Modal */}
-      <AnimatePresence>
-        {isCreateModalOpen && (
+      {createPortal(
+        <AnimatePresence>
+          {isCreateModalOpen && (
           <>
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsCreateModalOpen(false)}
-              className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[60]"
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col"
+              className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[70] flex flex-col"
             >
-              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800">Provision New Partner</h3>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-gray-800">{editMode ? 'Edit Partner' : 'Provision New Partner'}</h3>
                 <button 
                   onClick={() => setIsCreateModalOpen(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -386,8 +464,8 @@ export default function EntityManagement() {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-6">
-                <form onSubmit={handleCreateSubmit} id="create-partner-form" className="space-y-5">
+              <div className="flex-1 overflow-y-auto p-5">
+                <form onSubmit={handleCreateSubmit} id="create-partner-form" className="space-y-3">
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Partner Role</label>
@@ -407,23 +485,34 @@ export default function EntityManagement() {
                     <input
                       required
                       type="text"
-                      placeholder="e.g. fran_nyc_01"
                       value={formData.userId}
                       onChange={(e) => setFormData({...formData, userId: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={editMode}
+                      className={`w-full p-2 border ${editMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm`}
+                      placeholder="e.g. fran_delhi_01"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Temporary Password</label>
-                    <input
-                      required
-                      type="password"
-                      placeholder="Enter secure password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Password {editMode ? '(Leave blank to keep unchanged)' : <span className="text-red-500">*</span>}</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm pr-10"
+                        placeholder={editMode ? 'Leave blank to keep unchanged' : '••••••••'}
+                        required={!editMode}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -449,23 +538,46 @@ export default function EntityManagement() {
                   </div>
 
                   {formData.role === 'franchise' && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Store ID</label>
-                      <input
-                        required
-                        type="text"
-                        placeholder="e.g. store-005"
-                        value={formData.storeId}
-                        onChange={(e) => setFormData({...formData, storeId: e.target.value})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-sm font-medium text-gray-700">Assigned Store IDs</label>
+                        <button 
+                          type="button" 
+                          onClick={handleAddStoreId}
+                          className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        >
+                          <Plus size={14} /> Add Store
+                        </button>
+                      </div>
+                      
+                      {storeIds.map((id, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <input
+                            required={index === 0}
+                            type="text"
+                            placeholder="e.g. store-005"
+                            value={id}
+                            onChange={(e) => handleStoreIdChange(index, e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                          {storeIds.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveStoreId(index)}
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <X size={18} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
                     </motion.div>
                   )}
                   
                 </form>
               </div>
               
-              <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
+              <div className="px-5 py-4 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
@@ -482,17 +594,19 @@ export default function EntityManagement() {
                   {isSubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Provisioning...
+                      {editMode ? 'Saving...' : 'Provisioning...'}
                     </>
                   ) : (
-                    'Provision Partner'
+                    editMode ? 'Save Changes' : 'Provision Partner'
                   )}
                 </button>
               </div>
             </motion.div>
           </>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }

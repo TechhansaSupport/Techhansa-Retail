@@ -26,6 +26,8 @@ import AdminDashboard from './portal/Admin/Pages/Dashboard';
 import EntityManagement from './portal/Admin/Pages/EntityManagement';
 import CentralCatalog from './portal/Admin/Pages/CentralCatalog';
 import AuditLogs from './portal/Admin/Pages/AuditLogs';
+import AdminNotifications from './portal/Admin/Pages/Notifications';
+import AdminSettings from './portal/Admin/Pages/Settings';
 import FranchiseLayout from './portal/franchiseportal/storeadmin/Layout/FranchiseLayout';
 import FranchiseDashboard from './portal/franchiseportal/storeadmin/Pages/Dashboard';
 import FranchiseProfile from './portal/franchiseportal/storeadmin/Pages/StoreProfile';
@@ -129,6 +131,8 @@ function App() {
             <Route path="entities" element={<EntityManagement />} />
             <Route path="catalog" element={<CentralCatalog />} />
             <Route path="audit" element={<AuditLogs />} />
+            <Route path="notifications" element={<AdminNotifications />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
           {/* Franchise Portal */}

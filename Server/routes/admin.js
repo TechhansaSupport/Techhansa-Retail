@@ -58,16 +58,134 @@ router.get('/dashboard', async (req, res) => {
     ]);
     const totalRevenue = invoiceStats[0]?.totalRevenue || 0;
 
+    // Generate real 7-day trailing data for sparklines
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const userDailyStats = await User.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo }, role: { $in: ['franchise', 'channel'] } } },
+      { $group: {
+          _id: { day: { $dayOfMonth: "$createdAt" }, month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
+          count: { $sum: 1 },
+          distributed: { $sum: "$totalCredit" },
+          used: { $sum: "$usedCredit" }
+        }
+      }
+    ]);
+
+    const revenueDailyStats = await Invoice.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo }, paymentStatus: 'Paid' } },
+      { $group: {
+          _id: { day: { $dayOfMonth: "$createdAt" }, month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
+          revenue: { $sum: "$amount" }
+        }
+      }
+    ]);
+
+    const userSparkline = [];
+    const distributedCreditSparkline = [];
+    const usedCreditSparkline = [];
+    const revenueSparkline = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const day = d.getDate();
+      const month = d.getMonth() + 1;
+      const year = d.getFullYear();
+      
+      const userStat = userDailyStats.find(s => s._id.day === day && s._id.month === month && s._id.year === year);
+      userSparkline.push({ v: userStat ? userStat.count : 0 });
+      distributedCreditSparkline.push({ v: userStat ? userStat.distributed : 0 });
+      usedCreditSparkline.push({ v: userStat ? userStat.used : 0 });
+      
+      const revenueStat = revenueDailyStats.find(s => s._id.day === day && s._id.month === month && s._id.year === year);
+      revenueSparkline.push({ v: revenueStat ? revenueStat.revenue : 0 });
+    }
+
     res.json({
       totalUsers,
       totalCreditDistributed,
       totalUsedCredit,
       totalInventoryItems,
       totalInventoryValue,
-      totalRevenue
+      totalRevenue,
+      userSparkline,
+      distributedCreditSparkline,
+      usedCreditSparkline,
+      revenueSparkline
     });
   } catch (error) {
     console.error('Error fetching admin dashboard data:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/admin/dashboard/chart
+router.get('/dashboard/chart', async (req, res) => {
+  try {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    const userStats = await User.aggregate([
+      { $match: { createdAt: { $gte: sixMonthsAgo }, role: { $in: ['franchise', 'channel'] } } },
+      { $group: {
+          _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" }, role: "$role" },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const invoiceStats = await Invoice.aggregate([
+      { $match: { createdAt: { $gte: sixMonthsAgo }, paymentStatus: 'Paid' } },
+      { $group: {
+          _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
+          totalRevenue: { $sum: "$amount" }
+        }
+      }
+    ]);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const chartData = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const month = d.getMonth() + 1; // 1-12
+      const year = d.getFullYear();
+      const name = monthNames[d.getMonth()];
+      
+      chartData.push({
+        name,
+        month,
+        year,
+        Franchise: 0,
+        B2B: 0,
+        Revenue: 0
+      });
+    }
+
+    userStats.forEach(stat => {
+      const dataRow = chartData.find(d => d.month === stat._id.month && d.year === stat._id.year);
+      if (dataRow) {
+        if (stat._id.role === 'franchise') dataRow.Franchise += stat.count;
+        if (stat._id.role === 'channel') dataRow.B2B += stat.count;
+      }
+    });
+
+    invoiceStats.forEach(stat => {
+      const dataRow = chartData.find(d => d.month === stat._id.month && d.year === stat._id.year);
+      if (dataRow) {
+        dataRow.Revenue += stat.totalRevenue;
+      }
+    });
+
+    res.json(chartData);
+  } catch (error) {
+    console.error('Error fetching chart data:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -118,6 +236,42 @@ router.post('/entities', async (req, res) => {
     res.status(201).json(userResponse);
   } catch (error) {
     console.error('Error creating entity:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /api/admin/entities/:userId
+router.put('/entities/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, email, storeId, role, status } = req.body;
+    // Only include fields that are explicitly provided in req.body
+    let updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (storeId !== undefined) updateData.storeId = storeId;
+    if (role !== undefined) updateData.role = role;
+    if (status !== undefined) updateData.status = status;
+    
+    // Optional: update password if provided
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(req.body.password, salt);
+    }
+    
+    const updatedUser = await User.findOneAndUpdate(
+      { userId },
+      { $set: updateData },
+      { new: true }
+    ).select('-password');
+    
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating entity:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
