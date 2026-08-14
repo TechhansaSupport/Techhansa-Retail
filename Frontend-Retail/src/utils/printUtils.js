@@ -6,19 +6,19 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   if (!invoice) return;
 
   const doc = new jsPDF();
-  
+
   // Set fonts and styles
   doc.setFont('helvetica');
-  
+
   // -----------------------------------------
   // Header Section: Company vs Invoice Meta
   // -----------------------------------------
-  
+
   // Title
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.text('INVOICE', 105, 15, { align: 'center' });
-  
+
   doc.setLineWidth(0.5);
   doc.line(14, 20, 196, 20); // Top boundary line
 
@@ -27,12 +27,12 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.setFont('helvetica', 'bold');
   const compName = companySettings?.companyName || 'Techhansa Retail';
   doc.text(compName, 15, 26);
-  
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   const addr = companySettings?.registeredAddress || 'REGD. OFF-SHI 8/27A-K-3 GILAT BAZAR BYPASS\nSHIVPURKOT, VARANASI, UP-221002';
   doc.text(addr, 15, 31);
-  
+
   let currentY = 38;
   doc.text(`GSTIN/UIN: ${companySettings?.gstin || ''}`, 15, currentY); currentY += 4;
   doc.text(`State Name: ${companySettings?.stateName || ''}`, 15, currentY); currentY += 4;
@@ -47,15 +47,15 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.text('Invoice No.', 112, 26);
   doc.setFont('helvetica', 'bold');
   doc.text(invoice.invoiceNumber || invoice.invoiceId || '', 112, 30);
-  
+
   doc.line(155, 20, 155, 34); // vertical line for Dated
   doc.setFont('helvetica', 'normal');
   doc.text('Dated', 157, 26);
   doc.setFont('helvetica', 'bold');
   doc.text(new Date(invoice.createdAt).toLocaleDateString('en-GB'), 157, 30);
-  
+
   doc.line(110, 34, 196, 34); // horizontal line
-  
+
   doc.setFont('helvetica', 'normal');
   doc.text('Related Order', 112, 40);
   doc.setFont('helvetica', 'bold');
@@ -89,13 +89,13 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   // basic address wrapping
   const splitAddr = doc.splitTextToSize(userAddr, 90);
   doc.text(splitAddr, 15, 74);
-  
+
   // -----------------------------------------
   // Product Table
   // -----------------------------------------
-  
+
   const invoiceItems = invoice.items || rfp?.products || [];
-  
+
   // Calculate an assumed rate per item if it's missing (for mock data or legacy invoices)
   const totalQtyAcrossAllItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const totalAmountFromInvoice = invoice.amount || 0;
@@ -137,7 +137,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
     const taxableValue = rate * qty;
     const gstAmount = taxableValue * (gstRate / 100);
     const totalAmount = taxableValue + gstAmount;
-    
+
     totalQty += qty;
     totalGstAmt += gstAmount;
     finalAmt += totalAmount;
@@ -149,10 +149,10 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
 
   // Adding the Totals row to the table data
   tableData.push([
-    '', '', '', '', '', '', 'Total', 
-    totalQty.toString(), 
-    '', 
-    `Rs. ${totalGstAmt.toFixed(2)}`, 
+    '', '', '', '', '', '', 'Total',
+    totalQty.toString(),
+    '',
+    `Rs. ${totalGstAmt.toFixed(2)}`,
     `Rs. ${finalAmt.toFixed(2)}`
   ]);
 
@@ -177,7 +177,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
       9: { cellWidth: 18, halign: 'right' }, // GST
       10: { cellWidth: 18, halign: 'right' }, // Total
     },
-    didParseCell: function(data) {
+    didParseCell: function (data) {
       if (data.row.index === tableData.length - 1) {
         data.cell.styles.fontStyle = 'bold';
         if (data.column.index === 6) data.cell.styles.halign = 'right';
@@ -188,9 +188,97 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   let finalY = doc.lastAutoTable.finalY;
 
   // -----------------------------------------
+  // Product Details Section (with fallback to RFP products)
+  // -----------------------------------------
+  const prodList = (invoice.productDetails && invoice.productDetails.length > 0)
+    ? invoice.productDetails
+    : (rfp?.products || []).map(p => {
+        const perItemRate = assumedRate;
+        const gst = perItemRate * 0.18;
+        return {
+          productName: p.category || p.name || '-',
+          brand: p.brand || '-',
+          model: p.model || '-',
+          configuration: p.configuration || '-',
+          serialNumber: '',
+          rate: perItemRate,
+          gstAmount: gst,
+          totalAmount: perItemRate + gst
+        };
+      });
+
+  if (prodList.length > 0) {
+    finalY += 4;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Product Details', 15, finalY + 4);
+
+    const prodTableData = prodList.map(p => {
+      const r = p.rate || 0;
+      const g = p.gstAmount || (r * 0.18);
+      const t = p.totalAmount || (r + g);
+      return [
+        p.productName || p.category || '-',
+        p.brand || '-',
+        p.model || '-',
+        p.configuration || '-',
+        p.serialNumber || '-',
+        `Rs. ${r.toFixed(2)}`,
+        `Rs. ${g.toFixed(2)}`,
+        `Rs. ${t.toFixed(2)}`
+      ];
+    });
+
+    autoTable(doc, {
+      startY: finalY + 7,
+      margin: { left: 14, right: 14 },
+      head: [['Product Name', 'Brand', 'Model', 'Configuration', 'Serial Number', 'Rate', 'GST Amount', 'Total Amount']],
+      body: prodTableData,
+      theme: 'grid',
+      styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.2 },
+      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+      columnStyles: {
+        5: { halign: 'right' },
+        6: { halign: 'right' },
+        7: { halign: 'right' },
+      }
+    });
+
+    finalY = doc.lastAutoTable.finalY;
+  }
+
+  // -----------------------------------------
+  // Buyer Details Section (with fallback to user context)
+  // -----------------------------------------
+  const buyer = (invoice.buyerDetails && invoice.buyerDetails.buyerId)
+    ? invoice.buyerDetails
+    : {
+        buyerId: user?.userId || invoice.userId || '-',
+        productId: rfp?.rfpId || invoice.orderReference?.orderNumber || '-',
+        buyerName: user?.name || user?.companyName || '-',
+        paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
+      };
+
+  finalY += 4;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Buyer Details', 15, finalY + 4);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Buyer ID: ${buyer.buyerId || '-'}`, 15, finalY + 10);
+  doc.text(`Product ID: ${buyer.productId || '-'}`, 100, finalY + 10);
+  doc.text(`Buyer Name: ${buyer.buyerName || '-'}`, 15, finalY + 15);
+  doc.text('Payment Details:', 100, finalY + 15);
+  doc.setFont('helvetica', 'bold');
+  doc.text(buyer.paymentDetails || 'Advance Payment', 132, finalY + 15);
+
+  finalY += 20;
+
+  // -----------------------------------------
   // Summary & Amount in Words
   // -----------------------------------------
-  
+
   doc.setLineWidth(0.2);
   // Amount Chargeable in words
   doc.setFontSize(8);
@@ -198,7 +286,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.text('Amount Chargeable (in words)', 15, finalY + 5);
   doc.setFont('helvetica', 'bold');
   doc.text(`INR ${numberToWords(Math.round(finalAmt))} Only`, 15, finalY + 10);
-  
+
   doc.setFont('helvetica', 'italic');
   doc.text('E. & O.E', 195, finalY + 10, { align: 'right' });
 
@@ -210,7 +298,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.setFontSize(8);
   const taxableValue = invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || assumedRate) * (item.quantity || 0)), 0);
   doc.text(`Tax Amount (in words) : INR ${numberToWords(Math.round(totalGstAmt))} Only`, 15, finalY + 5);
-  
+
   doc.text('Taxable Value:', 150, finalY + 5);
   doc.setFont('helvetica', 'bold');
   doc.text(`Rs. ${taxableValue.toFixed(2)}`, 195, finalY + 5, { align: 'right' });
@@ -221,7 +309,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   // -----------------------------------------
   // Footer: Bank & Declaration
   // -----------------------------------------
-  
+
   const footerHeight = 45;
   doc.line(110, finalY, 110, finalY + footerHeight); // Vertical separator
 
@@ -236,17 +324,17 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   // Bank Details (Right Side Top)
   doc.text("Company's Bank Details", 112, finalY + 5, { underline: true });
   let bankY = finalY + 10;
-  
+
   const drawBankDetail = (label, value) => {
     doc.setFont('helvetica', 'normal');
     doc.text(label, 112, bankY);
     doc.text(":", 145, bankY);
     doc.setFont('helvetica', 'bold');
-    
+
     // Max width from x=147 to x=194 is 47
     const splitValue = doc.splitTextToSize(value, 47);
     doc.text(splitValue, 147, bankY);
-    
+
     // increment bankY based on number of lines
     bankY += (splitValue.length * 3.5) + 0.5;
   };
@@ -264,7 +352,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.setFont('helvetica', 'bold');
   doc.text(`for ${compName}`, 195, finalY + 33, { align: 'right' });
   doc.setFont('helvetica', 'normal');
-  
+
   // Split signatory text into multiple lines and right align
   const sigLines = signatoryText.split('\n');
   let sigY = finalY + 40;
@@ -280,7 +368,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.line(14, finalY + footerHeight, 196, finalY + footerHeight); // bottom boundary
   doc.line(14, 20, 14, finalY + footerHeight); // global left boundary
   doc.line(196, 20, 196, finalY + footerHeight); // global right boundary
-  
+
   doc.setFontSize(7);
   doc.text('This is a Computer Generated Invoice', 105, finalY + 50, { align: 'center' });
 
@@ -290,19 +378,19 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
 
 export const printReport = (reportTitle, data) => {
   const doc = new jsPDF();
-  
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
   doc.text(reportTitle, 14, 20);
-  
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 28);
-  
+
   if (data && data.length > 0) {
     const headers = Object.keys(data[0]);
     const body = data.map(row => Object.values(row));
-    
+
     autoTable(doc, {
       startY: 35,
       head: [headers],
@@ -312,6 +400,6 @@ export const printReport = (reportTitle, data) => {
   } else {
     doc.text('No data available for this report.', 14, 40);
   }
-  
+
   doc.save(`${reportTitle.replace(/\s+/g, '_')}.pdf`);
 };

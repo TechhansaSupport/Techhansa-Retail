@@ -42,9 +42,25 @@ const InvoiceSchema = new mongoose.Schema({
     accountNo: String,
     bankName: String
   },
+  productDetails: [{
+    productName: String,
+    brand: String,
+    model: String,
+    configuration: String,
+    serialNumber: String,
+    rate: { type: Number, default: 0 },
+    gstAmount: { type: Number, default: 0 },
+    totalAmount: { type: Number, default: 0 }
+  }],
+  buyerDetails: {
+    buyerId: String,
+    productId: String,
+    buyerName: String,
+    paymentDetails: { type: String, enum: ['Credit Limit', 'Advance Payment'], default: 'Advance Payment' }
+  },
   termsAndConditions: [String]
 }, { timestamps: true });
-InvoiceSchema.pre('save', function() {
+InvoiceSchema.pre('save', function () {
   if (this.paymentStatus === 'Paid') {
     this.receivedAmount = this.amount;
     this.balanceAmount = 0;

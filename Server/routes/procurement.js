@@ -3,51 +3,9 @@ const router = express.Router();
 const RFP = require('../models/RFP');
 const Quotation = require('../models/Quotation');
 const Order = require('../models/Order');
-const Invoice = require('../models/Invoice');
 const User = require('../models/User');
 const CompanySettings = require('../models/CompanySettings');
 const CreditTransaction = require('../models/CreditTransaction');
-
-async function generateInvoiceNumber() {
-  let stateCode = 'DL'; // default
-  const settings = await CompanySettings.findOne();
-
-  if (settings) {
-    const addr = (settings.stateName || settings.registeredAddress || '').toUpperCase();
-    if (addr.includes('UTTAR PRADESH') || addr.includes(' UP') || addr.includes('U.P') || addr.includes(', UP')) stateCode = 'UP';
-    else if (addr.includes('MADHYA PRADESH') || addr.includes(' MP') || addr.includes('M.P')) stateCode = 'MP';
-    else if (addr.includes('RAJASTHAN') || addr.includes(' RJ') || addr.includes('R.J')) stateCode = 'RJ';
-    else if (addr.includes('MAHARASHTRA') || addr.includes(' MH') || addr.includes('M.H')) stateCode = 'MH';
-    else if (addr.includes('GUJARAT') || addr.includes(' GJ') || addr.includes('G.J')) stateCode = 'GJ';
-    else if (addr.includes('HARYANA') || addr.includes(' HR') || addr.includes('H.R')) stateCode = 'HR';
-    else if (addr.includes('KARNATAKA') || addr.includes(' KA') || addr.includes('K.A')) stateCode = 'KA';
-    else if (addr.includes('DELHI') || addr.includes(' DL') || addr.includes('D.L')) stateCode = 'DL';
-  }
-
-  const date = new Date();
-  const month = date.getMonth(); // 0-11
-  const year = date.getFullYear();
-  let startYear, endYear;
-  if (month >= 3) {
-    startYear = year.toString().slice(-2);
-    endYear = (year + 1).toString().slice(-2);
-  } else {
-    startYear = (year - 1).toString().slice(-2);
-    endYear = year.toString().slice(-2);
-  }
-  const fy = `${startYear}-${endYear}`;
-
-  const prefix = `THS-${stateCode}-${fy}`;
-  const lastInvoice = await Invoice.findOne({ invoiceNumber: new RegExp(`^${prefix}-`) }).sort({ createdAt: -1 });
-  let seq = 1;
-  if (lastInvoice) {
-    const parts = lastInvoice.invoiceNumber.split('-');
-    const lastSeq = parseInt(parts[parts.length - 1], 10);
-    if (!isNaN(lastSeq)) seq = lastSeq + 1;
-  }
-  const seqStr = seq.toString().padStart(3, '0');
-  return `${prefix}-${seqStr}`;
-}
 
 // GET Dashboard Stats
 router.get('/dashboard-stats', async (req, res) => {
@@ -58,7 +16,6 @@ router.get('/dashboard-stats', async (req, res) => {
         pendingRFPs: 0,
         approvedOrders: 0,
         deliveredOrders: 0,
-        totalInvoices: 0,
         totalSpending: 0
       });
     }
@@ -67,7 +24,6 @@ router.get('/dashboard-stats', async (req, res) => {
     const pendingRFPs = await RFP.countDocuments({ ...filter, status: { $in: ['Draft', 'Submitted', 'Under Review'] } });
     const approvedOrders = await Order.countDocuments({ ...filter, status: 'Confirmed' });
     const deliveredOrders = await Order.countDocuments({ ...filter, status: 'Delivered' });
-    const totalInvoices = await Invoice.countDocuments(filter);
 
     // Calculate total spending (actual deducted credit)
     const user = await User.findOne({ userId });
@@ -77,7 +33,6 @@ router.get('/dashboard-stats', async (req, res) => {
       pendingRFPs,
       approvedOrders,
       deliveredOrders,
-      totalInvoices,
       totalSpending
     });
   } catch (error) {
@@ -127,15 +82,23 @@ router.post('/rfp', async (req, res) => {
       });
       await newOrder.save();
 
-      // Create placeholder Invoice
-      const newInvoice = new Invoice({
-        invoiceNumber: await generateInvoiceNumber(),
-        orderReference: newOrder._id,
-        amount: 0,
-        paymentStatus: 'Unpaid',
-        userId: newRFP.userId
+      // Build productDetails from RFP products
+      const productDetails = (newRFP.products || []).map(p => {
+        const rate = 0; // Placeholder — updated when quotation is approved
+        const gstAmount = rate * 0.18;
+        const totalAmount = rate + gstAmount;
+        return {
+          productName: p.category || '',
+          brand: p.brand || '',
+          model: p.model || '',
+          configuration: p.configuration || '',
+          serialNumber: '',
+          rate,
+          gstAmount,
+          totalAmount
+        };
       });
-      await newInvoice.save();
+
     }
 
     res.status(201).json(newRFP);
@@ -190,27 +153,6 @@ router.get('/orders/:orderNumber', async (req, res) => {
   }
 });
 
-// GET all Invoices
-router.get('/invoices', async (req, res) => {
-  try {
-    if (!req.query.userId) return res.json([]);
-    const filter = { userId: req.query.userId };
-    const invoices = await Invoice.find(filter)
-      .populate({
-        path: 'orderReference',
-        populate: {
-          path: 'quotationReference',
-          populate: {
-            path: 'rfpReference'
-          }
-        }
-      })
-      .sort({ createdAt: -1 });
-    res.json(invoices);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
 // PUT update RFP
 router.put('/rfp/:id', async (req, res) => {
@@ -246,14 +188,23 @@ router.put('/rfp/:id', async (req, res) => {
         });
         await newOrder.save();
 
-        const newInvoice = new Invoice({
-          invoiceNumber: await generateInvoiceNumber(),
-          orderReference: newOrder._id,
-          amount: 0,
-          paymentStatus: 'Unpaid',
-          userId: updatedRFP.userId
+        // Build productDetails from RFP products
+        const prodDetails = (updatedRFP.products || []).map(p => {
+          const rate = 0;
+          const gstAmount = rate * 0.18;
+          const totalAmount = rate + gstAmount;
+          return {
+            productName: p.category || '',
+            brand: p.brand || '',
+            model: p.model || '',
+            configuration: p.configuration || '',
+            serialNumber: '',
+            rate,
+            gstAmount,
+            totalAmount
+          };
         });
-        await newInvoice.save();
+
       }
     }
     res.json(updatedRFP);
@@ -286,7 +237,6 @@ router.get('/reports', async (req, res) => {
     const filter = { userId };
 
     // Fetch all relevant data
-    const invoices = await Invoice.find(filter);
     const orders = await Order.find(filter);
     const rfps = await RFP.find(filter);
 
@@ -294,15 +244,14 @@ router.get('/reports', async (req, res) => {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     // Daily Metrics
-    const todayInvoices = invoices.filter(i => new Date(i.createdAt) >= todayStart);
     const todayOrders = orders.filter(o => new Date(o.createdAt) >= todayStart);
     const todayRfps = rfps.filter(r => new Date(r.createdAt) >= todayStart);
 
     const daily = {
-      spend: todayInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0),
+      spend: todayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
       orders: todayOrders.length,
       rfps: todayRfps.length,
-      invoicesPaid: todayInvoices.filter(i => i.paymentStatus === 'Paid').length
+      invoicesPaid: 0 // Retained field with 0 value to not break frontend if it's still expecting it elsewhere
     };
 
     // Monthly Metrics (Last 12 months)
@@ -313,16 +262,11 @@ router.get('/reports', async (req, res) => {
       const monthStart = d;
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
 
-      const monthInvoices = invoices.filter(inv => {
-        const date = new Date(inv.createdAt);
-        return date >= monthStart && date <= monthEnd;
-      });
-      const spend = monthInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
-
       const monthOrders = orders.filter(o => {
         const date = new Date(o.createdAt);
         return date >= monthStart && date <= monthEnd;
       });
+      const spend = monthOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
       monthly.push({
         name: monthName,
@@ -338,16 +282,11 @@ router.get('/reports', async (req, res) => {
       const yearStart = new Date(year, 0, 1);
       const yearEnd = new Date(year, 11, 31, 23, 59, 59);
 
-      const yearInvoices = invoices.filter(inv => {
-        const date = new Date(inv.createdAt);
-        return date >= yearStart && date <= yearEnd;
-      });
-      const spend = yearInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
-
       const yearOrders = orders.filter(o => {
         const date = new Date(o.createdAt);
         return date >= yearStart && date <= yearEnd;
       });
+      const spend = yearOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
       yearly.push({
         name: year.toString(),
@@ -448,5 +387,7 @@ router.get('/credit-transactions', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
 
 module.exports = router;

@@ -53,7 +53,6 @@ import Checkout from './portal/chnnelportal/Pages/Checkout';
 import Orders from './portal/chnnelportal/Pages/Orders';
 import CreditHistory from './portal/chnnelportal/Pages/CreditHistory';
 import DeliveryTracking from './portal/chnnelportal/Pages/DeliveryTracking';
-import Invoices from './portal/chnnelportal/Pages/Invoices';
 import Reports from './portal/chnnelportal/Pages/Reports';
 import SupportCenter from './portal/chnnelportal/Pages/SupportCenter';
 import Profile from './portal/chnnelportal/Pages/Profile';
@@ -188,7 +187,6 @@ function App() {
             <Route path="credit-history" element={<CreditHistory />} />
             <Route path="orders" element={<Orders />} />
             <Route path="tracking" element={<DeliveryTracking />} />
-            <Route path="invoices" element={<Invoices />} />
             <Route path="reports" element={<Reports />} />
             <Route path="support" element={<SupportCenter />} />
             <Route path="profile" element={<Profile />} />
