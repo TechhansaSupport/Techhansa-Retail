@@ -90,14 +90,101 @@ router.get('/dashboard/:userId', async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const invoices = await Invoice.find({
+    const todayInvoices = await Invoice.find({
       employeeId: userId,
       createdAt: { $gte: startOfDay, $lte: endOfDay }
     });
 
-    const salesToday = invoices.reduce((acc, inv) => acc + inv.amount, 0);
+    const salesToday = todayInvoices.reduce((acc, inv) => acc + inv.amount, 0);
+    const ordersProcessed = todayInvoices.length;
+    const aov = ordersProcessed > 0 ? Math.round(salesToday / ordersProcessed) : 0;
 
-    res.json({ success: true, salesToday, targetToday: 100000 }); // Mock target of 1 Lakh
+    // Recent Bills
+    const recentBillsData = await Invoice.find({ employeeId: userId })
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    const recentBills = recentBillsData.map(inv => {
+      const diffInMinutes = Math.floor((new Date() - inv.createdAt) / 60000);
+      let timeStr = '';
+      if (diffInMinutes < 1) timeStr = `Just now`;
+      else if (diffInMinutes < 60) timeStr = `${diffInMinutes} mins ago`;
+      else if (diffInMinutes < 1440) timeStr = `${Math.floor(diffInMinutes / 60)} hours ago`;
+      else timeStr = `${Math.floor(diffInMinutes / 1440)} days ago`;
+
+      return {
+        id: inv.invoiceNumber,
+        time: timeStr,
+        amount: inv.amount,
+        items: inv.totalQuantity || (inv.items ? inv.items.reduce((acc, item) => acc + (item.quantity || 1), 0) : 0)
+      };
+    });
+
+    // Weekly Performance
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - 6);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const weeklyInvoices = await Invoice.find({
+      employeeId: userId,
+      createdAt: { $gte: startOfWeek, $lte: endOfDay }
+    }).populate('items.productId');
+
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const performanceHistoryMap = {};
+    const orderedDays = [];
+    
+    // Initialize last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayName = days[d.getDay()];
+      performanceHistoryMap[dayName] = 0;
+      orderedDays.push(dayName);
+    }
+
+    const categoryCountMap = {};
+
+    weeklyInvoices.forEach(inv => {
+      const dayName = days[inv.createdAt.getDay()];
+      if (performanceHistoryMap[dayName] !== undefined) {
+        performanceHistoryMap[dayName] += inv.amount;
+      }
+      
+      if (inv.items) {
+        inv.items.forEach(item => {
+          const cat = item.productId && item.productId.category ? item.productId.category : 'Others';
+          categoryCountMap[cat] = (categoryCountMap[cat] || 0) + (item.quantity || 1);
+        });
+      }
+    });
+
+    const performanceHistory = orderedDays.map(day => ({
+      day,
+      sales: performanceHistoryMap[day],
+      target: 100000 // Mock daily target
+    }));
+
+    const totalCategories = Object.values(categoryCountMap).reduce((a, b) => a + b, 0);
+    let categoryDistribution = [];
+    if (totalCategories > 0) {
+      categoryDistribution = Object.keys(categoryCountMap).map(cat => ({
+        name: cat,
+        value: Math.round((categoryCountMap[cat] / totalCategories) * 100)
+      })).sort((a, b) => b.value - a.value).slice(0, 4);
+    }
+
+    res.json({ 
+      success: true, 
+      salesToday, 
+      targetToday: 100000,
+      ordersProcessed,
+      aov,
+      recentBills,
+      performanceHistory,
+      categoryDistribution,
+      totalWeeklyItems: totalCategories
+    });
   } catch (error) {
     console.error('Dashboard sales error:', error);
     res.status(500).json({ success: false, message: 'Server error fetching sales' });
