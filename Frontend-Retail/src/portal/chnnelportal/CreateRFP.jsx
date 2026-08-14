@@ -199,7 +199,7 @@ export default function CreateRFP() {
     <div className="max-w-7xl mx-auto pb-12">
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <Link to="/channel/rfp" className="text-sm text-blue-600 hover:underline mb-2 block">&larr; Back to RFP Management</Link>
+          
           <h1 className="text-2xl font-bold text-gray-900">{rfp ? 'Edit Draft RFP' : 'Create New RFP'}</h1>
           <p className="text-gray-500 text-sm mt-1">{rfp ? 'Update your draft procurement request.' : 'Submit a new procurement request for quotation.'}</p>
         </div>
