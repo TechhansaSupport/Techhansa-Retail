@@ -106,7 +106,7 @@ export default function Invoices() {
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 mt-4">
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Amount:</span>
-                  <span className="text-slate-700 font-semibold text-emerald-600">Γé╣{inv.amount?.toLocaleString('en-IN') || 0}</span>
+                  <span className="text-slate-700 font-semibold text-emerald-600"> {inv.amount?.toLocaleString('en-IN') || 0}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Date:</span>
@@ -140,7 +140,7 @@ export default function Invoices() {
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Invoice Amount</p>
-                  <p className="text-emerald-600 font-semibold">Γé╣{selectedInvoice.amount?.toLocaleString('en-IN') || 0}</p>
+                  <p className="text-emerald-600 font-semibold"> {selectedInvoice.amount?.toLocaleString('en-IN') || 0}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Invoice Date</p>
@@ -196,12 +196,12 @@ export default function Invoices() {
                               <td className="px-4 py-3 text-sm text-slate-500 whitespace-pre-wrap">{item.configuration || item.specs || item.details || '-'}</td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-center">{hsn}</td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{qty}</td>
-                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">Γé╣{rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium"> {rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium text-slate-500">
-                                Γé╣{gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-right font-bold text-emerald-600">
-                                Γé╣{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                             </tr>
                           );
@@ -211,10 +211,10 @@ export default function Invoices() {
                         <tr>
                           <td colSpan="5" className="px-4 py-3 text-sm font-bold text-slate-700 text-right">TOTAL</td>
                           <td className="px-4 py-3 text-sm font-bold text-slate-900 text-center">{selectedInvoice.totalQuantity || invoiceItems.reduce((acc, item) => acc + (item.quantity || 0), 0)}</td>
-                          <td className="px-4 py-3 text-sm font-bold text-slate-900 text-right">Γé╣{(selectedInvoice.subtotalAmount || invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0)), 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-slate-900 text-right"> {(selectedInvoice.subtotalAmount || invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0)), 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           <td className="px-4 py-3 text-sm font-bold text-slate-700 text-right"></td>
                           <td className="px-4 py-3 text-sm font-bold text-emerald-700 text-right">
-                            Γé╣{(selectedInvoice.amount || invoiceItems.reduce((acc, item) => {
+                            {(selectedInvoice.amount || invoiceItems.reduce((acc, item) => {
                               const r = item.rate || item.unitPrice || 0;
                               const q = item.quantity || 0;
                               const gRate = item.taxRate || 18;
@@ -231,11 +231,11 @@ export default function Invoices() {
                   <div className="flex flex-col md:flex-row justify-between mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <div className="space-y-1">
                       <p className="text-sm text-slate-500 font-medium">RECEIVED AMOUNT</p>
-                      <p className="text-xl font-bold text-emerald-600">Γé╣{(selectedInvoice.receivedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <p className="text-xl font-bold text-emerald-600"> {(selectedInvoice.receivedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     </div>
                     <div className="space-y-1 mt-4 md:mt-0 text-left md:text-right">
                       <p className="text-sm text-slate-500 font-medium">BALANCE AMOUNT</p>
-                      <p className="text-xl font-bold text-amber-600">Γé╣{(selectedInvoice.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <p className="text-xl font-bold text-amber-600"> {(selectedInvoice.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     </div>
                   </div>
 
@@ -259,12 +259,12 @@ export default function Invoices() {
                             {selectedInvoice.taxBreakdown.map((tax, i) => (
                               <tr key={i}>
                                 <td className="px-4 py-2 text-slate-900 font-medium">{tax.hsn}</td>
-                                <td className="px-4 py-2 text-slate-900 text-right">Γé╣{tax.taxableValue?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td className="px-4 py-2 text-slate-900 text-right"> {tax.taxableValue?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                 <td className="px-4 py-2 text-slate-600 text-right">{tax.cgstRate}%</td>
-                                <td className="px-4 py-2 text-slate-600 text-right">Γé╣{tax.cgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td className="px-4 py-2 text-slate-600 text-right"> {tax.cgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                 <td className="px-4 py-2 text-slate-600 text-right">{tax.sgstRate}%</td>
-                                <td className="px-4 py-2 text-slate-600 text-right">Γé╣{tax.sgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                <td className="px-4 py-2 font-bold text-slate-900 text-right">Γé╣{tax.totalTaxAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td className="px-4 py-2 text-slate-600 text-right"> {tax.sgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td className="px-4 py-2 font-bold text-slate-900 text-right"> {tax.totalTaxAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                               </tr>
                             ))}
                           </tbody>

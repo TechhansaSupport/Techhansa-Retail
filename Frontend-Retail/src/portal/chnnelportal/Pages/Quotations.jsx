@@ -53,13 +53,21 @@ export default function Quotations() {
   };
 
   const filteredQs = quotations.filter(q => {
+    if (q.status === 'Rejected') return false;
+
     const qtId = q.quotationNo || q.quotationId || '';
     const vendor = q.vendorName || q.vendor || '';
     return qtId.toLowerCase().includes(searchQuery.toLowerCase()) || vendor.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const selectedRfp = selectedQuotation ? rfps.find(r => r.rfpId === selectedQuotation.quotationNo?.replace('QT-', '')) : null;
-  const quotationItems = selectedQuotation?.items || selectedRfp?.products || [];
+  const quotationItems = (selectedQuotation?.items?.length > 0) ? selectedQuotation.items : (selectedRfp?.products || []).map(p => {
+    const unitPrice = selectedQuotation?.amount || 0;
+    const totalAmount = unitPrice * (p.quantity || 1) * 1.18; // 18% GST
+    return { ...p, unitPrice, totalAmount };
+  });
+
+  const displayTotalAmount = quotationItems.reduce((sum, item) => sum + (item.totalAmount || ((item.quantity || 1) * (item.unitPrice || 0) * 1.18)), 0);
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
@@ -163,7 +171,7 @@ export default function Quotations() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Total Amount</p>
-                  <p className="text-emerald-600 font-semibold">₹{selectedQuotation.amount?.toLocaleString('en-IN') || selectedQuotation.totalAmount?.toLocaleString('en-IN') || 0}</p>
+                  <p className="font-bold text-emerald-600">₹{displayTotalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Valid Until</p>
@@ -208,7 +216,7 @@ export default function Quotations() {
                             <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || `${item.brand} ${item.category} (${item.model})`}</td>
                             <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{item.quantity}</td>
                             <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{item.unitPrice?.toLocaleString('en-IN') || 0}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{((item.quantity || 0) * (item.unitPrice || 0)).toLocaleString('en-IN')}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{(item.totalAmount || ((item.quantity || 0) * (item.unitPrice || 0) * 1.18)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -229,7 +237,7 @@ export default function Quotations() {
               )}
               {selectedQuotation.status !== 'Pending' && (
                 <button 
-                  onClick={() => navigate('/channel/checkout', { state: { quotation: selectedQuotation } })} 
+                  onClick={() => navigate('/channel/checkout', { state: { quotation: selectedQuotation, displayTotalAmount } })} 
                   className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
                 >
                   Proceed to Checkout
