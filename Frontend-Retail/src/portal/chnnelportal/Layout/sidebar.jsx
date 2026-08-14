@@ -7,7 +7,6 @@ import {
   FileBadge,
   ShoppingCart,
   Truck,
-  Receipt,
   PieChart,
   Headset,
   UserCircle,
@@ -65,7 +64,6 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         <SidebarLink to="/channel/quotations" icon={FileBadge}>Quotations</SidebarLink>
         <SidebarLink to="/channel/orders" icon={ShoppingCart}>Orders</SidebarLink>
         <SidebarLink to="/channel/tracking" icon={Truck}>Delivery Tracking</SidebarLink>
-        <SidebarLink to="/channel/invoices" icon={Receipt}>Invoices</SidebarLink>
         <SidebarLink to="/channel/reports" icon={PieChart}>Reports</SidebarLink>
 
         <div className="pt-4 mt-auto border-t border-slate-100 mx-2">
