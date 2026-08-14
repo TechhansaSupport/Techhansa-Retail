@@ -1,10 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { AuthContext } from '../../../../context/AuthContext';
 
 export const FranchiseContext = createContext();
 
 export function FranchiseProvider({ children }) {
-  const STORE_ID = 'STORE-001';
+  const { user } = useContext(AuthContext);
+  const storeId = user?.storeId;
 
   const [inventory, setInventory] = useState([]);
   const [salesHistory, setSalesHistory] = useState([]);
@@ -20,16 +22,17 @@ export function FranchiseProvider({ children }) {
   const [employees, setEmployees] = useState([]);
 
   const refreshData = async () => {
+    if (!storeId) return;
     try {
       const [profileRes, inventoryRes, walletRes, invoicesRes, employeesRes, catalogRes, requestsRes, salesRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/profile`),
-        axios.get(`http://localhost:5000/api/inventory/${STORE_ID}`),
-        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/wallet`),
-        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/b2b-invoices`),
-        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/employees`),
+        axios.get(`http://localhost:5000/api/franchise/${storeId}/profile`),
+        axios.get(`http://localhost:5000/api/inventory/${storeId}`),
+        axios.get(`http://localhost:5000/api/franchise/${storeId}/wallet`),
+        axios.get(`http://localhost:5000/api/franchise/${storeId}/b2b-invoices`),
+        axios.get(`http://localhost:5000/api/franchise/${storeId}/employees`),
         axios.get(`http://localhost:5000/api/franchise/catalog/all`),
-        axios.get(`http://localhost:5000/api/franchise/${STORE_ID}/requests`),
-        axios.get(`http://localhost:5000/api/sales/store/${STORE_ID}`) // Fetch Store Sales
+        axios.get(`http://localhost:5000/api/franchise/${storeId}/requests`),
+        axios.get(`http://localhost:5000/api/sales/store/${storeId}`) // Fetch Store Sales
       ]);
 
       if (profileRes.data.success) {
@@ -57,7 +60,7 @@ export function FranchiseProvider({ children }) {
 
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [storeId]);
 
   const addToGlobalCart = (item) => {
     setGlobalCart(prev => {
@@ -99,7 +102,7 @@ export function FranchiseProvider({ children }) {
 
   const addFundsToWallet = async (amount) => {
     try {
-      const res = await axios.post(`http://localhost:5000/api/franchise/${STORE_ID}/wallet/add`, { amount });
+      const res = await axios.post(`http://localhost:5000/api/franchise/${storeId}/wallet/add`, { amount });
       if (res.data.success) {
         setMetrics(prev => ({ ...prev, walletBalance: res.data.newBalance }));
         setWalletTransactions(prev => [res.data.data, ...prev]);
@@ -113,7 +116,7 @@ export function FranchiseProvider({ children }) {
 
   const approveB2BInvoice = async (invoiceId) => {
     try {
-      const res = await axios.put(`http://localhost:5000/api/franchise/${STORE_ID}/b2b-invoices/${invoiceId}/approve`);
+      const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/b2b-invoices/${invoiceId}/approve`);
       if (res.data.success) {
         await refreshData();
         return true;
@@ -143,7 +146,7 @@ export function FranchiseProvider({ children }) {
         items: orderItems,
         total: 0 // Calculate if needed, but backend can handle or leave 0 for requests
       };
-      const res = await axios.post(`http://localhost:5000/api/franchise/${STORE_ID}/requests`, payload);
+      const res = await axios.post(`http://localhost:5000/api/franchise/${storeId}/requests`, payload);
       if (res.data.success) {
         setOrders(prev => [res.data.data, ...prev]);
         return true;
@@ -159,8 +162,8 @@ export function FranchiseProvider({ children }) {
       const response = await axios.post('http://localhost:5000/api/sales/checkout', {
         cart: cartItems,
         customer: customerDetails,
-        employeeId: STORE_ID,
-        storeId: STORE_ID
+        employeeId: storeId,
+        storeId: storeId
       });
 
       if (response.data.success) {
@@ -178,8 +181,8 @@ export function FranchiseProvider({ children }) {
   };
   const addInventoryItem = async (newItem) => {
     try {
-      const payload = { ...newItem, storeId: STORE_ID };
-      const res = await axios.post(`http://localhost:5000/api/inventory/${STORE_ID}`, payload);
+      const payload = { ...newItem, storeId: storeId };
+      const res = await axios.post(`http://localhost:5000/api/inventory/${storeId}`, payload);
       if (res.data.success) {
         setInventory(prev => [res.data.data, ...prev]);
         return true;
@@ -192,7 +195,7 @@ export function FranchiseProvider({ children }) {
 
   const updateInventoryItem = async (id, updatedFields) => {
     try {
-      const res = await axios.put(`http://localhost:5000/api/inventory/${STORE_ID}/${id}`, updatedFields);
+      const res = await axios.put(`http://localhost:5000/api/inventory/${storeId}/${id}`, updatedFields);
       if (res.data.success) {
         // Use the server response to update state so we have the true data
         setInventory(prev => prev.map(item => (item._id === id || item.id === id) ? res.data.data : item));
@@ -206,7 +209,7 @@ export function FranchiseProvider({ children }) {
 
   const addEmployee = async (employeeData) => {
     try {
-      const res = await axios.post(`http://localhost:5000/api/franchise/${STORE_ID}/employees`, employeeData);
+      const res = await axios.post(`http://localhost:5000/api/franchise/${storeId}/employees`, employeeData);
       if (res.data.success) {
         setEmployees(prev => [res.data.data, ...prev]);
         return { success: true };
@@ -220,7 +223,7 @@ export function FranchiseProvider({ children }) {
 
   const toggleEmployeeStatus = async (id) => {
     try {
-      const res = await axios.put(`http://localhost:5000/api/franchise/${STORE_ID}/employees/${id}/status`);
+      const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/employees/${id}/status`);
       if (res.data.success) {
         setEmployees(prev => prev.map(emp => (emp._id === id || emp.id === id) ? { ...emp, status: res.data.data.status } : emp));
         return true;
