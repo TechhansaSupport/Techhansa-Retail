@@ -6,7 +6,7 @@ const OrderSchema = new mongoose.Schema({
   expectedDelivery: { type: Date, required: true },
   status: {
     type: String,
-    enum: ['Pending', 'Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered'],
+    enum: ['Pending', 'Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered', 'Rejected'],
     default: 'Pending'
   },
   trackingInfo: {
@@ -21,6 +21,15 @@ const OrderSchema = new mongoose.Schema({
   utrNumber: { type: String },
   transactionDate: { type: Date },
   receiptUrl: { type: String },
+  items: [{
+    productName: String,
+    brand: String,
+    model: String,
+    configuration: String,
+    quantity: Number,
+    unitPrice: Number,
+    totalAmount: Number
+  }],
   userId: { type: String, required: false }
 }, { timestamps: true });
 

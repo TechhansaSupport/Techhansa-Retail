@@ -57,6 +57,7 @@ import Reports from './portal/chnnelportal/Pages/Reports';
 import SupportCenter from './portal/chnnelportal/Pages/SupportCenter';
 import Profile from './portal/chnnelportal/Pages/Profile';
 import Settings from './portal/chnnelportal/Pages/Settings';
+import Invoices from './portal/chnnelportal/Pages/Invoices';
 
 
 // --- Scroll To Hash / Top Component ---  
@@ -187,6 +188,7 @@ function App() {
             <Route path="credit-history" element={<CreditHistory />} />
             <Route path="orders" element={<Orders />} />
             <Route path="tracking" element={<DeliveryTracking />} />
+            <Route path="invoices" element={<Invoices />} />
             <Route path="reports" element={<Reports />} />
             <Route path="support" element={<SupportCenter />} />
             <Route path="profile" element={<Profile />} />
