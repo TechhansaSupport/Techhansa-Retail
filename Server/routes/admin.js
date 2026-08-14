@@ -240,10 +240,26 @@ router.patch('/orders/:id/status', async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    );
+    ).populate('quotationReference');
+    
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
+
+    if (order.quotationReference) {
+      if (status === 'Confirmed') {
+        await Quotation.findByIdAndUpdate(order.quotationReference._id, { status: 'Approved' });
+        if (order.quotationReference.rfpReference) {
+          await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, { status: 'Approved' });
+        }
+      } else if (status === 'Declined') {
+        await Quotation.findByIdAndUpdate(order.quotationReference._id, { status: 'Rejected' });
+        if (order.quotationReference.rfpReference) {
+          await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, { status: 'Rejected' });
+        }
+      }
+    }
+
     res.json(order);
   } catch (error) {
     console.error('Error updating order status:', error);
