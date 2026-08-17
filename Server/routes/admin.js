@@ -225,9 +225,9 @@ router.get('/orders', async (req, res) => {
       ...pr,
       paymentStatus: (pr.status === 'PENDING' || pr.status === 'PAYMENT_VERIFICATION') ? 'Pending Verification' : 'Verified',
       status: pr.status === 'PENDING' ? 'Pending' :
-              pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
-              pr.status === 'APPROVED' ? 'Processing' : 
-              pr.status === 'DISPATCHED' ? 'Dispatched' :
+        pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
+          pr.status === 'APPROVED' ? 'Processing' :
+            pr.status === 'DISPATCHED' ? 'Dispatched' :
               pr.status === 'DELIVERED' ? 'Delivered' : pr.status
     }));
 
@@ -305,21 +305,21 @@ router.get('/procurement-requests/:id', async (req, res) => {
   try {
     const request = await ProcurementRequest.findById(req.params.id).lean();
     if (!request) return res.status(404).json({ message: 'Procurement Request not found' });
-    
+
     // Map fields for frontend modal
     request.totalAmount = request.total;
-    
+
     // Format status nicely for UI
     if (request.status === 'PAYMENT_VERIFICATION') {
-       request.status = 'Payment Verification';
+      request.status = 'Payment Verification';
     } else if (request.status === 'PENDING') {
-       request.status = 'Pending';
+      request.status = 'Pending';
     } else if (request.status === 'APPROVED') {
-       request.status = 'Processing';
+      request.status = 'Processing';
     } else if (request.status === 'DISPATCHED') {
-       request.status = 'Dispatched';
+      request.status = 'Dispatched';
     } else if (request.status === 'DELIVERED') {
-       request.status = 'Delivered';
+      request.status = 'Delivered';
     }
 
     // Fetch related invoice for payment details
@@ -327,10 +327,10 @@ router.get('/procurement-requests/:id', async (req, res) => {
     if (invoice) {
       request.invoiceNo = invoice.invoiceNo;
       if (invoice.paymentDetails) {
-         request.paymentMethod = invoice.paymentDetails.method;
-         request.paymentStatus = invoice.status; // e.g., 'Payment Verification', 'Paid'
-         request.utr = invoice.paymentDetails.utr;
-         request.receipt = invoice.paymentDetails.receipt;
+        request.paymentMethod = invoice.paymentDetails.method;
+        request.paymentStatus = invoice.status; // e.g., 'Payment Verification', 'Paid'
+        request.utr = invoice.paymentDetails.utr;
+        request.receipt = invoice.paymentDetails.receipt;
       }
     }
 
@@ -397,7 +397,7 @@ router.post('/procurement-requests/:id/confirm-payment', async (req, res) => {
 
     const invoice = await B2BInvoice.findOne({ requestId: request.requestId });
     if (!invoice) return res.status(404).json({ message: 'B2B Invoice not found' });
-    
+
     // Update statuses
     request.status = 'DISPATCHED';
     await request.save();

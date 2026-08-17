@@ -396,30 +396,10 @@ router.post('/:storeId/requests', async (req, res) => {
     }
     const requestId = `REQ-${String(nextNum).padStart(3, '0')}`;
     
-    // Credit Limit Logic
-    const profile = await StoreProfile.findOne({ storeId });
-    if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
-    
-    const availableCredit = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
-    if (availableCredit < totalAmount) {
-      return res.status(400).json({ success: false, message: 'Insufficient Available Credit' });
-    }
-    
-    // Reserve credit
-    profile.reservedCredit = (profile.reservedCredit || 0) + totalAmount;
-    await profile.save();
-    
-    const newBalance = profile.totalCredit - profile.usedCredit - profile.reservedCredit;
-    
-    // Log reservation transaction
-    const txn = new WalletTransaction({
-      storeId,
-      txnId: `TXN-${Date.now()}`,
-      type: 'Reserved',
-      amount: totalAmount,
-      closingBalance: newBalance
-    });
-    await txn.save();
+    // Removed credit limitation check here.
+    // Procurement requests should NOT be blocked by credit limits because:
+    // 1. The Admin manually sets the final B2BInvoice amount.
+    // 2. The Franchise can opt to pay via Advance Payment (NEFT/UPI) at checkout.
 
     const newRequest = new ProcurementRequest({
       storeId,
