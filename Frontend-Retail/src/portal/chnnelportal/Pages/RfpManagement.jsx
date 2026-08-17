@@ -255,6 +255,10 @@ export default function RfpManagement() {
                     <span className="text-slate-700">{rfp.products ? rfp.products.reduce((acc, p) => acc + (p.quantity || 0), 0) : 0}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
+                    <span className="text-slate-400 font-medium">Est. Amount:</span>
+                    <span className="text-slate-700 font-semibold">₹{rfp.estimatedTotal?.toLocaleString() || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
                     <span className="text-slate-400 font-medium">Created:</span>
                     <span className="text-slate-700">{new Date(rfp.createdAt).toLocaleDateString()}</span>

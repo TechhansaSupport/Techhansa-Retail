@@ -162,6 +162,7 @@ const StoreProfile = require('../models/StoreProfile');
 const WalletTransaction = require('../models/WalletTransaction');
 const B2BInvoice = require('../models/B2BInvoice');
 const TechhansaCatalog = require('../models/TechhansaCatalog');
+const GlobalProduct = require('../models/GlobalProduct');
 const User = require('../models/User');
 
 // --- NEW API ENDPOINTS FOR FRANCHISE PORTAL ---
@@ -341,7 +342,7 @@ router.get('/:storeId/requests', async (req, res) => {
 // 9. Create Procurement Request
 router.post('/:storeId/requests', async (req, res) => {
   try {
-    const { items, total, date } = req.body;
+    const { items, totalAmount, date } = req.body;
     const storeId = req.params.storeId;
     
     // Auto-increment logic
@@ -372,12 +373,12 @@ router.post('/:storeId/requests', async (req, res) => {
     if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
     
     const availableCredit = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
-    if (availableCredit < total) {
+    if (availableCredit < totalAmount) {
       return res.status(400).json({ success: false, message: 'Insufficient Available Credit' });
     }
     
     // Reserve credit
-    profile.reservedCredit = (profile.reservedCredit || 0) + total;
+    profile.reservedCredit = (profile.reservedCredit || 0) + totalAmount;
     await profile.save();
     
     const newBalance = profile.totalCredit - profile.usedCredit - profile.reservedCredit;
@@ -387,7 +388,7 @@ router.post('/:storeId/requests', async (req, res) => {
       storeId,
       txnId: `TXN-${Date.now()}`,
       type: 'Reserved',
-      amount: total,
+      amount: totalAmount,
       closingBalance: newBalance
     });
     await txn.save();
@@ -397,7 +398,8 @@ router.post('/:storeId/requests', async (req, res) => {
       requestId,
       date,
       items,
-      total
+      totalAmount,
+      total: totalAmount // keeping total for backward compatibility if needed
     });
     
     await newRequest.save();
@@ -408,10 +410,10 @@ router.post('/:storeId/requests', async (req, res) => {
   }
 });
 
-// 7. Get Techhansa Catalog
+// 7. Get Techhansa Catalog (now from GlobalProduct)
 router.get('/catalog/all', async (req, res) => {
   try {
-    const catalog = await TechhansaCatalog.find({});
+    const catalog = await GlobalProduct.find({});
     res.json({ success: true, data: catalog });
   } catch (error) {
     console.error('Error fetching catalog:', error);

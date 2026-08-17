@@ -78,6 +78,7 @@ router.post('/rfp', async (req, res) => {
         quotationReference: newQuotation._id,
         expectedDelivery: newRFP.expectedDeliveryDate,
         status: 'Pending',
+        totalAmount: req.body.estimatedTotal || 0,
         userId: newRFP.userId
       });
       await newOrder.save();
@@ -184,6 +185,7 @@ router.put('/rfp/:id', async (req, res) => {
           quotationReference: newQuotation._id,
           expectedDelivery: updatedRFP.expectedDeliveryDate,
           status: 'Pending',
+          totalAmount: req.body.estimatedTotal || updatedRFP.estimatedTotal || 0,
           userId: updatedRFP.userId
         });
         await newOrder.save();
