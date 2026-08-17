@@ -140,11 +140,12 @@ export function FranchiseProvider({ children }) {
       const res = await axios.post(`http://localhost:5000/api/franchise/${storeId}/requests`, payload);
       if (res.data.success) {
         setOrders(prev => [res.data.data, ...prev]);
-        return true;
+        return { success: true };
       }
+      return { success: false, message: 'Unknown error' };
     } catch (error) {
       console.error("Failed to submit order request", error);
-      return false;
+      return { success: false, message: error.response?.data?.message || 'Failed to submit order request' };
     }
   };
 

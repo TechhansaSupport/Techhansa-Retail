@@ -95,9 +95,9 @@ export default function Procurement() {
     }
     
     // Add to submitted orders via context
-    const success = await submitOrderRequest(orderItems);
+    const result = await submitOrderRequest(orderItems);
 
-    if (success) {
+    if (result.success) {
       toast.success("Order request sent to Techhansa Admin for verification.");
       setIsModalOpen(false);
       setOrderItems([]);
@@ -106,7 +106,7 @@ export default function Procurement() {
       setSelectedBrand('');
       setSelectedModel('');
     } else {
-      toast.error("Failed to submit order request. Please try again.");
+      toast.error(result.message || "Failed to submit order request. Please try again.");
     }
   };
 

@@ -429,6 +429,26 @@ router.post('/procurement-requests/:id/confirm-payment', async (req, res) => {
   }
 });
 
+
+// PATCH /api/admin/procurement-requests/:id/status
+router.patch('/procurement-requests/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const request = await ProcurementRequest.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!request) {
+      return res.status(404).json({ message: 'Procurement request not found' });
+    }
+    res.json(request);
+  } catch (error) {
+    console.error('Error updating procurement request status:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // POST /api/admin/rfps/:id/approve
 router.post('/rfps/:id/approve', async (req, res) => {
   try {

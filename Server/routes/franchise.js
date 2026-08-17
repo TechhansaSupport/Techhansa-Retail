@@ -435,7 +435,7 @@ router.post('/:storeId/requests', async (req, res) => {
     res.status(201).json({ success: true, data: newRequest });
   } catch (error) {
     console.error('Error creating procurement request:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message, stack: error.stack });
   }
 });
 
