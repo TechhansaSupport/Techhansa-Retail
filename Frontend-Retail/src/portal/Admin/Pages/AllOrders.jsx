@@ -74,9 +74,22 @@ export default function AllOrders() {
     }
   };
 
+  const handleConfirmPayment = async (orderId) => {
+    try {
+      await axios.post(`/api/admin/procurement-requests/${orderId}/confirm-payment`);
+      toast.success('Payment confirmed successfully!');
+      setIsModalOpen(false);
+      fetchOrders();
+    } catch (error) {
+      console.error('Failed to confirm payment:', error);
+      toast.error(error.response?.data?.message || 'Failed to confirm payment');
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Pending': return 'bg-amber-100 text-amber-700';
+      case 'Payment Verification': return 'bg-orange-100 text-orange-700';
       case 'Confirmed': return 'bg-blue-100 text-blue-700';
       case 'Processing': return 'bg-indigo-100 text-indigo-700';
       case 'Dispatched': return 'bg-purple-100 text-purple-700';
@@ -205,7 +218,7 @@ export default function AllOrders() {
                     </td>
                     <td className="p-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        {order.status === 'Pending' && (
+                        {order.status === 'Pending' && order.orderType !== 'Franchise Procurement' && (
                           <>
                             <button
                               onClick={() => handleUpdateStatus(order._id, 'Confirmed')}
@@ -369,7 +382,7 @@ export default function AllOrders() {
               )}
 
               {/* Total Amount Footer */}
-              {selectedOrder.orderType === 'Franchise Procurement' && selectedOrder.status === 'PENDING' ? (
+              {selectedOrder.orderType === 'Franchise Procurement' && (selectedOrder.status === 'PENDING' || selectedOrder.status === 'Pending') ? (
                 <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="flex flex-col">
                     <span className="text-indigo-800 font-bold uppercase tracking-wider text-sm mb-1">Set Invoice Amount (₹)</span>
@@ -386,6 +399,30 @@ export default function AllOrders() {
                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-sm transition-colors whitespace-nowrap"
                   >
                     Generate B2B Invoice & Approve
+                  </button>
+                </div>
+              ) : selectedOrder.orderType === 'Franchise Procurement' && (selectedOrder.status === 'PAYMENT_VERIFICATION' || selectedOrder.status === 'Payment Verification') ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-amber-800 font-bold uppercase tracking-wider text-sm mb-1">Verify Advance Payment</span>
+                    <span className="text-amber-900 font-medium text-sm">Please verify the payment offline before confirming.</span>
+                    {selectedOrder.utr && (
+                      <span className="text-sm font-semibold text-amber-900 mt-1 bg-amber-100 px-2 py-1 rounded inline-block w-fit">
+                        UTR: {selectedOrder.utr}
+                      </span>
+                    )}
+                    {selectedOrder.receipt && (
+                      <a href={`#${selectedOrder.receipt}`} className="text-sm font-semibold text-indigo-600 hover:underline mt-1">
+                        View Receipt
+                      </a>
+                    )}
+                    <span className="text-2xl font-black text-amber-900 mt-2">₹{selectedOrder.totalAmount?.toLocaleString()}</span>
+                  </div>
+                  <button 
+                    onClick={() => handleConfirmPayment(selectedOrder._id)}
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl font-bold shadow-sm transition-colors whitespace-nowrap"
+                  >
+                    Confirm Payment Received
                   </button>
                 </div>
               ) : (
