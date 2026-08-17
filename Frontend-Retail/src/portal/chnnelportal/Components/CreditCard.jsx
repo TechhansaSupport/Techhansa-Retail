@@ -11,8 +11,7 @@ export default function CreditCard() {
 
   const total = user.totalCredit || 0;
   const used = user.usedCredit || 0;
-  const reserved = user.reservedCredit || 0;
-  const available = total - used - reserved;
+  const available = total - used;
 
   const percentage = total > 0 ? (available / total) * 100 : 0;
   
@@ -72,9 +71,6 @@ export default function CreditCard() {
             {used > 0 && (
               <div className={`${barColor} h-2.5`} style={{ width: `${(used / total) * 100}%` }} title="Used Credit"></div>
             )}
-            {reserved > 0 && (
-              <div className="bg-blue-300 h-2.5" style={{ width: `${(reserved / total) * 100}%` }} title="Reserved for pending orders"></div>
-            )}
           </div>
         </div>
 
@@ -84,8 +80,8 @@ export default function CreditCard() {
             <div className="font-semibold text-gray-800">{formatCurrency(total)}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-500 mb-1">Used & Reserved</div>
-            <div className="font-semibold text-gray-800">{formatCurrency(used + reserved)}</div>
+            <div className="text-xs text-gray-500 mb-1">Used Credit</div>
+            <div className="font-semibold text-gray-800">{formatCurrency(used)}</div>
           </div>
         </div>
       </div>

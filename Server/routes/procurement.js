@@ -21,16 +21,17 @@ router.get('/dashboard-stats', async (req, res) => {
     }
     const filter = { userId };
 
-    const pendingRFPs = await RFP.countDocuments({ ...filter, status: { $in: ['Draft', 'Submitted', 'Under Review'] } });
-    const approvedOrders = await Order.countDocuments({ ...filter, status: 'Confirmed' });
+    // Include 'Approved' in the active RFP count so it doesn't disappear from the dashboard until it's converted to a paid order
+    const pendingRFPs = await RFP.countDocuments({ ...filter, status: { $in: ['Draft', 'Submitted', 'Under Review', 'Approved'] } });
+    const approvedOrders = await Order.countDocuments({ ...filter, status: { $in: ['Confirmed', 'Processing'] } });
     const deliveredOrders = await Order.countDocuments({ ...filter, status: 'Delivered' });
 
-    // Calculate total spending (actual deducted + reserved credit)
+    // Calculate total spending (actual deducted credit)
     const user = await User.findOne({ userId });
-    const totalSpending = (user?.usedCredit || 0) + (user?.reservedCredit || 0);
+    const totalSpending = user?.usedCredit || 0;
 
     res.json({
-      pendingRFPs,
+      pendingRFPs, // This now represents "Active RFPs"
       approvedOrders,
       deliveredOrders,
       totalSpending
@@ -124,44 +125,61 @@ router.get('/quotations', async (req, res) => {
 // POST /quotations/:id/pay
 router.post('/quotations/:id/pay', async (req, res) => {
   try {
+    const { paymentMethod, utrNumber } = req.body;
     const quotation = await Quotation.findById(req.params.id);
     if (!quotation) {
       return res.status(404).json({ error: 'Quotation not found' });
     }
 
-    if (quotation.paymentStatus === 'Paid') {
-      return res.status(400).json({ error: 'Quotation is already paid' });
+    if (quotation.paymentStatus === 'Paid' || quotation.paymentStatus === 'Pending Verification') {
+      return res.status(400).json({ error: 'Quotation payment is already processed or pending verification' });
     }
 
-    if (quotation.storeId) {
-      // It's a Franchise, handle wallet deduction
-      const User = require('../models/User');
-      const user = await User.findOne({ storeId: quotation.storeId });
+    quotation.paymentMethod = paymentMethod;
+    if (utrNumber) quotation.utrNumber = utrNumber;
+    quotation.transactionDate = new Date();
+    
+    if (paymentMethod === 'Credit Lines') {
+      const amountToPay = quotation.amount;
+      const user = await User.findOne({ userId: quotation.userId });
+      
       if (!user) {
-        return res.status(404).json({ error: 'Franchise user not found' });
+        return res.status(404).json({ error: 'User account not found for credit deduction' });
       }
-      if (user.usedCredit + quotation.amount > user.totalCredit) {
-        return res.status(400).json({ error: 'Insufficient credit limit' });
+      
+      const availableCredit = user.totalCredit - user.usedCredit;
+      
+      if (availableCredit < amountToPay) {
+        return res.status(400).json({ error: `Insufficient credit limit. Available: ₹${availableCredit.toLocaleString('en-IN')}` });
       }
-      user.usedCredit += quotation.amount;
+
+      // Deduct the credit
+      user.usedCredit += amountToPay;
       await user.save();
-    }
 
-    quotation.paymentStatus = 'Paid';
-    await quotation.save();
-
-    // Update parent order/PR
-    if (quotation.procurementReference) {
-      const ProcurementRequest = require('../models/ProcurementRequest');
-      await ProcurementRequest.findByIdAndUpdate(quotation.procurementReference, { status: 'Paid' });
+      // Log the transaction
+      const transaction = new CreditTransaction({
+        userId: user.userId,
+        amount: amountToPay,
+        type: 'Deducted',
+        description: `Payment for Quotation ${quotation.quotationNo}`,
+        referenceId: quotation._id.toString()
+      });
+      await transaction.save();
+      
+      quotation.paymentStatus = 'Paid';
+      // Automatically confirm the order since payment is cleared
+      await Order.findOneAndUpdate(
+        { quotationReference: quotation._id },
+        { status: 'Confirmed', totalAmount: quotation.amount }
+      );
+    } else {
+      quotation.paymentStatus = 'Pending Verification';
     }
     
-    if (quotation.rfpReference) {
-      const Order = require('../models/Order');
-      await Order.findOneAndUpdate({ quotationReference: quotation._id }, { status: 'Paid' });
-    }
+    await quotation.save();
 
-    res.json({ message: 'Payment successful', quotation });
+    res.json({ message: 'Payment submitted successfully', quotation });
   } catch (error) {
     console.error('Error processing quotation payment:', error);
     res.status(500).json({ error: 'Server error' });
@@ -219,8 +237,8 @@ router.put('/rfp/:id', async (req, res) => {
         const newQuotation = new Quotation({
           quotationNo: `QT-${updatedRFP.rfpId}`,
           rfpReference: updatedRFP._id,
-          vendor: 'TBD',
-          amount: 0,
+          vendor: 'Techhansa Retail',
+          amount: updatedRFP.estimatedTotal || 0,
           validUntil: updatedRFP.expectedDeliveryDate,
           status: 'Pending',
           userId: updatedRFP.userId
@@ -402,23 +420,22 @@ router.post('/orders', async (req, res) => {
       const user = await User.findOne({ userId });
       if (!user) return res.status(404).json({ error: 'User not found' });
 
-      const availableCredit = (user.totalCredit || 0) - (user.usedCredit || 0) - (user.reservedCredit || 0);
+      const availableCredit = (user.totalCredit || 0) - (user.usedCredit || 0);
       if (availableCredit < totalAmount) {
-        return res.status(400).json({ error: 'Insufficient Credit Limit' });
+        return res.status(400).json({ error: 'Insufficient credit limit.' });
       }
 
-      // Reserve the credit
-      user.reservedCredit = (user.reservedCredit || 0) + totalAmount;
+      // Immediately deduct it since we're creating an order checkout
+      user.usedCredit = (user.usedCredit || 0) + totalAmount;
       await user.save();
-      paymentStatus = 'Reserved';
+      paymentStatus = 'Paid';
 
-      // Record transaction
+      // Log reservation as deduction
       const transaction = new CreditTransaction({
-        userId,
-        type: 'Reserved',
+        userId: user.userId,
         amount: totalAmount,
-        referenceId: orderNumber,
-        description: `Reserved credit for Order ${orderNumber}`
+        type: 'Deducted',
+        description: `Paid credit for Order ${orderNumber}`,
       });
       await transaction.save();
 
