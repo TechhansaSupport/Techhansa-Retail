@@ -95,9 +95,9 @@ export default function Procurement() {
     }
     
     // Add to submitted orders via context
-    const success = await submitOrderRequest(orderItems);
+    const result = await submitOrderRequest(orderItems);
 
-    if (success) {
+    if (result.success) {
       toast.success("Order request sent to Techhansa Admin for verification.");
       setIsModalOpen(false);
       setOrderItems([]);
@@ -106,7 +106,7 @@ export default function Procurement() {
       setSelectedBrand('');
       setSelectedModel('');
     } else {
-      toast.error("Failed to submit order request. Please try again.");
+      toast.error(result.message || "Failed to submit order request. Please try again.");
     }
   };
 
@@ -181,7 +181,7 @@ export default function Procurement() {
                               </td>
                               <td className="py-3 text-slate-600">{item.brand}</td>
                               <td className="py-3 text-sm text-slate-500">
-                                {Object.keys(item.specs).length > 0 ? (
+                                {item.specs && Object.keys(item.specs).length > 0 ? (
                                   Object.entries(item.specs).map(([key, val]) => (
                                     val ? <span key={key} className="block"><span className="font-medium text-slate-600 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {val}</span> : null
                                   ))

@@ -49,9 +49,21 @@ export default function AllOrders() {
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      await axios.patch(`/api/admin/orders/${orderId}/status`, { status: newStatus });
+      const targetOrder = orders.find(o => o._id === orderId);
+      if (targetOrder && targetOrder.orderType === 'Franchise Procurement') {
+        if (newStatus === 'Declined') {
+          // Franchise orders decline endpoint or update status
+          await axios.patch(`/api/admin/procurement-requests/${orderId}/status`, { status: 'DECLINED' });
+        }
+      } else {
+        await axios.patch(`/api/admin/orders/${orderId}/status`, { status: newStatus });
+      }
       toast.success(`Order ${newStatus.toLowerCase()} successfully`);
-      setOrders(orders.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
+      
+      // Update local state handling different string cases
+      const mappedStatus = (targetOrder && targetOrder.orderType === 'Franchise Procurement' && newStatus === 'Declined') ? 'Declined' : newStatus;
+      
+      setOrders(orders.map(o => o._id === orderId ? { ...o, status: mappedStatus } : o));
     } catch (error) {
       console.error('Failed to update order status:', error);
       toast.error('Failed to update order status');
@@ -233,7 +245,7 @@ export default function AllOrders() {
                     </td>
                     <td className="p-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        {order.status === 'Pending' && order.orderType !== 'Franchise Procurement' && (
+                        {order.status === 'Pending' && (
                           <>
                             <button
                               onClick={() => handleViewOrder(order._id, order.orderType)}

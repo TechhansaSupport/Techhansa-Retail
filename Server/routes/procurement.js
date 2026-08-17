@@ -6,6 +6,20 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 const CompanySettings = require('../models/CompanySettings');
 const CreditTransaction = require('../models/CreditTransaction');
+const Invoice = require('../models/Invoice');
+
+// GET Invoices
+router.get('/invoices', async (req, res) => {
+  try {
+    if (!req.query.userId) return res.json([]);
+    const invoices = await Invoice.find({ userId: req.query.userId }).sort({ createdAt: -1 });
+    res.json(invoices);
+  } catch (error) {
+    console.error('Error fetching invoices:', error);
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
 
 // GET Dashboard Stats
 router.get('/dashboard-stats', async (req, res) => {

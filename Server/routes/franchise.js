@@ -285,7 +285,7 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
     }
     await itemToApprove.save();
 
-    res.json({ success: true, invoice, newBalance, transaction: txn });
+    res.json({ success: true, invoice });
   } catch (error) {
     console.error('Error approving b2b invoice:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -434,7 +434,7 @@ router.post('/:storeId/requests', async (req, res) => {
     res.status(201).json({ success: true, data: newRequest });
   } catch (error) {
     console.error('Error creating procurement request:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message, stack: error.stack });
   }
 });
 
