@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
 import { Store, MapPin, User, Clock, Phone, Mail, FileText, Users, Edit3 } from 'lucide-react';
@@ -6,7 +6,21 @@ import { Store, MapPin, User, Clock, Phone, Mail, FileText, Users, Edit3 } from 
 export default function StoreProfile() {
   const { storeProfileData, updateStoreProfile } = useFranchise();
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ ...storeProfileData });
+  const [formData, setFormData] = useState(storeProfileData || {});
+
+  useEffect(() => {
+    if (storeProfileData) {
+      setFormData(storeProfileData);
+    }
+  }, [storeProfileData]);
+
+  if (!storeProfileData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   const handleSave = () => {
     updateStoreProfile(formData);
