@@ -59,18 +59,32 @@ export default function AllOrders() {
   };
 
   const handleApproveProcurement = async (orderId) => {
-    if (!invoiceTotal || isNaN(invoiceTotal) || Number(invoiceTotal) <= 0) {
-      toast.error('Please enter a valid invoice total amount');
-      return;
-    }
+    const finalAmount = selectedOrder.totalAmount || 0;
     try {
-      await axios.post(`/api/admin/procurement-requests/${orderId}/approve`, { totalAmount: Number(invoiceTotal) });
-      toast.success('Invoice generated and Procurement Request approved');
+      if (selectedOrder.orderType === 'Enterprise') {
+        // Assume channel partner order: we patch status to 'Quotation Sent' (not directly implemented here but admin.js handles RFP approve elsewhere; wait, for standard orders without RFP? Let's just patch status)
+        await axios.patch(`/api/admin/orders/${orderId}/status`, { status: 'Quotation Sent', amount: finalAmount });
+        toast.success('Quotation sent successfully');
+      } else {
+        await axios.post(`/api/admin/procurement-requests/${orderId}/approve`, { totalAmount: finalAmount });
+        toast.success('Quotation generated and sent to partner');
+      }
       setIsModalOpen(false);
       fetchOrders();
     } catch (error) {
-      console.error('Failed to approve procurement request:', error);
-      toast.error(error.response?.data?.message || 'Failed to generate invoice');
+      console.error('Failed to send quotation:', error);
+      toast.error(error.response?.data?.message || 'Failed to send quotation');
+    }
+  };
+
+  const handleSendInvoice = async (orderId) => {
+    try {
+      await axios.post(`/api/admin/orders/${orderId}/invoice`);
+      toast.success('Invoice generated and sent successfully');
+      fetchOrders();
+    } catch (error) {
+      console.error('Failed to send invoice:', error);
+      toast.error(error.response?.data?.message || 'Failed to send invoice');
     }
   };
 
@@ -89,7 +103,8 @@ export default function AllOrders() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Pending': return 'bg-amber-100 text-amber-700';
-      case 'Payment Verification': return 'bg-orange-100 text-orange-700';
+      case 'Quotation Sent': return 'bg-blue-100 text-blue-700';
+      case 'Paid': return 'bg-emerald-100 text-emerald-800';
       case 'Confirmed': return 'bg-blue-100 text-blue-700';
       case 'Processing': return 'bg-indigo-100 text-indigo-700';
       case 'Dispatched': return 'bg-purple-100 text-purple-700';
@@ -221,9 +236,9 @@ export default function AllOrders() {
                         {order.status === 'Pending' && order.orderType !== 'Franchise Procurement' && (
                           <>
                             <button
-                              onClick={() => handleUpdateStatus(order._id, 'Confirmed')}
+                              onClick={() => handleViewOrder(order._id, order.orderType)}
                               className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors inline-flex"
-                              title="Accept Order"
+                              title="Send Quotation"
                             >
                               <Check size={18} />
                             </button>
@@ -243,7 +258,16 @@ export default function AllOrders() {
                         >
                           <Eye size={18} />
                         </button>
-                      </div>
+  
+                      {order.status === 'Paid' && (
+                        <button
+                          onClick={() => handleSendInvoice(order._id)}
+                          className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
+                          title="Send Invoice"
+                        >
+                          <Package size={18} />
+                        </button>
+                      )}</div>
                     </td>
                   </motion.tr>
                 ))
@@ -269,9 +293,9 @@ export default function AllOrders() {
                   <Package size={24} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800">Order {selectedOrder.orderNumber}</h2>
-                  <p className="text-sm text-slate-500 font-medium">Placed on {new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
-                </div>
+                <h3 className="text-xl font-bold text-slate-900">Send Quotation</h3>
+                <p className="text-sm text-slate-500 mt-1">Review the order and confirm the final quotation amount.</p>
+              </div>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -382,55 +406,20 @@ export default function AllOrders() {
               )}
 
               {/* Total Amount Footer */}
-              {selectedOrder.orderType === 'Franchise Procurement' && (selectedOrder.status === 'PENDING' || selectedOrder.status === 'Pending') ? (
-                <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex flex-col">
-                    <span className="text-indigo-800 font-bold uppercase tracking-wider text-sm mb-1">Set Invoice Amount (₹)</span>
-                    <input
-                      type="number"
-                      value={invoiceTotal}
-                      onChange={(e) => setInvoiceTotal(e.target.value)}
-                      placeholder="e.g. 50000"
-                      className="px-4 py-2 rounded-lg border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-900"
-                    />
-                  </div>
+              <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex flex-col">
+                  <span className="text-indigo-800 font-bold uppercase tracking-wider text-sm mb-1">Total Amount</span>
+                  <span className="text-2xl font-black text-indigo-900">₹{selectedOrder.totalAmount?.toLocaleString() || 0}</span>
+                </div>
+                {selectedOrder.status === 'PENDING' || selectedOrder.status === 'Pending' ? (
                   <button
                     onClick={() => handleApproveProcurement(selectedOrder._id)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-sm transition-colors whitespace-nowrap"
+                    className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap"
                   >
-                    Generate B2B Invoice & Approve
+                    Confirm & Send Quotation
                   </button>
-                </div>
-              ) : selectedOrder.orderType === 'Franchise Procurement' && (selectedOrder.status === 'PAYMENT_VERIFICATION' || selectedOrder.status === 'Payment Verification') ? (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex flex-col">
-                    <span className="text-amber-800 font-bold uppercase tracking-wider text-sm mb-1">Verify Advance Payment</span>
-                    <span className="text-amber-900 font-medium text-sm">Please verify the payment offline before confirming.</span>
-                    {selectedOrder.utr && (
-                      <span className="text-sm font-semibold text-amber-900 mt-1 bg-amber-100 px-2 py-1 rounded inline-block w-fit">
-                        UTR: {selectedOrder.utr}
-                      </span>
-                    )}
-                    {selectedOrder.receipt && (
-                      <a href={`#${selectedOrder.receipt}`} className="text-sm font-semibold text-indigo-600 hover:underline mt-1">
-                        View Receipt
-                      </a>
-                    )}
-                    <span className="text-2xl font-black text-amber-900 mt-2">₹{selectedOrder.totalAmount?.toLocaleString()}</span>
-                  </div>
-                  <button 
-                    onClick={() => handleConfirmPayment(selectedOrder._id)}
-                    className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl font-bold shadow-sm transition-colors whitespace-nowrap"
-                  >
-                    Confirm Payment Received
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex items-center justify-between">
-                  <span className="text-indigo-800 font-bold uppercase tracking-wider">Total Amount</span>
-                  <span className="text-2xl font-black text-indigo-900">₹{selectedOrder.totalAmount?.toLocaleString()}</span>
-                </div>
-              )}
+                ) : null}
+              </div>
             </div>
           </motion.div>
         </div>

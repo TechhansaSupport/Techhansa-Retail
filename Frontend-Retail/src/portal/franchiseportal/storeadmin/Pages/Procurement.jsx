@@ -261,10 +261,21 @@ export default function Procurement() {
                   <td className="px-4 py-3 text-center">
                     {inv.status === 'Pending' && (
                       <button 
-                        onClick={() => navigate('/franchise/checkout', { state: { invoice: inv } })}
-                        className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100"
+                        onClick={async () => {
+                          if (inv.amount > metrics.walletBalance) {
+                            toast.error(`Cannot approve. Amount (₹${inv.amount}) exceeds available credit (₹${metrics.walletBalance}).`);
+                            return;
+                          }
+                          try {
+                            await approveB2BInvoice(inv._id);
+                            toast.success(`Payment for ${inv.invoiceNo || inv.id} successful!`);
+                          } catch (err) {
+                            toast.error(`Failed to process payment for ${inv.invoiceNo || inv.id}`);
+                          }
+                        }}
+                        className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"
                       >
-                        Proceed to Checkout
+                        {inv.type === 'Quotation' ? 'Pay Quotation' : 'Pay Invoice'}
                       </button>
                     )}
                   </td>

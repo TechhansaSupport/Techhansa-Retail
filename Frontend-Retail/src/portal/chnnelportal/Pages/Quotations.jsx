@@ -52,15 +52,34 @@ export default function Quotations() {
     }
   };
 
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [utrNumber, setUtrNumber] = useState('');
   const [isPaying, setIsPaying] = useState(false);
 
-  const handlePayment = async () => {
-    if (!selectedQuotation) return;
+  const handlePaymentClick = () => {
+    setPaymentMethod('');
+    setUtrNumber('');
+    setIsPaymentModalOpen(true);
+  };
+
+  const submitPayment = async () => {
+    if (!paymentMethod) {
+      toast.error('Please select a payment method');
+      return;
+    }
+    if ((paymentMethod === 'NEFT' || paymentMethod === 'UPI') && !utrNumber.trim()) {
+      toast.error('Please enter the UTR / Reference Number');
+      return;
+    }
+
     setIsPaying(true);
     try {
-      await axios.post(`/api/procurement/quotations/${selectedQuotation._id}/pay`);
-      toast.success('Payment successful!');
-      setSelectedQuotation({ ...selectedQuotation, paymentStatus: 'Paid' });
+      const payload = { paymentMethod, utrNumber: utrNumber.trim() };
+      const res = await axios.post(`/api/procurement/quotations/${selectedQuotation._id}/pay`, payload);
+      toast.success(res.data.message || 'Payment submitted successfully!');
+      setSelectedQuotation({ ...selectedQuotation, paymentStatus: res.data.quotation.paymentStatus });
+      setIsPaymentModalOpen(false);
       fetchQuotations();
     } catch (err) {
       console.error(err);
@@ -71,23 +90,34 @@ export default function Quotations() {
   };
 
   const filteredQs = quotations.filter(q => {
-    if (q.status === 'Rejected') return false;
+    // Hide quotations that are Rejected or still Pending admin approval
+    if (q.status === 'Rejected' || q.status === 'Pending') return false;
 
     const qtId = q.quotationNo || q.quotationId || '';
     const vendor = q.vendorName || q.vendor || '';
     return qtId.toLowerCase().includes(searchQuery.toLowerCase()) || vendor.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const selectedRfp = selectedQuotation ? rfps.find(r => r.rfpId === selectedQuotation.quotationNo?.replace('QT-', '')) : null;
-  const quotationItems = (selectedQuotation?.items?.length > 0) ? selectedQuotation.items : (selectedRfp?.products || []).map(p => {
-    // If admin approved and items array is empty, we don't know the unit price, we only know the total amount.
-    // For display purposes, we'll just show the quantity. We'll handle total amount separately.
-    return { ...p };
-  });
+  const displayTotalAmount = selectedQuotation?.amount || selectedQuotation?.rfpReference?.estimatedTotal || selectedQuotation?.totalAmount || 0;
 
-  const displayTotalAmount = (selectedQuotation?.status === 'Approved' && (!selectedQuotation.items || selectedQuotation.items.length === 0))
-    ? selectedQuotation.amount
-    : quotationItems.reduce((sum, item) => sum + (item.totalAmount || ((item.quantity || 1) * (item.unitPrice || 0) * 1.18)), 0);
+  const selectedRfp = selectedQuotation?.rfpReference || rfps.find(r => r.rfpId === selectedQuotation?.quotationNo?.replace('QT-', ''));
+  const rawItems = (selectedQuotation?.items?.length > 0) ? selectedQuotation.items : (selectedRfp?.products || []);
+
+  const quotationItems = rawItems.map(p => {
+    let unitPrice = p.unitPrice ?? p.price;
+    let totalAmount = p.totalAmount;
+    
+    if (unitPrice === undefined || unitPrice === 0 || unitPrice == null) {
+      if (rawItems.length === 1 && displayTotalAmount > 0) {
+        totalAmount = displayTotalAmount;
+        unitPrice = totalAmount / (p.quantity || 1);
+      }
+    } else if (totalAmount === undefined || totalAmount == null) {
+      totalAmount = unitPrice * (p.quantity || 1);
+    }
+    
+    return { ...p, unitPrice, totalAmount };
+  });
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
@@ -143,11 +173,11 @@ export default function Quotations() {
                   </button>
                 </div>
               </div>
-              <h3 className="text-base font-semibold text-slate-900 mb-2">{qt.vendorName || qt.vendor}</h3>
+              <h3 className="text-base font-semibold text-slate-900 mb-2">{qt.vendorName || (qt.vendor === 'TBD' ? 'Techhansa Retail' : qt.vendor)}</h3>
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500">
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Value:</span>
-                  <span className="text-slate-700 font-semibold text-emerald-600">₹{qt.amount?.toLocaleString('en-IN') || qt.totalAmount?.toLocaleString('en-IN') || 0}</span>
+                  <span className="text-slate-700 font-semibold text-emerald-600">₹{(qt.amount || qt.rfpReference?.estimatedTotal || qt.totalAmount || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Valid Until:</span>
@@ -193,7 +223,7 @@ export default function Quotations() {
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Vendor</p>
-                  <p className="text-slate-900 font-semibold">{selectedQuotation.vendorName || selectedQuotation.vendor || 'TBD'}</p>
+                  <p className="text-slate-900 font-semibold">{selectedQuotation.vendorName || (selectedQuotation.vendor === 'TBD' ? 'Techhansa Retail' : selectedQuotation.vendor) || 'Techhansa Retail'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Total Amount</p>
@@ -261,9 +291,9 @@ export default function Quotations() {
                   Awaiting Approval
                 </button>
               )}
-              {selectedQuotation.status === 'Approved' && selectedQuotation.paymentStatus !== 'Paid' && (
+              {selectedQuotation.status === 'Approved' && selectedQuotation.paymentStatus === 'Pending' && (
                 <button
-                  onClick={handlePayment}
+                  onClick={handlePaymentClick}
                   disabled={isPaying}
                   className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
                 >
@@ -278,6 +308,105 @@ export default function Quotations() {
                   Paid
                 </button>
               )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Payment Selection Modal */}
+      {isPaymentModalOpen && selectedQuotation && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Make Payment</h2>
+                <p className="text-sm text-slate-500 mt-1">Amount to pay: <strong className="text-emerald-600">₹{displayTotalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</strong></p>
+              </div>
+              <button onClick={() => setIsPaymentModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-3">Select Payment Method</label>
+                <div className="grid grid-cols-1 gap-3">
+                  <button 
+                    onClick={() => setPaymentMethod('Credit Lines')}
+                    className={`p-3 border rounded-xl text-left transition-all ${paymentMethod === 'Credit Lines' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+                  >
+                    <span className="font-semibold text-slate-800 block">Credit Lines</span>
+                    <span className="text-xs text-slate-500">Pay using your approved Techhansa credit limits</span>
+                  </button>
+                  <button 
+                    onClick={() => setPaymentMethod('NEFT')}
+                    className={`p-3 border rounded-xl text-left transition-all ${paymentMethod === 'NEFT' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+                  >
+                    <span className="font-semibold text-slate-800 block">NEFT / RTGS</span>
+                    <span className="text-xs text-slate-500">Direct bank transfer to Techhansa</span>
+                  </button>
+                  <button 
+                    onClick={() => setPaymentMethod('UPI')}
+                    className={`p-3 border rounded-xl text-left transition-all ${paymentMethod === 'UPI' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+                  >
+                    <span className="font-semibold text-slate-800 block">UPI</span>
+                    <span className="text-xs text-slate-500">Scan QR Code or enter UPI ID</span>
+                  </button>
+                </div>
+              </div>
+
+              {paymentMethod === 'UPI' && (
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                  <p className="text-sm font-medium text-slate-700 mb-2">Scan this QR Code</p>
+                  <div className="w-32 h-32 bg-white border border-slate-200 rounded-lg mx-auto flex items-center justify-center p-2 mb-2">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=techhansa@bank&pn=Techhansa&am=${displayTotalAmount}`} alt="UPI QR" className="w-full h-full object-contain" />
+                  </div>
+                  <p className="text-xs text-slate-500 font-mono">techhansa@bank</p>
+                </div>
+              )}
+
+              {paymentMethod === 'NEFT' && (
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm">
+                  <p className="text-slate-700 font-medium mb-2 border-b border-slate-200 pb-2">Techhansa Bank Details</p>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <span className="text-slate-500">Bank:</span><span className="font-semibold text-slate-900">HDFC Bank</span>
+                    <span className="text-slate-500">A/C Name:</span><span className="font-semibold text-slate-900">Techhansa Retail</span>
+                    <span className="text-slate-500">A/C No:</span><span className="font-semibold text-slate-900 font-mono text-xs">50200012345678</span>
+                    <span className="text-slate-500">IFSC:</span><span className="font-semibold text-slate-900 font-mono">HDFC0001234</span>
+                  </div>
+                </div>
+              )}
+
+              {(paymentMethod === 'NEFT' || paymentMethod === 'UPI') && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">UTR / Reference Number *</label>
+                  <input
+                    type="text"
+                    value={utrNumber}
+                    onChange={(e) => setUtrNumber(e.target.value)}
+                    placeholder="Enter the 12-digit UTR number"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 uppercase"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Required to verify your {paymentMethod} payment.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <button onClick={() => setIsPaymentModalOpen(false)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-colors">
+                Cancel
+              </button>
+              <button 
+                onClick={submitPayment} 
+                disabled={isPaying || !paymentMethod}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isPaying ? 'Processing...' : 'Submit Payment'}
+              </button>
             </div>
           </motion.div>
         </div>

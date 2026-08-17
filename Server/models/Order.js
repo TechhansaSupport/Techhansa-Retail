@@ -6,7 +6,7 @@ const OrderSchema = new mongoose.Schema({
   expectedDelivery: { type: Date, required: true },
   status: {
     type: String,
-    enum: ['Pending', 'Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered', 'Declined'],
+    enum: ['Pending', 'Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered', 'Declined', 'Quotation Sent', 'Paid'],
     default: 'Pending'
   },
   trackingInfo: {

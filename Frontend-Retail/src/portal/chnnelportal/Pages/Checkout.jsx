@@ -35,7 +35,7 @@ export default function Checkout() {
   const subtotal = totalAmount / 1.18;
   const gst = totalAmount - subtotal;
 
-  const availableCredit = (user?.totalCredit || 0) - (user?.usedCredit || 0) - (user?.reservedCredit || 0);
+  const availableCredit = (user?.totalCredit || 0) - (user?.usedCredit || 0);
   const hasEnoughCredit = availableCredit >= totalAmount;
 
   const handleSubmit = async () => {
@@ -87,7 +87,7 @@ export default function Checkout() {
       if (paymentMethod === 'Credit') {
         const updatedUser = {
           ...user,
-          reservedCredit: (user.reservedCredit || 0) + totalAmount
+          usedCredit: (user.usedCredit || 0) + totalAmount
         };
         // In real app, call a profile refresh API
         login(updatedUser, localStorage.getItem('token')); 
