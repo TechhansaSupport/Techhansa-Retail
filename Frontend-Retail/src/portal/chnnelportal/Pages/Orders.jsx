@@ -38,7 +38,7 @@ export default function Orders() {
     }
   };
 
-  const validStatuses = ['Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered', 'Rejected'];
+  const validStatuses = ['Pending', 'Confirmed', 'Processing', 'Dispatched', 'Out for Delivery', 'Delivered', 'Declined', 'Rejected'];
 
   const filteredOrders = orders.filter(o => {
     if (!validStatuses.includes(o.status)) return false;
@@ -77,11 +77,13 @@ export default function Orders() {
             className="px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg text-sm font-medium focus:outline-none focus:border-blue-500 shrink-0 bg-white"
           >
             <option value="All">All Status</option>
-            <option value="Confirmed">Confirmed</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Approved</option>
             <option value="Processing">Processing</option>
             <option value="Dispatched">Dispatched</option>
             <option value="Out for Delivery">Out for Delivery</option>
             <option value="Delivered">Delivered</option>
+            <option value="Declined">Declined</option>
           </select>
 
           <button onClick={() => exportToCSV('orders.csv', filteredOrders, [
@@ -106,8 +108,13 @@ export default function Orders() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="font-bold text-blue-600 text-sm cursor-pointer hover:underline">{order.orderNumber || order.orderId}</span>
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${order.status === 'Pending' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700'}`}>
-                    {order.status === 'Pending' ? 'Pending Admin Approval' : order.status}
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                    order.status === 'Pending' ? 'bg-amber-50 text-amber-700' : 
+                    order.status === 'Confirmed' ? 'bg-emerald-50 text-emerald-700' :
+                    order.status === 'Declined' || order.status === 'Rejected' ? 'bg-red-50 text-red-700' :
+                    'bg-blue-50 text-blue-700'
+                  }`}>
+                    {order.status === 'Pending' ? 'Pending Admin Approval' : order.status === 'Confirmed' ? 'Approved' : order.status}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

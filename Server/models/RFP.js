@@ -6,6 +6,7 @@ const RFPProductSchema = new mongoose.Schema({
   model: { type: String, required: true },
   configuration: { type: String, required: true },
   quantity: { type: Number, required: true },
+  price: { type: Number, default: 0 },
   unit: { type: String, required: true, default: 'Nos' },
   remarks: { type: String }
 });
@@ -18,6 +19,7 @@ const RFPSchema = new mongoose.Schema({
   priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
   remarks: { type: String },
   products: [RFPProductSchema],
+  estimatedTotal: { type: Number, default: 0 },
   status: {
     type: String,
     enum: ['Draft', 'Submitted', 'Under Review', 'Quotation Received', 'Approved', 'Rejected'],

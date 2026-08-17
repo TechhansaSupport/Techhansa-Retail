@@ -6,7 +6,9 @@ const requestItemSchema = new mongoose.Schema({
   brand: { type: String, required: true },
   quantity: { type: Number, required: true },
   specs: { type: mongoose.Schema.Types.Mixed, default: {} },
-  comments: { type: String, default: '' }
+  comments: { type: String, default: '' },
+  price: { type: Number, default: 0 },
+  amount: { type: Number, default: 0 }
 }, { _id: false });
 
 const procurementRequestSchema = new mongoose.Schema({
@@ -15,6 +17,7 @@ const procurementRequestSchema = new mongoose.Schema({
   date: { type: String, required: true },
   status: { type: String, required: true, default: 'PENDING' },
   items: [requestItemSchema],
+  totalAmount: { type: Number, default: 0 },
   total: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });

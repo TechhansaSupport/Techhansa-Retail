@@ -135,7 +135,7 @@ export function FranchiseProvider({ children }) {
       const payload = {
         date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
         items: orderItems,
-        total: 0 // Calculate if needed, but backend can handle or leave 0 for requests
+        totalAmount: orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)
       };
       const res = await axios.post(`http://localhost:5000/api/franchise/${storeId}/requests`, payload);
       if (res.data.success) {

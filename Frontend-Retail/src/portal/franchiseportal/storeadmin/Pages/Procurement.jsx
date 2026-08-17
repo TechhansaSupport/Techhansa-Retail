@@ -14,18 +14,43 @@ export default function Procurement() {
   const [orderItems, setOrderItems] = useState([]);
   
   const initialFormState = {
+    catalogItemId: '',
     hardwareType: '',
-    otherType: '',
     brand: '',
     quantity: 1,
     specs: {},
-    comments: ''
+    comments: '',
+    price: 0,
+    amount: 0
   };
   const [formData, setFormData] = useState(initialFormState);
 
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedModel, setSelectedModel] = useState('');
+
+  const categories = [...new Set(techhansaCatalog.map(item => item.category).filter(Boolean))];
+  const brands = [...new Set(techhansaCatalog.filter(item => !selectedCategory || item.category === selectedCategory).map(item => item.brand).filter(Boolean))];
+  const models = [...new Set(techhansaCatalog.filter(item => 
+    (!selectedCategory || item.category === selectedCategory) && 
+    (!selectedBrand || item.brand === selectedBrand)
+  ).map(item => item.model).filter(Boolean))];
+  
+  const specifications = techhansaCatalog.filter(item => 
+    (!selectedCategory || item.category === selectedCategory) && 
+    (!selectedBrand || item.brand === selectedBrand) &&
+    (!selectedModel || item.model === selectedModel)
+  );
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'quantity') {
+        updated.amount = updated.price * Number(value);
+      }
+      return updated;
+    });
   };
 
   const handleSpecChange = (e) => {
@@ -47,12 +72,15 @@ export default function Procurement() {
 
   const handleAddItem = (e) => {
     e.preventDefault();
-    if (!formData.hardwareType || !formData.brand || !formData.quantity) {
-      toast.error("Please fill in the required fields");
+    if (!formData.catalogItemId || !formData.quantity) {
+      toast.error("Please select a product and quantity");
       return;
     }
     setOrderItems(prev => [...prev, { ...formData, id: Date.now() }]);
     setFormData(initialFormState);
+    setSelectedCategory('');
+    setSelectedBrand('');
+    setSelectedModel('');
     toast.success("Item added to order list");
   };
 
@@ -74,85 +102,15 @@ export default function Procurement() {
       setIsModalOpen(false);
       setOrderItems([]);
       setFormData(initialFormState);
+      setSelectedCategory('');
+      setSelectedBrand('');
+      setSelectedModel('');
     } else {
       toast.error("Failed to submit order request. Please try again.");
     }
   };
 
   const renderDynamicSpecs = () => {
-    const { hardwareType } = formData;
-    
-    if (['Desktop', 'Laptop', 'Server'].includes(hardwareType)) {
-      return (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">Processor (CPU)</label>
-            <input type="text" name="processor" value={formData.specs.processor || ''} onChange={handleSpecChange} placeholder="e.g. Intel i7, AMD Ryzen 7" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"/>
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">RAM Size</label>
-            <input type="text" name="ram" value={formData.specs.ram || ''} onChange={handleSpecChange} placeholder="e.g. 16GB, 32GB" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"/>
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">Storage Size</label>
-            <input type="text" name="storageSize" value={formData.specs.storageSize || ''} onChange={handleSpecChange} placeholder="e.g. 512GB, 1TB" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"/>
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">Storage Type</label>
-            <select name="storageType" value={formData.specs.storageType || ''} onChange={handleSpecChange} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
-               <option value="">Select...</option>
-               <option value="SSD NVMe">SSD NVMe</option>
-               <option value="SSD SATA">SSD SATA</option>
-               <option value="HDD">HDD</option>
-            </select>
-          </div>
-        </div>
-      );
-    }
-    
-    if (hardwareType === 'Monitor') {
-       return (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">Screen Size</label>
-            <input type="text" name="screenSize" value={formData.specs.screenSize || ''} onChange={handleSpecChange} placeholder="e.g. 24 inch, 27 inch" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"/>
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">Resolution</label>
-            <input type="text" name="resolution" value={formData.specs.resolution || ''} onChange={handleSpecChange} placeholder="e.g. 1080p, 4K" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"/>
-          </div>
-        </div>
-       );
-    }
-
-    if (hardwareType === 'Mouse' || hardwareType === 'Keyboard') {
-       return (
-        <div className="space-y-1">
-          <label className="text-sm font-semibold text-slate-700">Connection Type</label>
-          <select name="connectionType" value={formData.specs.connectionType || ''} onChange={handleSpecChange} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
-             <option value="">Select...</option>
-             <option value="Wired">Wired</option>
-             <option value="Wireless (Bluetooth/USB)">Wireless (Bluetooth/USB)</option>
-          </select>
-        </div>
-       );
-    }
-
-    if (hardwareType === 'RAM') {
-      return (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">Capacity</label>
-            <input type="text" name="capacity" value={formData.specs.capacity || ''} onChange={handleSpecChange} placeholder="e.g. 8GB, 16GB" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"/>
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">Type</label>
-            <input type="text" name="type" value={formData.specs.type || ''} onChange={handleSpecChange} placeholder="e.g. DDR4, DDR5" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"/>
-          </div>
-        </div>
-       );
-    }
-    
     return null;
   }
 
@@ -331,31 +289,88 @@ export default function Procurement() {
               <div className="p-6 overflow-y-auto flex-1">
                 <form id="add-item-form" onSubmit={handleAddItem} className="space-y-5">
                   
-                  {/* Hardware Type & Quantity */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-2 space-y-1">
-                      <label className="text-sm font-semibold text-slate-700">Hardware Type</label>
+                  {/* Catalog Selection & Quantity */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-sm font-semibold text-slate-700">Category</label>
                       <select 
-                        name="hardwareType"
-                        value={formData.hardwareType}
-                        onChange={handleHardwareTypeChange}
+                        value={selectedCategory} 
+                        onChange={e => {
+                          setSelectedCategory(e.target.value);
+                          setSelectedBrand('');
+                          setSelectedModel('');
+                          setFormData(prev => ({...prev, catalogItemId: '', specs: {}, hardwareType: '', brand: '', price: 0}));
+                        }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                      >
+                        <option value="">All Categories</option>
+                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-sm font-semibold text-slate-700">Brand</label>
+                      <select 
+                        value={selectedBrand} 
+                        onChange={e => {
+                          setSelectedBrand(e.target.value);
+                          setSelectedModel('');
+                          setFormData(prev => ({...prev, catalogItemId: '', specs: {}, hardwareType: '', brand: '', price: 0}));
+                        }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                      >
+                        <option value="">All Brands</option>
+                        {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-sm font-semibold text-slate-700">Model</label>
+                      <select 
+                        value={selectedModel} 
+                        onChange={e => {
+                          setSelectedModel(e.target.value);
+                          setFormData(prev => ({...prev, catalogItemId: '', specs: {}, hardwareType: '', brand: '', price: 0}));
+                        }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                      >
+                        <option value="">All Models</option>
+                        {models.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-sm font-semibold text-slate-700">Specification (Finalize)</label>
+                      <select 
+                        name="catalogItem"
+                        value={formData.catalogItemId || ''}
+                        onChange={(e) => {
+                          const item = techhansaCatalog.find(i => i._id === e.target.value);
+                          if (item) {
+                            setFormData(prev => ({
+                              ...prev,
+                              catalogItemId: item._id,
+                              hardwareType: item.name,
+                              brand: item.brand || 'N/A',
+                              specs: { Category: item.category, Model: item.model, Specs: item.specs },
+                              price: item.sellingPrice || 0,
+                              amount: (item.sellingPrice || 0) * formData.quantity
+                            }));
+                          }
+                        }}
                         required
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
                       >
-                        <option value="" disabled>Select hardware type...</option>
-                        <option value="Desktop">Desktop</option>
-                        <option value="Laptop">Laptop</option>
-                        <option value="Server">Server</option>
-                        <option value="Monitor">Monitor</option>
-                        <option value="Mouse">Mouse</option>
-                        <option value="Keyboard">Keyboard</option>
-                        <option value="RAM">RAM</option>
-                        <option value="Storage (HDD/SSD)">Storage (HDD/SSD)</option>
-                        <option value="Networking">Networking</option>
-                        <option value="Others">Others</option>
+                        <option value="" disabled>Select Specs...</option>
+                        {specifications.map(item => (
+                          <option key={item._id} value={item._id} disabled={item.availableStock <= 0}>
+                            {item.specs ? item.specs.substring(0, 45) + (item.specs.length > 45 ? '...' : '') : item.name} {item.availableStock > 0 ? '' : '(Out of stock)'}
+                          </option>
+                        ))}
                       </select>
                     </div>
-                    <div className="space-y-1">
+                    
+                    <div className="space-y-1 col-span-2">
                       <label className="text-sm font-semibold text-slate-700">Quantity</label>
                       <input 
                         type="number"
@@ -367,39 +382,6 @@ export default function Procurement() {
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
                       />
                     </div>
-                  </div>
-
-                  {/* Other Type (Conditional) */}
-                  {formData.hardwareType === 'Others' && (
-                    <div className="space-y-1">
-                      <label className="text-sm font-semibold text-slate-700">Specify Hardware</label>
-                      <input 
-                        type="text"
-                        name="otherType"
-                        value={formData.otherType}
-                        onChange={handleInputChange}
-                        placeholder="Enter hardware type"
-                        required
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
-                      />
-                    </div>
-                  )}
-
-                  {/* Dynamic Specs section */}
-                  {renderDynamicSpecs()}
-
-                  {/* Brand / Company Name */}
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-slate-700">Company Name / Brand</label>
-                    <input 
-                      type="text"
-                      name="brand"
-                      value={formData.brand}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Dell, HP, Logitech"
-                      required
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
-                    />
                   </div>
 
                   {/* Comments / Extra Specs */}
@@ -478,6 +460,13 @@ export default function Procurement() {
                             "{item.comments}"
                           </p>
                         )}
+                        
+                        <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center">
+                          <p className="text-xs text-slate-500">Unit: ₹{item.price?.toLocaleString() || 0}</p>
+                          <p className="text-sm font-bold text-slate-800">
+                            Total: ₹{item.amount?.toLocaleString() || (item.price * item.quantity).toLocaleString()}
+                          </p>
+                        </div>
                         
                         <button 
                           onClick={() => handleRemoveItem(item.id)}

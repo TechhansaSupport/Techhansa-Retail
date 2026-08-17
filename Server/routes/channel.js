@@ -185,11 +185,19 @@ router.post('/apply', upload.single('documents'), async (req, res) => {
       error: error.message
     });
   }
-  /* POSTGRES FINALLY LOGIC COMMENTED OUT
-  finally {
-    client.release();
+});
+
+const GlobalProduct = require('../models/GlobalProduct');
+
+// Get Techhansa Catalog
+router.get('/catalog/all', async (req, res) => {
+  try {
+    const catalog = await GlobalProduct.find({});
+    res.json({ success: true, data: catalog });
+  } catch (error) {
+    console.error('Error fetching catalog:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
-  */
 });
 
 module.exports = router;

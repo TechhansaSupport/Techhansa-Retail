@@ -78,6 +78,7 @@ router.post('/rfp', async (req, res) => {
         quotationReference: newQuotation._id,
         expectedDelivery: newRFP.expectedDeliveryDate,
         status: 'Pending',
+        totalAmount: req.body.estimatedTotal || 0,
         userId: newRFP.userId
       });
       await newOrder.save();
@@ -120,6 +121,28 @@ router.get('/quotations', async (req, res) => {
   }
 });
 
+// POST /quotations/:id/pay
+router.post('/quotations/:id/pay', async (req, res) => {
+  try {
+    const quotation = await Quotation.findById(req.params.id);
+    if (!quotation) {
+      return res.status(404).json({ error: 'Quotation not found' });
+    }
+
+    if (quotation.paymentStatus === 'Paid') {
+      return res.status(400).json({ error: 'Quotation is already paid' });
+    }
+
+    quotation.paymentStatus = 'Paid';
+    await quotation.save();
+
+    res.json({ message: 'Payment successful', quotation });
+  } catch (error) {
+    console.error('Error processing quotation payment:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET all Orders
 router.get('/orders', async (req, res) => {
   try {
@@ -142,7 +165,7 @@ router.get('/orders/:orderNumber', async (req, res) => {
           path: 'rfpReference'
         }
       });
-    
+
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -184,6 +207,7 @@ router.put('/rfp/:id', async (req, res) => {
           quotationReference: newQuotation._id,
           expectedDelivery: updatedRFP.expectedDeliveryDate,
           status: 'Pending',
+          totalAmount: req.body.estimatedTotal || updatedRFP.estimatedTotal || 0,
           userId: updatedRFP.userId
         });
         await newOrder.save();
@@ -331,15 +355,15 @@ router.get('/reports', async (req, res) => {
 // POST new Order (Checkout)
 router.post('/orders', async (req, res) => {
   try {
-    const { 
-      quotationReference, 
-      expectedDelivery, 
-      totalAmount, 
-      paymentMethod, 
-      utrNumber, 
-      transactionDate, 
-      receiptUrl, 
-      userId 
+    const {
+      quotationReference,
+      expectedDelivery,
+      totalAmount,
+      paymentMethod,
+      utrNumber,
+      transactionDate,
+      receiptUrl,
+      userId
     } = req.body;
 
     if (!userId) {
@@ -352,7 +376,7 @@ router.post('/orders', async (req, res) => {
     if (paymentMethod === 'Credit') {
       const user = await User.findOne({ userId });
       if (!user) return res.status(404).json({ error: 'User not found' });
-      
+
       const availableCredit = (user.totalCredit || 0) - (user.usedCredit || 0) - (user.reservedCredit || 0);
       if (availableCredit < totalAmount) {
         return res.status(400).json({ error: 'Insufficient Credit Limit' });
@@ -405,7 +429,7 @@ router.get('/credit-transactions', async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ error: 'userId is required' });
-    
+
     const transactions = await CreditTransaction.find({ userId }).sort({ date: -1 });
     res.json(transactions);
   } catch (error) {

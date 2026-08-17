@@ -21,6 +21,7 @@ export default function CentralCatalog() {
     brand: '',
     model: '',
     name: '',
+    specs: '',
 
     serialNumber: '',
     buyingPrice: '',
@@ -213,6 +214,7 @@ export default function CentralCatalog() {
               <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
                 <th className="px-6 py-4 font-medium">Category</th>
                 <th className="px-6 py-4 font-medium">Brand & Model</th>
+                <th className="px-6 py-4 font-medium w-1/4">Specifications</th>
                 <th className="px-6 py-4 font-medium text-right">Base Purchase Price</th>
                 <th className="px-6 py-4 font-medium text-right">Store Selling Price</th>
                 <th className="px-6 py-4 font-medium text-center">Available Qty</th>
@@ -241,6 +243,9 @@ export default function CentralCatalog() {
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-800">{item.brand || 'N/A'}</div>
                       <div className="text-xs text-slate-500 font-mono mt-0.5">{item.model || 'N/A'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs text-slate-600 line-clamp-2" title={item.specs}>{item.specs || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 text-right font-medium text-slate-700">
                       ₹{item.buyingPrice?.toLocaleString() || 0}
@@ -300,6 +305,9 @@ export default function CentralCatalog() {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-bold text-slate-800 text-lg">{item.name}</div>
+                    {item.specs && (
+                      <div className="text-xs text-slate-500 mt-1 line-clamp-2">{item.specs}</div>
+                    )}
                   </div>
                   <div className="flex space-x-1">
                     <button 
@@ -396,8 +404,12 @@ export default function CentralCatalog() {
                       <input type="text" name="model" value={formData.model} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. XPS 13" />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Full Product Name</label>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Full Product Name *</label>
                       <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Dell XPS 13" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Specifications</label>
+                      <textarea name="specs" value={formData.specs} onChange={handleChange} rows="2" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Intel Core i7, 16GB RAM, 512GB SSD"></textarea>
                     </div>
                   </div>
                 </div>
