@@ -210,7 +210,8 @@ router.get('/:storeId/b2b-invoices', async (req, res) => {
       amount: q.amount,
       status: q.paymentStatus,
       date: new Date(q.createdAt).toLocaleDateString(),
-      type: 'Quotation'
+      type: 'Quotation',
+      invoiceFile: `/quotations/${q.quotationNo}.pdf`
     }));
 
     const mappedInvoices = invoices.map(inv => ({
@@ -220,7 +221,8 @@ router.get('/:storeId/b2b-invoices', async (req, res) => {
       amount: inv.amount,
       status: inv.status,
       date: new Date(inv.createdAt).toLocaleDateString(),
-      type: 'Invoice'
+      type: 'Invoice',
+      invoiceFile: inv.invoiceFile || `/invoices/${inv.invoiceNo}.pdf`
     }));
 
     // Merge and sort

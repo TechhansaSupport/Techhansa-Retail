@@ -544,7 +544,8 @@ router.post('/orders/:id/invoice', async (req, res) => {
           invoiceNo: `INV-${Date.now()}`,
           requestId: pr.requestId,
           amount: pr.total,
-          status: 'Paid'
+          status: 'Paid',
+          invoiceFile: `/invoices/${pr.requestId}-invoice.pdf`
         });
         await b2bInvoice.save();
 
