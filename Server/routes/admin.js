@@ -27,9 +27,9 @@ router.use(verifyAdminToken);
 router.get('/dashboard', async (req, res) => {
   try {
     const totalUsers = await User.countDocuments({ role: { $in: ['franchise', 'channel'] } });
-    
+
     const userCreditStats = await User.aggregate([
-      { 
+      {
         $group: {
           _id: null,
           totalCreditDistributed: { $sum: "$totalCredit" },
@@ -70,7 +70,8 @@ router.get('/dashboard', async (req, res) => {
 
     const userDailyStats = await User.aggregate([
       { $match: { createdAt: { $gte: sevenDaysAgo }, role: { $in: ['franchise', 'channel'] } } },
-      { $group: {
+      {
+        $group: {
           _id: { day: { $dayOfMonth: "$createdAt" }, month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
           count: { $sum: 1 },
           distributed: { $sum: "$totalCredit" },
@@ -81,7 +82,8 @@ router.get('/dashboard', async (req, res) => {
 
     const revenueDailyStats = await Invoice.aggregate([
       { $match: { createdAt: { $gte: sevenDaysAgo }, paymentStatus: 'Paid' } },
-      { $group: {
+      {
+        $group: {
           _id: { day: { $dayOfMonth: "$createdAt" }, month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
           revenue: { $sum: "$amount" }
         }
@@ -99,12 +101,12 @@ router.get('/dashboard', async (req, res) => {
       const day = d.getDate();
       const month = d.getMonth() + 1;
       const year = d.getFullYear();
-      
+
       const userStat = userDailyStats.find(s => s._id.day === day && s._id.month === month && s._id.year === year);
       userSparkline.push({ v: userStat ? userStat.count : 0 });
       distributedCreditSparkline.push({ v: userStat ? userStat.distributed : 0 });
       usedCreditSparkline.push({ v: userStat ? userStat.used : 0 });
-      
+
       const revenueStat = revenueDailyStats.find(s => s._id.day === day && s._id.month === month && s._id.year === year);
       revenueSparkline.push({ v: revenueStat ? revenueStat.revenue : 0 });
     }
@@ -137,7 +139,8 @@ router.get('/dashboard/chart', async (req, res) => {
 
     const userStats = await User.aggregate([
       { $match: { createdAt: { $gte: sixMonthsAgo }, role: { $in: ['franchise', 'channel'] } } },
-      { $group: {
+      {
+        $group: {
           _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" }, role: "$role" },
           count: { $sum: 1 }
         }
@@ -146,7 +149,8 @@ router.get('/dashboard/chart', async (req, res) => {
 
     const invoiceStats = await Invoice.aggregate([
       { $match: { createdAt: { $gte: sixMonthsAgo }, paymentStatus: 'Paid' } },
-      { $group: {
+      {
+        $group: {
           _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
           totalRevenue: { $sum: "$amount" }
         }
@@ -155,14 +159,14 @@ router.get('/dashboard/chart', async (req, res) => {
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const chartData = [];
-    
+
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
       const month = d.getMonth() + 1; // 1-12
       const year = d.getFullYear();
       const name = monthNames[d.getMonth()];
-      
+
       chartData.push({
         name,
         month,
@@ -221,9 +225,9 @@ router.get('/orders', async (req, res) => {
       ...pr,
       paymentStatus: pr.status === 'PENDING' ? 'Pending Verification' : 'Verified',
       status: pr.status === 'PENDING' ? 'Pending' :
-              pr.status === 'APPROVED' ? 'Processing' : 
-              pr.status === 'DISPATCHED' ? 'Dispatched' :
-              pr.status === 'DELIVERED' ? 'Delivered' : pr.status
+        pr.status === 'APPROVED' ? 'Processing' :
+          pr.status === 'DISPATCHED' ? 'Dispatched' :
+            pr.status === 'DELIVERED' ? 'Delivered' : pr.status
     }));
 
     const allOrders = [...orders, ...mappedProcurements].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -243,7 +247,7 @@ router.patch('/orders/:id/status', async (req, res) => {
       { status },
       { new: true }
     ).populate('quotationReference');
-    
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
@@ -333,12 +337,49 @@ router.post('/procurement-requests/:id/approve', async (req, res) => {
   }
 });
 
+
+
+
+// POST /api/admin/rfps/:id/approve
+router.post('/rfps/:id/approve', async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (amount === undefined || amount < 0) {
+      return res.status(400).json({ message: 'Valid amount is required.' });
+    }
+
+    const rfp = await RFP.findById(req.params.id);
+    if (!rfp) return res.status(404).json({ message: 'RFP not found' });
+
+    // Find the associated Quotation
+    const quotation = await Quotation.findOne({ rfpReference: rfp._id });
+    if (!quotation) {
+      return res.status(404).json({ message: 'Associated Quotation not found for this RFP' });
+    }
+
+    // Update RFP status
+    rfp.status = 'Approved';
+    await rfp.save();
+
+    // Update Quotation amount and set status to 'Approved', paymentStatus to 'Pending'
+    quotation.amount = amount;
+    quotation.status = 'Approved';
+    quotation.paymentStatus = 'Pending';
+    await quotation.save();
+
+    res.json({ message: 'RFP Approved successfully', rfp, quotation });
+  } catch (error) {
+    console.error('Error approving RFP:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // GET /api/admin/entities
 router.get('/entities', async (req, res) => {
   try {
-    const entities = await User.find({ 
+    const entities = await User.find({
       role: { $in: ['franchise', 'channel'] },
-      deletedAt: null 
+      deletedAt: null
     }).select('-password');
     res.json(entities);
   } catch (error) {
@@ -351,7 +392,7 @@ router.get('/entities', async (req, res) => {
 router.post('/entities', async (req, res) => {
   try {
     const { userId, password, role, email, name, storeId } = req.body;
-    
+
     // Check if user already exists
     const existingUser = await User.findOne({ userId });
     if (existingUser) {
@@ -371,7 +412,7 @@ router.post('/entities', async (req, res) => {
     });
 
     await newUser.save();
-    
+
     // Create StoreProfile if role is franchise
     if (role === 'franchise' && storeId) {
       const StoreProfile = require('../models/StoreProfile');
@@ -389,7 +430,7 @@ router.post('/entities', async (req, res) => {
         });
       }
     }
-    
+
     // Don't send the password back
     const userResponse = newUser.toObject();
     delete userResponse.password;
@@ -413,19 +454,19 @@ router.put('/entities/:userId', async (req, res) => {
     if (storeId !== undefined) updateData.storeId = storeId;
     if (role !== undefined) updateData.role = role;
     if (status !== undefined) updateData.status = status;
-    
+
     // Optional: update password if provided
     if (req.body.password) {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(req.body.password, salt);
     }
-    
+
     const updatedUser = await User.findOneAndUpdate(
       { userId },
       { $set: updateData },
       { new: true }
     ).select('-password');
-    
+
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -441,14 +482,14 @@ router.put('/entities/:userId', async (req, res) => {
 router.delete('/entities/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     // Soft delete by setting deletedAt
     const deletedUser = await User.findOneAndUpdate(
       { userId },
       { deletedAt: new Date(), status: 'Suspended' },
       { new: true }
     );
-    
+
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -508,7 +549,7 @@ router.put('/entities/:userId/status', async (req, res) => {
   try {
     const { userId } = req.params;
     const { status } = req.body;
-    
+
     if (!['Active', 'Suspended'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
@@ -574,7 +615,7 @@ router.put('/catalog/:id', async (req, res) => {
     }
     // sync stock
     if (payload.availableStock !== undefined) {
-       payload.quantity = Number(payload.availableStock) || 0;
+      payload.quantity = Number(payload.availableStock) || 0;
     }
     const product = await GlobalProduct.findByIdAndUpdate(
       req.params.id,
@@ -605,7 +646,7 @@ router.get('/audit', async (req, res) => {
   try {
     const creditTransactions = await CreditTransaction.find().sort({ createdAt: -1 }).limit(100);
     const invoices = await Invoice.find().sort({ createdAt: -1 }).limit(100);
-    
+
     res.json({
       creditTransactions,
       invoices

@@ -207,14 +207,14 @@ export default function AllOrders() {
                       <div className="flex items-center justify-center gap-2">
                         {order.status === 'Pending' && (
                           <>
-                            <button 
+                            <button
                               onClick={() => handleUpdateStatus(order._id, 'Confirmed')}
                               className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors inline-flex"
                               title="Accept Order"
                             >
                               <Check size={18} />
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleUpdateStatus(order._id, 'Declined')}
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex"
                               title="Decline Order"
@@ -223,7 +223,7 @@ export default function AllOrders() {
                             </button>
                           </>
                         )}
-                        <button 
+                        <button
                           onClick={() => handleViewOrder(order._id, order.orderType)}
                           className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors inline-flex"
                           title="View Details"
@@ -260,7 +260,7 @@ export default function AllOrders() {
                   <p className="text-sm text-slate-500 font-medium">Placed on {new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="w-10 h-10 flex items-center justify-center bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors border border-slate-200"
               >
@@ -373,15 +373,15 @@ export default function AllOrders() {
                 <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="flex flex-col">
                     <span className="text-indigo-800 font-bold uppercase tracking-wider text-sm mb-1">Set Invoice Amount (₹)</span>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={invoiceTotal}
                       onChange={(e) => setInvoiceTotal(e.target.value)}
                       placeholder="e.g. 50000"
                       className="px-4 py-2 rounded-lg border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-900"
                     />
                   </div>
-                  <button 
+                  <button
                     onClick={() => handleApproveProcurement(selectedOrder._id)}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-sm transition-colors whitespace-nowrap"
                   >
