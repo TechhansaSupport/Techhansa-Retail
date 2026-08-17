@@ -242,7 +242,7 @@ router.get('/orders', async (req, res) => {
 // PATCH /api/admin/orders/:id/status
 router.patch('/orders/:id/status', async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, amount } = req.body;
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       { status },
@@ -254,10 +254,16 @@ router.patch('/orders/:id/status', async (req, res) => {
     }
 
     if (order.quotationReference) {
-      if (status === 'Confirmed') {
-        await Quotation.findByIdAndUpdate(order.quotationReference._id, { status: 'Approved' });
+      if (status === 'Quotation Sent' || status === 'Confirmed') {
+        await Quotation.findByIdAndUpdate(order.quotationReference._id, { 
+          status: 'Approved',
+          amount: amount || order.totalAmount || 0,
+          paymentStatus: 'Pending'
+        });
         if (order.quotationReference.rfpReference) {
-          await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, { status: 'Approved' });
+          await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, { 
+            status: status === 'Quotation Sent' ? 'Quotation Received' : 'Approved' 
+          });
         }
       } else if (status === 'Declined') {
         await Quotation.findByIdAndUpdate(order.quotationReference._id, { status: 'Rejected' });
@@ -347,21 +353,33 @@ router.post('/procurement-requests/:id/approve', async (req, res) => {
 
     // Update Procurement Request
     request.total = totalAmount;
-    request.status = 'APPROVED';
+    request.status = 'Quotation Sent';
     await request.save();
 
-    // Create B2B Invoice
-    const invoiceNo = `INV-${Date.now()}`;
-    const newInvoice = new B2BInvoice({
+    // Generate Quotation instead of B2BInvoice
+    const quotation = new Quotation({
+      quotationNo: `QT-PR-${Date.now()}`,
+      procurementReference: request._id,
       storeId: request.storeId,
-      invoiceNo,
-      requestId: request.requestId,
+      vendor: 'Techhansa Retail',
       amount: totalAmount,
-      status: 'Pending'
+      validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      status: 'Pending',
+      paymentStatus: 'Pending',
+      items: request.items.map(item => ({
+        productName: item.hardwareType === 'Others' ? item.otherType : item.hardwareType,
+        brand: item.brand,
+        model: item.model,
+        configuration: JSON.stringify(item.specs),
+        quantity: item.quantity,
+        unitPrice: 0,
+        totalAmount: 0
+      })),
+      userId: request.storeId
     });
-    await newInvoice.save();
+    await quotation.save();
 
-    res.json({ success: true, invoice: newInvoice, request });
+    res.json({ message: 'Quotation sent successfully', request, quotation });
   } catch (error) {
     console.error('Error approving procurement request:', error);
     res.status(500).json({ message: 'Server error' });
@@ -411,7 +429,7 @@ router.post('/rfps/:id/approve', async (req, res) => {
     }
 
     // Update RFP status
-    rfp.status = 'Approved';
+    rfp.status = 'Quotation Received';
     await rfp.save();
 
     // Update Quotation amount and set status to 'Approved', paymentStatus to 'Pending'
@@ -420,9 +438,91 @@ router.post('/rfps/:id/approve', async (req, res) => {
     quotation.paymentStatus = 'Pending';
     await quotation.save();
 
-    res.json({ message: 'RFP Approved successfully', rfp, quotation });
+    // Also find the associated Order and update its status
+    const order = await Order.findOne({ quotationReference: quotation._id });
+    if (order) {
+      order.status = 'Quotation Sent';
+      order.totalAmount = amount;
+      await order.save();
+    }
+
+    res.json({ message: 'Quotation sent successfully', rfp, quotation });
   } catch (error) {
     console.error('Error approving RFP:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/admin/orders/:id/invoice
+router.post('/orders/:id/invoice', async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    // We need to support both Order and ProcurementRequest
+    let invoiceData = null;
+    let orderUpdate = null;
+
+    // Check if it's an Order (Channel)
+    const order = await Order.findById(orderId).populate('quotationReference');
+    if (order) {
+      if (order.status !== 'Paid') {
+        return res.status(400).json({ message: 'Only Paid orders can be invoiced.' });
+      }
+      
+      const invoice = new Invoice({
+        invoiceNumber: `INV-${Date.now()}`,
+        userId: order.userId,
+        orderReference: order._id,
+        amount: order.totalAmount,
+        paymentStatus: 'Paid',
+        paymentMethod: order.paymentMethod || 'Credit',
+        items: order.items || (order.quotationReference ? order.quotationReference.items : [])
+      });
+      await invoice.save();
+
+      order.status = 'Processing'; // Move forward
+      await order.save();
+
+      // Ensure RFP is also 'Approved' or something similar
+      if (order.quotationReference && order.quotationReference.rfpReference) {
+        const rfp = await RFP.findById(order.quotationReference.rfpReference);
+        if (rfp) {
+          rfp.status = 'Approved';
+          await rfp.save();
+        }
+      }
+
+      invoiceData = invoice;
+      orderUpdate = order;
+    } else {
+      // Check if it's a ProcurementRequest (Franchise)
+      const pr = await ProcurementRequest.findById(orderId);
+      if (pr) {
+        if (pr.status !== 'Paid') {
+          return res.status(400).json({ message: 'Only Paid requests can be invoiced.' });
+        }
+
+        const b2bInvoice = new B2BInvoice({
+          storeId: pr.storeId,
+          invoiceNo: `INV-${Date.now()}`,
+          requestId: pr.requestId,
+          amount: pr.total,
+          status: 'Paid'
+        });
+        await b2bInvoice.save();
+
+        pr.status = 'Processing';
+        await pr.save();
+
+        invoiceData = b2bInvoice;
+        orderUpdate = pr;
+      } else {
+        return res.status(404).json({ message: 'Order/Request not found' });
+      }
+    }
+
+    res.json({ message: 'Invoice generated and sent successfully', invoice: invoiceData, order: orderUpdate });
+  } catch (error) {
+    console.error('Error generating invoice:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

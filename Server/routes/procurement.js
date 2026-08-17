@@ -133,8 +133,33 @@ router.post('/quotations/:id/pay', async (req, res) => {
       return res.status(400).json({ error: 'Quotation is already paid' });
     }
 
+    if (quotation.storeId) {
+      // It's a Franchise, handle wallet deduction
+      const User = require('../models/User');
+      const user = await User.findOne({ storeId: quotation.storeId });
+      if (!user) {
+        return res.status(404).json({ error: 'Franchise user not found' });
+      }
+      if (user.usedCredit + quotation.amount > user.totalCredit) {
+        return res.status(400).json({ error: 'Insufficient credit limit' });
+      }
+      user.usedCredit += quotation.amount;
+      await user.save();
+    }
+
     quotation.paymentStatus = 'Paid';
     await quotation.save();
+
+    // Update parent order/PR
+    if (quotation.procurementReference) {
+      const ProcurementRequest = require('../models/ProcurementRequest');
+      await ProcurementRequest.findByIdAndUpdate(quotation.procurementReference, { status: 'Paid' });
+    }
+    
+    if (quotation.rfpReference) {
+      const Order = require('../models/Order');
+      await Order.findOneAndUpdate({ quotationReference: quotation._id }, { status: 'Paid' });
+    }
 
     res.json({ message: 'Payment successful', quotation });
   } catch (error) {

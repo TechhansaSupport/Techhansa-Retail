@@ -195,114 +195,95 @@ router.get('/:storeId/wallet', async (req, res) => {
 });
 // Removed: Add Funds to Wallet (Button removed per user request)
 
-// 4. Get B2B Invoices
+// 4. Get Quotations and B2B Invoices for Franchise Procurement Approvals
 router.get('/:storeId/b2b-invoices', async (req, res) => {
   try {
+    const Quotation = require('../models/Quotation');
+    const quotations = await Quotation.find({ storeId: req.params.storeId }).sort({ createdAt: -1 });
     const invoices = await B2BInvoice.find({ storeId: req.params.storeId }).sort({ createdAt: -1 });
-    res.json({ success: true, data: invoices });
+    
+    // Map quotations to the format expected by the frontend 'approvals' tab
+    const mappedQuotations = quotations.map(q => ({
+      _id: q._id,
+      invoiceNo: q.quotationNo,
+      requestId: q.procurementReference ? q.procurementReference.toString() : 'N/A',
+      amount: q.amount,
+      status: q.paymentStatus,
+      date: new Date(q.createdAt).toLocaleDateString(),
+      type: 'Quotation'
+    }));
+
+    const mappedInvoices = invoices.map(inv => ({
+      _id: inv._id,
+      invoiceNo: inv.invoiceNo,
+      requestId: inv.requestId,
+      amount: inv.amount,
+      status: inv.status,
+      date: new Date(inv.createdAt).toLocaleDateString(),
+      type: 'Invoice'
+    }));
+
+    // Merge and sort
+    const combined = [...mappedQuotations, ...mappedInvoices].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json({ success: true, data: combined });
   } catch (error) {
-    console.error('Error fetching b2b invoices:', error);
+    console.error('Error fetching approvals data:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-// 5. Approve B2B Invoice
+// 5. Approve Quotation / B2B Invoice
 router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
   try {
     const { storeId, id } = req.params;
     const { paymentMethod, utrNumber, transactionDate, receiptUrl } = req.body;
     
-    const invoice = await B2BInvoice.findById(id);
-    if (!invoice) return res.status(404).json({ success: false, message: 'Invoice not found' });
-    if (invoice.status === 'Paid') return res.status(400).json({ success: false, message: 'Invoice already paid' });
-    if (invoice.storeId !== storeId) return res.status(403).json({ success: false, message: 'Unauthorized' });
+    const Quotation = require('../models/Quotation');
+    const ProcurementRequest = require('../models/ProcurementRequest');
+    
+    // Check if it's a quotation first
+    let itemToApprove = await Quotation.findById(id);
+    let isQuotation = true;
+
+    if (!itemToApprove) {
+      itemToApprove = await B2BInvoice.findById(id);
+      isQuotation = false;
+    }
+
+    if (!itemToApprove) return res.status(404).json({ success: false, message: 'Item not found' });
+    if ((isQuotation ? itemToApprove.paymentStatus : itemToApprove.status) === 'Paid') return res.status(400).json({ success: false, message: 'Already paid' });
+    if (itemToApprove.storeId !== storeId) return res.status(403).json({ success: false, message: 'Unauthorized' });
     
     const profile = await StoreProfile.findOne({ storeId });
     if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
     
-    const ProcurementRequest = require('../models/ProcurementRequest');
-    let originalReserved = invoice.amount; // default fallback
+    const availableCredit = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
     
-    if (invoice.requestId) {
-       const reqst = await ProcurementRequest.findOne({ requestId: invoice.requestId });
+    let originalReserved = itemToApprove.amount; // default fallback
+    
+    const reqstId = isQuotation ? itemToApprove.procurementReference : itemToApprove.requestId;
+    if (reqstId) {
+       const reqst = isQuotation ? await ProcurementRequest.findById(reqstId) : await ProcurementRequest.findOne({ requestId: reqstId });
        if (reqst) {
-          originalReserved = reqst.total || invoice.amount;
+          originalReserved = reqst.total || itemToApprove.amount;
+          reqst.status = isQuotation ? 'Paid' : 'DISPATCHED'; // Update parent request status
+          await reqst.save();
        }
     }
 
-    let txn = null;
-    let newBalance = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
-
-    // If paymentMethod is Advance Payment, we do not deduct from credit line
-    if (paymentMethod === 'NEFT' || paymentMethod === 'UPI') {
-      // Just release the reserved credit, but do NOT add to usedCredit
-      profile.reservedCredit = Math.max(0, (profile.reservedCredit || 0) - originalReserved);
-      await profile.save();
-      
-      invoice.paymentDetails = {
-        method: paymentMethod,
-        utr: utrNumber,
-        date: transactionDate,
-        receipt: receiptUrl
-      };
-      
-      newBalance = profile.totalCredit - profile.usedCredit - profile.reservedCredit;
-      
-      txn = new WalletTransaction({
-        storeId,
-        txnId: `TXN-${Date.now()}`,
-        type: 'Advance Payment',
-        amount: invoice.amount,
-        closingBalance: newBalance,
-        description: `Advance Payment via ${paymentMethod} (UTR: ${utrNumber})`
-      });
-      await txn.save();
-
-      invoice.status = 'Payment Verification';
-      await invoice.save();
-      
-      if (invoice.requestId) {
-        const reqst = await ProcurementRequest.findOne({ requestId: invoice.requestId });
-        if (reqst) {
-          reqst.status = 'PAYMENT_VERIFICATION';
-          await reqst.save();
-        }
-      }
-
+    // Adjust credits
+    profile.reservedCredit = Math.max(0, (profile.reservedCredit || 0) - originalReserved);
+    profile.usedCredit = (profile.usedCredit || 0) + itemToApprove.amount;
+    await profile.save();
+    
+    // Update item
+    if (isQuotation) {
+      itemToApprove.paymentStatus = 'Paid';
     } else {
-      // Default / Credit logic
-      const availableCredit = newBalance;
-      if (availableCredit < invoice.amount) {
-        return res.status(400).json({ success: false, message: 'Insufficient credit balance' });
-      }
-
-      // Adjust credits
-      profile.reservedCredit = Math.max(0, (profile.reservedCredit || 0) - originalReserved);
-      profile.usedCredit = (profile.usedCredit || 0) + invoice.amount;
-      await profile.save();
-
-      newBalance = profile.totalCredit - profile.usedCredit - profile.reservedCredit;
-      txn = new WalletTransaction({
-        storeId,
-        txnId: `TXN-${Date.now()}`,
-        type: 'Deducted',
-        amount: invoice.amount,
-        closingBalance: newBalance
-      });
-      await txn.save();
-      
-      // Update invoice to paid
-      invoice.status = 'Paid';
-      await invoice.save();
-      
-      if (invoice.requestId) {
-        const reqst = await ProcurementRequest.findOne({ requestId: invoice.requestId });
-        if (reqst) {
-          reqst.status = 'DISPATCHED';
-          await reqst.save();
-        }
-      }
+      itemToApprove.status = 'Paid';
     }
+    await itemToApprove.save();
 
     res.json({ success: true, invoice, newBalance, transaction: txn });
   } catch (error) {
