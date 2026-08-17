@@ -88,6 +88,18 @@ export default function AllOrders() {
     }
   };
 
+  const handleConfirmPayment = async (orderId) => {
+    try {
+      await axios.post(`/api/admin/procurement-requests/${orderId}/confirm-payment`);
+      toast.success('Payment confirmed successfully!');
+      setIsModalOpen(false);
+      fetchOrders();
+    } catch (error) {
+      console.error('Failed to confirm payment:', error);
+      toast.error(error.response?.data?.message || 'Failed to confirm payment');
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Pending': return 'bg-amber-100 text-amber-700';
@@ -221,7 +233,7 @@ export default function AllOrders() {
                     </td>
                     <td className="p-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        {order.status === 'Pending' && (
+                        {order.status === 'Pending' && order.orderType !== 'Franchise Procurement' && (
                           <>
                             <button
                               onClick={() => handleViewOrder(order._id, order.orderType)}

@@ -237,6 +237,7 @@ router.get('/:storeId/b2b-invoices', async (req, res) => {
 router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
   try {
     const { storeId, id } = req.params;
+    const { paymentMethod, utrNumber, transactionDate, receiptUrl } = req.body;
     
     const Quotation = require('../models/Quotation');
     const ProcurementRequest = require('../models/ProcurementRequest');
@@ -284,17 +285,6 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
     }
     await itemToApprove.save();
 
-    // Log transaction
-    const newBalance = profile.totalCredit - profile.usedCredit - profile.reservedCredit;
-    const txn = new WalletTransaction({
-      storeId,
-      txnId: `TXN-${Date.now()}`,
-      type: 'Deducted',
-      amount: invoice.amount,
-      closingBalance: newBalance
-    });
-    await txn.save();
-    
     res.json({ success: true, invoice, newBalance, transaction: txn });
   } catch (error) {
     console.error('Error approving b2b invoice:', error);

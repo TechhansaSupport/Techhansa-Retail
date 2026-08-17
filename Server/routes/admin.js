@@ -223,11 +223,12 @@ router.get('/orders', async (req, res) => {
 
     const mappedProcurements = procurements.map(pr => ({
       ...pr,
-      paymentStatus: pr.status === 'PENDING' ? 'Pending Verification' : 'Verified',
+      paymentStatus: (pr.status === 'PENDING' || pr.status === 'PAYMENT_VERIFICATION') ? 'Pending Verification' : 'Verified',
       status: pr.status === 'PENDING' ? 'Pending' :
-        pr.status === 'APPROVED' ? 'Processing' :
-          pr.status === 'DISPATCHED' ? 'Dispatched' :
-            pr.status === 'DELIVERED' ? 'Delivered' : pr.status
+              pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
+              pr.status === 'APPROVED' ? 'Processing' : 
+              pr.status === 'DISPATCHED' ? 'Dispatched' :
+              pr.status === 'DELIVERED' ? 'Delivered' : pr.status
     }));
 
     const allOrders = [...orders, ...mappedProcurements].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -302,8 +303,37 @@ router.get('/orders/:id', async (req, res) => {
 // GET /api/admin/procurement-requests/:id
 router.get('/procurement-requests/:id', async (req, res) => {
   try {
-    const request = await ProcurementRequest.findById(req.params.id);
+    const request = await ProcurementRequest.findById(req.params.id).lean();
     if (!request) return res.status(404).json({ message: 'Procurement Request not found' });
+    
+    // Map fields for frontend modal
+    request.totalAmount = request.total;
+    
+    // Format status nicely for UI
+    if (request.status === 'PAYMENT_VERIFICATION') {
+       request.status = 'Payment Verification';
+    } else if (request.status === 'PENDING') {
+       request.status = 'Pending';
+    } else if (request.status === 'APPROVED') {
+       request.status = 'Processing';
+    } else if (request.status === 'DISPATCHED') {
+       request.status = 'Dispatched';
+    } else if (request.status === 'DELIVERED') {
+       request.status = 'Delivered';
+    }
+
+    // Fetch related invoice for payment details
+    const invoice = await B2BInvoice.findOne({ requestId: request.requestId });
+    if (invoice) {
+      request.invoiceNo = invoice.invoiceNo;
+      if (invoice.paymentDetails) {
+         request.paymentMethod = invoice.paymentDetails.method;
+         request.paymentStatus = invoice.status; // e.g., 'Payment Verification', 'Paid'
+         request.utr = invoice.paymentDetails.utr;
+         request.receipt = invoice.paymentDetails.receipt;
+      }
+    }
+
     res.json(request);
   } catch (error) {
     console.error('Error fetching procurement request details:', error);
@@ -356,6 +386,28 @@ router.post('/procurement-requests/:id/approve', async (req, res) => {
   }
 });
 
+// POST /api/admin/procurement-requests/:id/confirm-payment
+router.post('/procurement-requests/:id/confirm-payment', async (req, res) => {
+  try {
+    const request = await ProcurementRequest.findById(req.params.id);
+    if (!request) return res.status(404).json({ message: 'Procurement Request not found' });
+    if (request.status !== 'PAYMENT_VERIFICATION') {
+      return res.status(400).json({ message: 'Only PAYMENT_VERIFICATION requests can have payments confirmed.' });
+    }
+
+    const invoice = await B2BInvoice.findOne({ requestId: request.requestId });
+    if (!invoice) return res.status(404).json({ message: 'B2B Invoice not found' });
+    
+    // Update statuses
+    request.status = 'DISPATCHED';
+    await request.save();
+
+    invoice.status = 'Paid';
+    await invoice.save();
+
+    res.json({ success: true, invoice, request });
+  } catch (error) {
+    console.error('Error confirming payment:', error);
 
 
 
@@ -620,6 +672,15 @@ router.put('/entities/:userId/credit', async (req, res) => {
     const oldCredit = user.totalCredit || 0;
     user.totalCredit = Number(totalCredit);
     await user.save();
+
+    // Sync the totalCredit to StoreProfile if the user has stores
+    if (user.role === 'franchise' && user.storeId) {
+      const storeIds = user.storeId.split(',').map(s => s.trim());
+      await StoreProfile.updateMany(
+        { storeId: { $in: storeIds } },
+        { $set: { totalCredit: Number(totalCredit) } }
+      );
+    }
 
     // Log the transaction
     const diff = user.totalCredit - oldCredit;

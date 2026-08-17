@@ -43,6 +43,9 @@ export function FranchiseProvider({ children }) {
            todaysSales: profileRes.value.data.data.todaysSales || 0,
            monthlySales: profileRes.value.data.data.monthlySales || 0,
            walletBalance: profileRes.value.data.data.walletBalance || 0,
+           totalCredit: profileRes.value.data.data.totalCredit || 0,
+           usedCredit: profileRes.value.data.data.usedCredit || 0,
+           reservedCredit: profileRes.value.data.data.reservedCredit || 0,
            completedOrders: profileRes.value.data.data.completedOrders || 0,
            pendingOrders: profileRes.value.data.data.pendingOrders || 0,
          });
@@ -102,9 +105,9 @@ export function FranchiseProvider({ children }) {
     setStoreProfileData(newProfile);
   };
 
-  const approveB2BInvoice = async (invoiceId) => {
+  const approveB2BInvoice = async (invoiceId, paymentDetails = {}) => {
     try {
-      const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/b2b-invoices/${invoiceId}/approve`);
+      const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/b2b-invoices/${invoiceId}/approve`, paymentDetails);
       if (res.data.success) {
         await refreshData();
         return true;

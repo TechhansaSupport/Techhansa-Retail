@@ -37,6 +37,7 @@ import FranchiseCart from './portal/franchiseportal/storeadmin/Pages/Cart';
 import FranchiseSales from './portal/franchiseportal/storeadmin/Pages/Sales';
 import FranchiseBilling from './portal/franchiseportal/storeadmin/Pages/Billing';
 import Procurement from './portal/franchiseportal/storeadmin/Pages/Procurement';
+import FranchiseCheckout from './portal/franchiseportal/storeadmin/Pages/Checkout';
 import Wallet from './portal/franchiseportal/storeadmin/Pages/Wallet';
 import Employees from './portal/franchiseportal/storeadmin/Pages/Employees';
 import { FranchiseProvider } from './portal/franchiseportal/storeadmin/context/FranchiseContext';
@@ -152,6 +153,7 @@ function App() {
             <Route path="inventory" element={<FranchiseInventory />} />
             <Route path="sales" element={<FranchiseSales />} />
             <Route path="procurement" element={<Procurement />} />
+            <Route path="checkout" element={<FranchiseCheckout />} />
             <Route path="wallet" element={<Wallet />} />
             <Route path="employees" element={<Employees />} />
           </Route>
