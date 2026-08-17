@@ -293,8 +293,12 @@ export default function AllOrders() {
                   <Package size={24} />
                 </div>
                 <div>
-                <h3 className="text-xl font-bold text-slate-900">Send Quotation</h3>
-                <p className="text-sm text-slate-500 mt-1">Review the order and confirm the final quotation amount.</p>
+                <h3 className="text-xl font-bold text-slate-900">
+                  {selectedOrder.status === 'Payment Verification' ? 'Verify Payment' : 'Send Quotation'}
+                </h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  {selectedOrder.status === 'Payment Verification' ? 'Review the payment details and confirm.' : 'Review the order and confirm the final quotation amount.'}
+                </p>
               </div>
               </div>
               <button
@@ -335,6 +339,12 @@ export default function AllOrders() {
                       <span className="text-slate-500 text-sm font-medium">Payment Method</span>
                       <span className="text-slate-700 text-sm font-bold">{selectedOrder.paymentMethod || 'N/A'}</span>
                     </div>
+                    {selectedOrder.utr && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 text-sm font-medium">UTR No</span>
+                        <span className="text-slate-700 text-sm font-bold">{selectedOrder.utr}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -418,6 +428,21 @@ export default function AllOrders() {
                   >
                     Confirm & Send Quotation
                   </button>
+                ) : selectedOrder.status === 'Payment Verification' ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleUpdateStatus(selectedOrder._id, 'Declined')}
+                      className="px-6 py-2 bg-rose-50 text-rose-600 font-medium rounded-lg hover:bg-rose-100 transition-colors whitespace-nowrap"
+                    >
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => handleConfirmPayment(selectedOrder._id)}
+                      className="px-6 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors whitespace-nowrap"
+                    >
+                      Verify Payment
+                    </button>
+                  </div>
                 ) : null}
               </div>
             </div>
