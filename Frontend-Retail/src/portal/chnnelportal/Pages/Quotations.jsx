@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, FileText, Download, Eye, ExternalLink, XCircle } from 'lucide-react';
 import { exportToCSV } from '../../../utils/exportUtils';
 import { AuthContext } from '../../../context/AuthContext';
+import axios from '../../../api/axios';
+import toast from 'react-hot-toast';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -22,20 +24,19 @@ export default function Quotations() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [rfps, setRfps] = useState([]);
-  
+
   useEffect(() => {
     if (user?.userId) {
       fetchQuotations();
       fetchRfps();
     }
   }, [user]);
-  
+
   const fetchQuotations = async () => {
     if (!user?.userId) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/quotations?userId=${user.userId}`);
-      const data = await res.json();
-      setQuotations(data);
+      const res = await axios.get(`/api/procurement/quotations?userId=${user.userId}`);
+      setQuotations(res.data);
     } catch (err) {
       console.error('Failed to fetch quotations', err);
     }
@@ -44,11 +45,28 @@ export default function Quotations() {
   const fetchRfps = async () => {
     if (!user?.userId) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`);
-      const data = await res.json();
-      setRfps(data);
+      const res = await axios.get(`/api/procurement/rfp?userId=${user.userId}`);
+      setRfps(res.data);
     } catch (err) {
       console.error('Failed to fetch RFPs', err);
+    }
+  };
+
+  const [isPaying, setIsPaying] = useState(false);
+
+  const handlePayment = async () => {
+    if (!selectedQuotation) return;
+    setIsPaying(true);
+    try {
+      await axios.post(`/api/procurement/quotations/${selectedQuotation._id}/pay`);
+      toast.success('Payment successful!');
+      setSelectedQuotation({ ...selectedQuotation, paymentStatus: 'Paid' });
+      fetchQuotations();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || 'Payment failed');
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -62,12 +80,14 @@ export default function Quotations() {
 
   const selectedRfp = selectedQuotation ? rfps.find(r => r.rfpId === selectedQuotation.quotationNo?.replace('QT-', '')) : null;
   const quotationItems = (selectedQuotation?.items?.length > 0) ? selectedQuotation.items : (selectedRfp?.products || []).map(p => {
-    const unitPrice = selectedQuotation?.amount || 0;
-    const totalAmount = unitPrice * (p.quantity || 1) * 1.18; // 18% GST
-    return { ...p, unitPrice, totalAmount };
+    // If admin approved and items array is empty, we don't know the unit price, we only know the total amount.
+    // For display purposes, we'll just show the quantity. We'll handle total amount separately.
+    return { ...p };
   });
 
-  const displayTotalAmount = quotationItems.reduce((sum, item) => sum + (item.totalAmount || ((item.quantity || 1) * (item.unitPrice || 0) * 1.18)), 0);
+  const displayTotalAmount = (selectedQuotation?.status === 'Approved' && (!selectedQuotation.items || selectedQuotation.items.length === 0))
+    ? selectedQuotation.amount
+    : quotationItems.reduce((sum, item) => sum + (item.totalAmount || ((item.quantity || 1) * (item.unitPrice || 0) * 1.18)), 0);
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
@@ -139,6 +159,12 @@ export default function Quotations() {
                     <span className="text-blue-500 cursor-pointer hover:underline">{qt.rfpReference.rfpId}</span>
                   </div>
                 )}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium">Payment:</span>
+                  <span className={`font-semibold ${qt.paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {qt.paymentStatus || 'Pending'}
+                  </span>
+                </div>
               </div>
             </motion.div>
           ))
@@ -148,7 +174,7 @@ export default function Quotations() {
       {/* View Quotation Modal */}
       {selectedQuotation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
@@ -162,7 +188,7 @@ export default function Quotations() {
                 <XCircle className="w-6 h-6" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto">
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div>
@@ -196,7 +222,7 @@ export default function Quotations() {
                   </div>
                 )}
               </div>
-              
+
               {quotationItems.length > 0 && (
                 <>
                   <h3 className="text-lg font-bold text-slate-900 mb-4">Quoted Items</h3>
@@ -215,8 +241,8 @@ export default function Quotations() {
                           <tr key={i} className="hover:bg-slate-50 transition-colors">
                             <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || `${item.brand} ${item.category} (${item.model})`}</td>
                             <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{item.quantity}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{item.unitPrice?.toLocaleString('en-IN') || 0}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{(item.totalAmount || ((item.quantity || 0) * (item.unitPrice || 0) * 1.18)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">{item.unitPrice !== undefined ? `₹${item.unitPrice?.toLocaleString('en-IN')}` : 'N/A'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">{item.totalAmount !== undefined ? `₹${item.totalAmount?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : 'N/A'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -225,22 +251,31 @@ export default function Quotations() {
                 </>
               )}
             </div>
-            
+
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
               <button onClick={() => setSelectedQuotation(null)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-colors">
                 Close
               </button>
               {selectedQuotation.status === 'Pending' && (
                 <button disabled className="px-6 py-2 bg-slate-200 text-slate-500 font-medium rounded-lg cursor-not-allowed" title="Awaiting admin approval">
-                  Accept Quotation
+                  Awaiting Approval
                 </button>
               )}
-              {selectedQuotation.status !== 'Pending' && (
-                <button 
-                  onClick={() => navigate('/channel/checkout', { state: { quotation: selectedQuotation, displayTotalAmount } })} 
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              {selectedQuotation.status === 'Approved' && selectedQuotation.paymentStatus !== 'Paid' && (
+                <button
+                  onClick={handlePayment}
+                  disabled={isPaying}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
                 >
-                  Proceed to Checkout
+                  {isPaying ? 'Processing...' : `Pay ₹${displayTotalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`}
+                </button>
+              )}
+              {selectedQuotation.paymentStatus === 'Paid' && (
+                <button
+                  disabled
+                  className="px-6 py-2 bg-emerald-100 text-emerald-700 font-bold rounded-lg cursor-not-allowed border border-emerald-200"
+                >
+                  Paid
                 </button>
               )}
             </div>
