@@ -112,18 +112,14 @@ export default function CreditHistory() {
       </motion.div>
 
       {/* Stats Summary */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Available Credit</p>
-          <div className="text-2xl font-bold text-emerald-600">{formatCurrency((user?.totalCredit || 0) - (user?.usedCredit || 0) - (user?.reservedCredit || 0))}</div>
+          <div className="text-2xl font-bold text-emerald-600">{formatCurrency((user?.totalCredit || 0) - (user?.usedCredit || 0))}</div>
         </div>
         <div className="bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Limit</p>
           <div className="text-2xl font-bold text-slate-900">{formatCurrency(user?.totalCredit || 0)}</div>
-        </div>
-        <div className="bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Currently Reserved</p>
-          <div className="text-2xl font-bold text-amber-600">{formatCurrency(user?.reservedCredit || 0)}</div>
         </div>
       </motion.div>
 

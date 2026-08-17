@@ -225,9 +225,9 @@ router.get('/orders', async (req, res) => {
       ...pr,
       paymentStatus: (pr.status === 'PENDING' || pr.status === 'PAYMENT_VERIFICATION') ? 'Pending Verification' : 'Verified',
       status: pr.status === 'PENDING' ? 'Pending' :
-              pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
-              pr.status === 'APPROVED' ? 'Processing' : 
-              pr.status === 'DISPATCHED' ? 'Dispatched' :
+        pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
+          pr.status === 'APPROVED' ? 'Processing' :
+            pr.status === 'DISPATCHED' ? 'Dispatched' :
               pr.status === 'DELIVERED' ? 'Delivered' : pr.status
     }));
 
@@ -305,32 +305,41 @@ router.get('/procurement-requests/:id', async (req, res) => {
   try {
     const request = await ProcurementRequest.findById(req.params.id).lean();
     if (!request) return res.status(404).json({ message: 'Procurement Request not found' });
-    
+
     // Map fields for frontend modal
     request.totalAmount = request.total;
-    
+
     // Format status nicely for UI
     if (request.status === 'PAYMENT_VERIFICATION') {
-       request.status = 'Payment Verification';
+      request.status = 'Payment Verification';
     } else if (request.status === 'PENDING') {
-       request.status = 'Pending';
+      request.status = 'Pending';
     } else if (request.status === 'APPROVED') {
-       request.status = 'Processing';
+      request.status = 'Processing';
     } else if (request.status === 'DISPATCHED') {
-       request.status = 'Dispatched';
+      request.status = 'Dispatched';
     } else if (request.status === 'DELIVERED') {
-       request.status = 'Delivered';
+      request.status = 'Delivered';
     }
 
-    // Fetch related invoice for payment details
-    const invoice = await B2BInvoice.findOne({ requestId: request.requestId });
-    if (invoice) {
-      request.invoiceNo = invoice.invoiceNo;
-      if (invoice.paymentDetails) {
-         request.paymentMethod = invoice.paymentDetails.method;
-         request.paymentStatus = invoice.status; // e.g., 'Payment Verification', 'Paid'
-         request.utr = invoice.paymentDetails.utr;
-         request.receipt = invoice.paymentDetails.receipt;
+    // Fetch related quotation or invoice for payment details
+    const quotation = await require('../models/Quotation').findOne({ procurementReference: request._id });
+    if (quotation) {
+      request.invoiceNo = quotation.quotationNo;
+      request.paymentMethod = quotation.paymentMethod;
+      request.paymentStatus = quotation.paymentStatus;
+      request.utr = quotation.utrNumber;
+      request.receipt = quotation.receiptUrl; // Assuming this exists or is saved
+    } else {
+      const invoice = await B2BInvoice.findOne({ requestId: request.requestId });
+      if (invoice) {
+        request.invoiceNo = invoice.invoiceNo;
+        if (invoice.paymentDetails) {
+          request.paymentMethod = invoice.paymentDetails.method;
+          request.paymentStatus = invoice.status;
+          request.utr = invoice.paymentDetails.utr;
+          request.receipt = invoice.paymentDetails.receipt;
+        }
       }
     }
 
@@ -395,15 +404,23 @@ router.post('/procurement-requests/:id/confirm-payment', async (req, res) => {
       return res.status(400).json({ message: 'Only PAYMENT_VERIFICATION requests can have payments confirmed.' });
     }
 
+    const quotation = await require('../models/Quotation').findOne({ procurementReference: request._id });
     const invoice = await B2BInvoice.findOne({ requestId: request.requestId });
-    if (!invoice) return res.status(404).json({ message: 'B2B Invoice not found' });
     
+    if (!quotation && !invoice) return res.status(404).json({ message: 'Quotation or B2B Invoice not found' });
+
     // Update statuses
     request.status = 'DISPATCHED';
     await request.save();
 
-    invoice.status = 'Paid';
-    await invoice.save();
+    if (quotation) {
+      quotation.paymentStatus = 'Paid';
+      await quotation.save();
+    }
+    if (invoice) {
+      invoice.status = 'Paid';
+      await invoice.save();
+    }
 
     res.json({ success: true, invoice, request });
   } catch (error) {

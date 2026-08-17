@@ -261,21 +261,10 @@ export default function Procurement() {
                   <td className="px-4 py-3 text-center">
                     {inv.status === 'Pending' && (
                       <button 
-                        onClick={async () => {
-                          if (inv.amount > metrics.walletBalance) {
-                            toast.error(`Cannot approve. Amount (₹${inv.amount}) exceeds available credit (₹${metrics.walletBalance}).`);
-                            return;
-                          }
-                          try {
-                            await approveB2BInvoice(inv._id);
-                            toast.success(`Payment for ${inv.invoiceNo || inv.id} successful!`);
-                          } catch (err) {
-                            toast.error(`Failed to process payment for ${inv.invoiceNo || inv.id}`);
-                          }
-                        }}
+                        onClick={() => navigate('/franchise/checkout', { state: { invoice: inv } })}
                         className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"
                       >
-                        {inv.type === 'Quotation' ? 'Pay Quotation' : 'Pay Invoice'}
+                        Proceed to Checkout
                       </button>
                     )}
                   </td>
@@ -458,7 +447,7 @@ export default function Procurement() {
                         </p>
                         
                         {/* Display Specs summary */}
-                        {Object.keys(item.specs).length > 0 && (
+                        {item.specs && Object.keys(item.specs).length > 0 && (
                           <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg mt-2 mb-1">
                             {Object.entries(item.specs).map(([key, val]) => (
                               val ? <div key={key}><span className="capitalize font-medium">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {val}</div> : null

@@ -199,14 +199,14 @@ router.get('/:storeId/wallet', async (req, res) => {
 router.get('/:storeId/b2b-invoices', async (req, res) => {
   try {
     const Quotation = require('../models/Quotation');
-    const quotations = await Quotation.find({ storeId: req.params.storeId }).sort({ createdAt: -1 });
+    const quotations = await Quotation.find({ storeId: req.params.storeId }).populate('procurementReference').sort({ createdAt: -1 });
     const invoices = await B2BInvoice.find({ storeId: req.params.storeId }).sort({ createdAt: -1 });
     
     // Map quotations to the format expected by the frontend 'approvals' tab
     const mappedQuotations = quotations.map(q => ({
       _id: q._id,
       invoiceNo: q.quotationNo,
-      requestId: q.procurementReference ? q.procurementReference.toString() : 'N/A',
+      requestId: q.procurementReference ? (q.procurementReference.requestId || q.procurementReference._id?.toString() || q.procurementReference.toString()) : 'N/A',
       amount: q.amount,
       status: q.paymentStatus,
       date: new Date(q.createdAt).toLocaleDateString(),
@@ -262,30 +262,51 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
     
     let originalReserved = itemToApprove.amount; // default fallback
     
+    const isAdvancePayment = (paymentMethod && paymentMethod !== 'Credit');
+
     const reqstId = isQuotation ? itemToApprove.procurementReference : itemToApprove.requestId;
     if (reqstId) {
        const reqst = isQuotation ? await ProcurementRequest.findById(reqstId) : await ProcurementRequest.findOne({ requestId: reqstId });
        if (reqst) {
           originalReserved = reqst.total || itemToApprove.amount;
-          reqst.status = isQuotation ? 'Paid' : 'DISPATCHED'; // Update parent request status
+          reqst.status = isAdvancePayment ? 'PAYMENT_VERIFICATION' : (isQuotation ? 'Paid' : 'DISPATCHED');
           await reqst.save();
        }
     }
 
     // Adjust credits
     profile.reservedCredit = Math.max(0, (profile.reservedCredit || 0) - originalReserved);
-    profile.usedCredit = (profile.usedCredit || 0) + itemToApprove.amount;
+    if (!isAdvancePayment) {
+      profile.usedCredit = (profile.usedCredit || 0) + itemToApprove.amount;
+    }
     await profile.save();
     
     // Update item
     if (isQuotation) {
-      itemToApprove.paymentStatus = 'Paid';
+      itemToApprove.paymentStatus = isAdvancePayment ? 'Pending Verification' : 'Paid';
     } else {
-      itemToApprove.status = 'Paid';
+      itemToApprove.status = isAdvancePayment ? 'Payment Verification' : 'Paid';
     }
+    
+    // Store payment details if needed
+    if (paymentMethod && paymentMethod !== 'Credit') {
+      if (isQuotation) {
+        itemToApprove.paymentMethod = paymentMethod;
+        itemToApprove.utrNumber = utrNumber;
+        itemToApprove.transactionDate = transactionDate;
+      } else {
+        itemToApprove.paymentDetails = {
+          method: paymentMethod,
+          utr: utrNumber,
+          date: transactionDate,
+          receipt: receiptUrl
+        };
+      }
+    }
+    
     await itemToApprove.save();
 
-    res.json({ success: true, invoice });
+    res.json({ success: true, item: itemToApprove });
   } catch (error) {
     console.error('Error approving b2b invoice:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -396,30 +417,10 @@ router.post('/:storeId/requests', async (req, res) => {
     }
     const requestId = `REQ-${String(nextNum).padStart(3, '0')}`;
     
-    // Credit Limit Logic
-    const profile = await StoreProfile.findOne({ storeId });
-    if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
-    
-    const availableCredit = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
-    if (availableCredit < totalAmount) {
-      return res.status(400).json({ success: false, message: 'Insufficient Available Credit' });
-    }
-    
-    // Reserve credit
-    profile.reservedCredit = (profile.reservedCredit || 0) + totalAmount;
-    await profile.save();
-    
-    const newBalance = profile.totalCredit - profile.usedCredit - profile.reservedCredit;
-    
-    // Log reservation transaction
-    const txn = new WalletTransaction({
-      storeId,
-      txnId: `TXN-${Date.now()}`,
-      type: 'Reserved',
-      amount: totalAmount,
-      closingBalance: newBalance
-    });
-    await txn.save();
+    // Removed credit limitation check here.
+    // Procurement requests should NOT be blocked by credit limits because:
+    // 1. The Admin manually sets the final B2BInvoice amount.
+    // 2. The Franchise can opt to pay via Advance Payment (NEFT/UPI) at checkout.
 
     const newRequest = new ProcurementRequest({
       storeId,
