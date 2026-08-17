@@ -13,19 +13,50 @@ export default function Wallet() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 bg-gradient-to-br from-indigo-900 to-indigo-700 rounded-3xl p-8 text-white relative overflow-hidden shadow-lg">
+        <div className="md:col-span-3 bg-gradient-to-br from-indigo-900 to-indigo-700 rounded-3xl p-8 text-white relative overflow-hidden shadow-lg">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500 opacity-20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
           
           <div className="relative z-10 flex flex-col h-full justify-between">
-            <div>
-              <p className="text-indigo-200 text-sm font-semibold tracking-wider uppercase mb-1">Current Available Balance</p>
-              <h2 className="text-5xl font-black flex items-center">
-                <IndianRupee size={40} className="mr-1" />
-                {metrics.walletBalance.toLocaleString()}
-              </h2>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+              <div>
+                <p className="text-indigo-200 text-sm font-semibold tracking-wider uppercase mb-1">Available Balance</p>
+                <h2 className="text-5xl font-black flex items-center">
+                  <IndianRupee size={40} className="mr-1" />
+                  {metrics.walletBalance.toLocaleString()}
+                </h2>
+              </div>
+              <div className="bg-white/10 px-6 py-4 rounded-2xl backdrop-blur-sm border border-white/10">
+                <p className="text-indigo-200 text-sm font-semibold tracking-wider uppercase mb-1">Total Credit Assigned</p>
+                <p className="text-2xl font-bold flex items-center">
+                  <IndianRupee size={20} className="mr-1" />
+                  {(metrics.totalCredit || 0).toLocaleString()}
+                </p>
+              </div>
             </div>
             
-            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-indigo-500/30">
+               <div>
+                  <p className="text-indigo-300 text-xs font-semibold tracking-wider uppercase mb-1 flex items-center gap-1">
+                    <ArrowUpRight size={14} className="text-rose-400" />
+                    Used Credit
+                  </p>
+                  <p className="text-xl font-bold flex items-center">
+                    <IndianRupee size={16} className="mr-1" />
+                    {(metrics.usedCredit || 0).toLocaleString()}
+                  </p>
+               </div>
+               <div>
+                  <p className="text-indigo-300 text-xs font-semibold tracking-wider uppercase mb-1 flex items-center gap-1">
+                    <ArrowDownRight size={14} className="text-amber-400" />
+                    Reserved Credit
+                  </p>
+                  <p className="text-xl font-bold flex items-center text-slate-100">
+                    <IndianRupee size={16} className="mr-1" />
+                    {(metrics.reservedCredit || 0).toLocaleString()}
+                  </p>
+               </div>
+            </div>
           </div>
         </div>
       </div>
@@ -47,10 +78,12 @@ export default function Wallet() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {walletTransactions.map(txn => (
-                <tr key={txn.id} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 text-sm text-slate-600">{txn.date}</td>
-                  <td className="px-6 py-4 font-mono text-sm text-slate-800">{txn.id}</td>
+              {walletTransactions.map((txn, index) => (
+                <tr key={txn._id || txn.txnId || index} className="hover:bg-slate-50">
+                  <td className="px-6 py-4 text-sm text-slate-600">
+                    {new Date(txn.date).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 font-mono text-sm text-slate-800">{txn.txnId || txn.id}</td>
                   <td className="px-6 py-4">
                     <span className={`flex items-center gap-1 text-xs font-bold ${txn.type === 'Credit In' ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {txn.type === 'Credit In' ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}

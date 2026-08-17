@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useFranchise } from '../context/FranchiseContext';
+import { useNavigate } from 'react-router-dom';
 import { Plus, X, Trash2, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Procurement() {
   const { techhansaCatalog, b2bInvoices, approveB2BInvoice, orders, submitOrderRequest, metrics } = useFranchise();
   const [activeTab, setActiveTab] = useState('catalog');
+  const navigate = useNavigate();
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -214,8 +216,8 @@ export default function Procurement() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                          {Array.isArray(order.items) ? order.items.map(item => (
-                            <tr key={item._id || item.id}>
+                          {Array.isArray(order.items) ? order.items.map((item, idx) => (
+                            <tr key={item._id || item.id || idx}>
                               <td className="py-3 font-medium text-slate-800">
                                 {item.hardwareType === 'Others' ? item.otherType : item.hardwareType}
                               </td>
@@ -282,7 +284,7 @@ export default function Procurement() {
                 <tr key={inv._id || inv.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 text-sm text-slate-600">{inv.requestId || 'N/A'}</td>
                   <td className="px-4 py-3 font-semibold text-slate-800">{inv.invoiceNo || inv.id}</td>
-                  <td className="px-4 py-3 text-sm">{inv.date}</td>
+                  <td className="px-4 py-3 text-sm">{inv.date || new Date(inv.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-right font-medium text-rose-600">₹{inv.amount.toLocaleString()}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`px-2 py-1 rounded-full text-xs font-bold ${inv.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -301,21 +303,10 @@ export default function Procurement() {
                   <td className="px-4 py-3 text-center">
                     {inv.status === 'Pending' && (
                       <button 
-                        onClick={async () => {
-                          if (inv.amount > metrics.walletBalance) {
-                            toast.error(`Cannot approve. Invoice amount (₹${inv.amount}) exceeds available credit (₹${metrics.walletBalance}).`);
-                            return;
-                          }
-                          try {
-                            await approveB2BInvoice(inv._id);
-                            toast.success(`Order ${inv.invoiceNo || inv.id} approved and paid successfully!`);
-                          } catch (err) {
-                            toast.error(`Failed to approve order ${inv.invoiceNo || inv.id}`);
-                          }
-                        }}
-                        className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"
+                        onClick={() => navigate('/franchise/checkout', { state: { invoice: inv } })}
+                        className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100"
                       >
-                        Approve and Pay
+                        Proceed to Checkout
                       </button>
                     )}
                   </td>

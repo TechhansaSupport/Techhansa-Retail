@@ -13,7 +13,7 @@ const procurementRequestSchema = new mongoose.Schema({
   storeId: { type: String, required: true },
   requestId: { type: String, required: true, unique: true },
   date: { type: String, required: true },
-  status: { type: String, required: true, enum: ['PENDING', 'APPROVED', 'DISPATCHED', 'DELIVERED'], default: 'PENDING' },
+  status: { type: String, required: true, default: 'PENDING' },
   items: [requestItemSchema],
   total: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
