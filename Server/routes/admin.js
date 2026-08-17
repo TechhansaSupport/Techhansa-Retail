@@ -408,6 +408,7 @@ router.post('/procurement-requests/:id/confirm-payment', async (req, res) => {
     res.json({ success: true, invoice, request });
   } catch (error) {
     console.error('Error confirming payment:', error);
+
     res.status(500).json({ message: 'Server error' });
   }
 });
