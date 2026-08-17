@@ -261,19 +261,19 @@ export default function Procurement() {
                       <button 
                         onClick={async () => {
                           if (inv.amount > metrics.walletBalance) {
-                            toast.error(`Cannot approve. Invoice amount (₹${inv.amount}) exceeds available credit (₹${metrics.walletBalance}).`);
+                            toast.error(`Cannot approve. Amount (₹${inv.amount}) exceeds available credit (₹${metrics.walletBalance}).`);
                             return;
                           }
                           try {
                             await approveB2BInvoice(inv._id);
-                            toast.success(`Order ${inv.invoiceNo || inv.id} approved and paid successfully!`);
+                            toast.success(`Payment for ${inv.invoiceNo || inv.id} successful!`);
                           } catch (err) {
-                            toast.error(`Failed to approve order ${inv.invoiceNo || inv.id}`);
+                            toast.error(`Failed to process payment for ${inv.invoiceNo || inv.id}`);
                           }
                         }}
                         className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"
                       >
-                        Approve and Pay
+                        {inv.type === 'Quotation' ? 'Pay Quotation' : 'Pay Invoice'}
                       </button>
                     )}
                   </td>
