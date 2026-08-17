@@ -409,7 +409,9 @@ router.post('/procurement-requests/:id/confirm-payment', async (req, res) => {
   } catch (error) {
     console.error('Error confirming payment:', error);
 
-
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // POST /api/admin/rfps/:id/approve
 router.post('/rfps/:id/approve', async (req, res) => {
