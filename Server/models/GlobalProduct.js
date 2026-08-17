@@ -18,9 +18,8 @@ const globalProductSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-globalProductSchema.pre('save', function(next) {
+globalProductSchema.pre('save', function() {
   this.updatedAt = Date.now();
-  next();
 });
 
 module.exports = mongoose.model('GlobalProduct', globalProductSchema);

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Plus, Trash2, FileUp, Save, Send, Calendar, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
@@ -28,14 +28,32 @@ export default function CreateRFP() {
       [{ id: 1, category: '', brand: '', model: '', config: '', qty: 1, remarks: '' }]
   );
 
-  // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
 
+  const [catalog, setCatalog] = useState([]);
+  
+  useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/channel/catalog/all`);
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.success) {
+            setCatalog(resData.data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch catalog:", err);
+      }
+    };
+    fetchCatalog();
+  }, []);
+
   const addRow = () => {
-    setProducts([...products, { id: Date.now(), category: '', brand: '', model: '', config: '', qty: 1, remarks: '' }]);
+    setProducts([...products, { id: Date.now(), catalogItemId: '', category: '', brand: '', model: '', config: '', qty: 1, remarks: '' }]);
   };
 
   const removeRow = (id) => {
@@ -94,8 +112,10 @@ export default function CreateRFP() {
         model: p.model.trim(),
         configuration: p.config.trim(),
         quantity: Number(p.qty),
+        price: Number(p.price) || 0,
         remarks: p.remarks.trim()
-      }))
+      })),
+      estimatedTotal: products.reduce((acc, p) => acc + ((p.price || 0) * (parseInt(p.qty) || 0)), 0)
     };
   };
 
@@ -291,71 +311,122 @@ export default function CreateRFP() {
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-gray-600 uppercase bg-gray-50 border-b border-gray-100">
                   <tr>
-                    <th className="px-4 py-3 font-semibold w-48">Category</th>
-                    <th className="px-4 py-3 font-semibold w-32">Brand</th>
-                    <th className="px-4 py-3 font-semibold w-40">Model</th>
-                    <th className="px-4 py-3 font-semibold min-w-[200px]">Configuration</th>
-                    <th className="px-4 py-3 font-semibold w-24">Qty</th>
+                    <th colSpan="4" className="px-4 py-3 font-semibold min-w-[300px]">Select Catalog Item</th>
+                    <th className="px-4 py-3 font-semibold text-right">Est. Price</th>
+                    <th className="px-4 py-3 font-semibold w-24 text-center">Qty</th>
+                    <th className="px-4 py-3 font-semibold text-right">Est. Amount</th>
                     <th className="px-4 py-3 font-semibold"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {products.map((p, i) => (
                     <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="p-2 align-top">
-                        <select
-                          value={p.category}
-                          onChange={(e) => updateProduct(i, 'category', e.target.value)}
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        >
-                          <option value="">Select...</option>
-                          <option>Laptops</option>
-                          <option>Desktops</option>
-                          <option>Monitors</option>
-                          <option>Printers</option>
-                          <option>Servers</option>
-                          <option>Networking</option>
-                          <option>Storage</option>
-                          <option>Accessories</option>
-                        </select>
+                      <td colSpan="4" className="p-2 align-top">
+                        <div className="grid grid-cols-2 gap-2">
+                          <select
+                            value={p.category || ''}
+                            onChange={(e) => {
+                              const newProducts = [...products];
+                              newProducts[i].category = e.target.value;
+                              newProducts[i].brand = '';
+                              newProducts[i].model = '';
+                              newProducts[i].config = '';
+                              newProducts[i].catalogItemId = '';
+                              setProducts(newProducts);
+                            }}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          >
+                            <option value="">All Categories</option>
+                            {[...new Set(catalog.map(item => item.category).filter(Boolean))].map(c => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+
+                          <select
+                            value={p.brand || ''}
+                            onChange={(e) => {
+                              const newProducts = [...products];
+                              newProducts[i].brand = e.target.value;
+                              newProducts[i].model = '';
+                              newProducts[i].config = '';
+                              newProducts[i].catalogItemId = '';
+                              setProducts(newProducts);
+                            }}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          >
+                            <option value="">All Brands</option>
+                            {[...new Set(catalog.filter(item => !p.category || item.category === p.category).map(item => item.brand).filter(Boolean))].map(b => (
+                              <option key={b} value={b}>{b}</option>
+                            ))}
+                          </select>
+
+                          <select
+                            value={p.model || ''}
+                            onChange={(e) => {
+                              const newProducts = [...products];
+                              newProducts[i].model = e.target.value;
+                              newProducts[i].config = '';
+                              newProducts[i].catalogItemId = '';
+                              setProducts(newProducts);
+                            }}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          >
+                            <option value="">All Models</option>
+                            {[...new Set(catalog.filter(item => 
+                              (!p.category || item.category === p.category) && 
+                              (!p.brand || item.brand === p.brand)
+                            ).map(item => item.model).filter(Boolean))].map(m => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
+
+                          <select
+                            value={p.catalogItemId || ''}
+                            onChange={(e) => {
+                              const selectedId = e.target.value;
+                              const item = catalog.find(c => c._id === selectedId);
+                              if (item) {
+                                const newProducts = [...products];
+                                newProducts[i].catalogItemId = item._id;
+                                newProducts[i].category = item.category || item.name;
+                                newProducts[i].brand = item.brand || 'N/A';
+                                newProducts[i].model = item.model || 'N/A';
+                                newProducts[i].config = item.specs || 'N/A';
+                                newProducts[i].price = item.sellingPrice || 0;
+                                setProducts(newProducts);
+                              }
+                            }}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          >
+                            <option value="">Select Specs...</option>
+                            {catalog.filter(item => 
+                              (!p.category || item.category === p.category) && 
+                              (!p.brand || item.brand === p.brand) &&
+                              (!p.model || item.model === p.model)
+                            ).map(c => (
+                              <option key={c._id} value={c._id}>
+                                {c.specs ? c.specs.substring(0, 45) + (c.specs.length > 45 ? '...' : '') : c.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </td>
-                      <td className="p-2 align-top">
-                        <input
-                          type="text"
-                          value={p.brand}
-                          onChange={(e) => updateProduct(i, 'brand', e.target.value)}
-                          placeholder="Brand"
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
+                      <td className="p-2 align-middle text-right text-sm text-gray-700">
+                        {p.price ? `₹${p.price.toLocaleString()}` : '-'}
                       </td>
-                      <td className="p-2 align-top">
-                        <input
-                          type="text"
-                          value={p.model}
-                          onChange={(e) => updateProduct(i, 'model', e.target.value)}
-                          placeholder="Model"
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </td>
-                      <td className="p-2 align-top">
-                        <input
-                          type="text"
-                          value={p.config}
-                          onChange={(e) => updateProduct(i, 'config', e.target.value)}
-                          placeholder="i7, 16GB, 512GB SSD..."
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </td>
-                      <td className="p-2 align-top">
+                      <td className="p-2 align-middle">
                         <input
                           type="number"
                           min="1"
                           value={p.qty}
                           onChange={(e) => updateProduct(i, 'qty', e.target.value)}
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 text-center"
                         />
                       </td>
-                      <td className="p-2 align-top text-center">
+                      <td className="p-2 align-middle text-right text-sm font-semibold text-gray-900">
+                        {p.price ? `₹${(p.price * p.qty).toLocaleString()}` : '-'}
+                      </td>
+                      <td className="p-2 align-middle text-center">
                         <button
                           onClick={() => removeRow(p.id)}
                           className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
@@ -392,7 +463,15 @@ export default function CreateRFP() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500 text-sm">Total Quantity</span>
-                <span className="font-semibold text-gray-900">{totalQty}</span>
+                <span className="font-semibold text-gray-900">
+                  {products.reduce((acc, p) => acc + (parseInt(p.qty) || 0), 0)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                <span className="text-gray-700 font-semibold">Estimated Total</span>
+                <span className="font-bold text-blue-600 text-lg">
+                  ₹{products.reduce((acc, p) => acc + ((p.price || 0) * (parseInt(p.qty) || 0)), 0).toLocaleString()}
+                </span>
               </div>
             </div>
 

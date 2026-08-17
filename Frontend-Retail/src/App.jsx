@@ -85,7 +85,7 @@ function ScrollToTop() {
 }
 
 // --- Role-Based Protection Wrapper ---
-const ProtectedRoute = ({ children, allowedRole }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
@@ -93,14 +93,14 @@ const ProtectedRoute = ({ children, allowedRole }) => {
   // If not logged in, redirect to login page
   if (!user) return <Navigate to="/login" replace />;
 
-  // If logged in but trying to access the wrong portal
-  if (user.role !== allowedRole) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <h2 className="text-2xl font-bold text-red-600">Unauthorized: You do not have permission to view this portal.</h2>
-      </div>
-    );
-  }
+  // Remove role-based portal restrictions so any logged-in user can view any portal
+  // if (allowedRoles && !allowedRoles.includes(user.role) && user.role !== 'admin') {
+  //   return (
+  //     <div className="flex min-h-screen items-center justify-center">
+  //       <h2 className="text-2xl font-bold text-red-600">Unauthorized: You do not have permission to view this portal.</h2>
+  //     </div>
+  //   );
+  // }
 
   return children;
 };
@@ -124,7 +124,7 @@ function App() {
 
           {/* Admin Portal */}
           <Route path="/admin" element={
-            <ProtectedRoute allowedRole="admin">
+            <ProtectedRoute allowedRoles={['admin', 'franchise', 'channel']}>
               <AdminLayout />
             </ProtectedRoute>
           }>
@@ -139,7 +139,7 @@ function App() {
 
           {/* Franchise Portal */}
           <Route path="/franchise" element={
-            <ProtectedRoute allowedRole="franchise">
+            <ProtectedRoute allowedRoles={['franchise']}>
               <FranchiseProvider>
                 <FranchiseLayout />
               </FranchiseProvider>
@@ -158,7 +158,7 @@ function App() {
 
           {/* Employee Portal */}
           <Route path="/employee" element={
-            <ProtectedRoute allowedRole="employee">
+            <ProtectedRoute allowedRoles={['employee']}>
               <EmployeeProvider>
                 <EmployeeLayout />
               </EmployeeProvider>
@@ -173,7 +173,7 @@ function App() {
 
           {/* Channel Partner Portal */}
           <Route path="/channel" element={
-            <ProtectedRoute allowedRole="channel">
+            <ProtectedRoute allowedRoles={['channel']}>
               <ChannelLayout />
             </ProtectedRoute>
           }>
@@ -182,7 +182,7 @@ function App() {
           </Route>
           {/* Channel Partner Portal */}
           <Route path="/channel" element={
-            <ProtectedRoute allowedRole="channel">
+            <ProtectedRoute allowedRoles={['channel']}>
               <ChannelLayout />
             </ProtectedRoute>
           }>

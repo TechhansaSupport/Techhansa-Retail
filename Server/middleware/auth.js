@@ -21,7 +21,6 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// Middleware to verify if the token belongs to an Admin
 const verifyAdminToken = (req, res, next) => {
   try {
     let token = req.headers.authorization;
@@ -34,8 +33,9 @@ const verifyAdminToken = (req, res, next) => {
     const verified = jwt.verify(token, JWT_SECRET);
     req.user = verified;
 
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access Denied: Super Admin privileges required' });
+    const allowedRoles = ['admin', 'franchise', 'channel'];
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access Denied: Admin privileges required' });
     }
 
     next();
