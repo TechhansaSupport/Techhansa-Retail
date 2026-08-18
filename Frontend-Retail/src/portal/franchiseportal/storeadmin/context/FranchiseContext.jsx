@@ -101,8 +101,23 @@ export function FranchiseProvider({ children }) {
     setGlobalCart([]);
   };
 
-  const updateStoreProfile = (newProfile) => {
-    setStoreProfileData(newProfile);
+  const updateStoreProfile = async (newProfile) => {
+    try {
+      // Optimistic UI update
+      setStoreProfileData(newProfile);
+      
+      const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/profile`, newProfile);
+      if (res.data.success) {
+        setStoreProfileData(res.data.data);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Failed to update store profile", error);
+      // Revert on error by refreshing
+      refreshData();
+      return false;
+    }
   };
 
   const approveB2BInvoice = async (invoiceId, paymentDetails = {}) => {

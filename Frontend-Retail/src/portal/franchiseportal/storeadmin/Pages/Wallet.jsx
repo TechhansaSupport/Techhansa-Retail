@@ -1,9 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useFranchise } from '../context/FranchiseContext';
-import { IndianRupee, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { AuthContext } from '../../../../context/AuthContext';
+import { IndianRupee, ArrowUpRight, ArrowDownRight, History, RefreshCcw, Receipt } from 'lucide-react';
 
 export default function Wallet() {
-  const { metrics, walletTransactions } = useFranchise();
+  const { metrics, walletTransactions, refreshData } = useFranchise();
+  const { user } = useContext(AuthContext) || {};
+  const [activeTab, setActiveTab] = useState('ledger'); // 'ledger' | 'history'
+  const [creditHistory, setCreditHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const fetchCreditHistory = async () => {
+    if (!user?.userId) return;
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/procurement/credit-transactions?userId=${user.userId}`);
+      const data = await res.json();
+      setCreditHistory(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to fetch credit history', err);
+      setCreditHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'history') {
+      fetchCreditHistory();
+    }
+  }, [activeTab, user?.userId]);
+
+  const formatCurrency = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
+
+  const getHistoryColor = (type) => {
+    if (['Assigned', 'Increased', 'Refunded', 'Released'].includes(type)) return 'text-emerald-600';
+    if (['Reserved'].includes(type)) return 'text-amber-600';
+    return 'text-red-600';
+  };
+
+  const getHistoryBadge = (type) => {
+    if (['Assigned', 'Increased', 'Refunded', 'Released'].includes(type)) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (['Reserved'].includes(type)) return 'bg-amber-50 text-amber-700 border-amber-200';
+    return 'bg-red-50 text-red-700 border-red-200';
+  };
 
   return (
     <div className="space-y-6">
@@ -23,7 +63,7 @@ export default function Wallet() {
                 <p className="text-indigo-200 text-sm font-semibold tracking-wider uppercase mb-1">Available Balance</p>
                 <h2 className="text-5xl font-black flex items-center">
                   <IndianRupee size={40} className="mr-1" />
-                  {metrics.walletBalance.toLocaleString()}
+                  {(metrics.walletBalance || 0).toLocaleString()}
                 </h2>
               </div>
               <div className="bg-white/10 px-6 py-4 rounded-2xl backdrop-blur-sm border border-white/10">
@@ -61,47 +101,142 @@ export default function Wallet() {
         </div>
       </div>
 
+      {/* Tabs */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-slate-800">Transaction Ledger</h2>
+        <div className="flex border-b border-slate-100 px-6">
+          <button
+            onClick={() => setActiveTab('ledger')}
+            className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'ledger'
+                ? 'border-indigo-600 text-indigo-700'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <Receipt size={16} /> Transaction Ledger
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'history'
+                ? 'border-indigo-600 text-indigo-700'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+          >
+            <History size={16} /> Credit History
+            {creditHistory.length > 0 && activeTab !== 'history' && (
+              <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{creditHistory.length}</span>
+            )}
+          </button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 text-slate-500 text-xs uppercase">
-                <th className="px-6 py-3">Date</th>
-                <th className="px-6 py-3">Transaction ID</th>
-                <th className="px-6 py-3">Type</th>
-                <th className="px-6 py-3 text-right">Amount</th>
-                <th className="px-6 py-3 text-center">Status</th>
-                <th className="px-6 py-3 text-right">Closing Balance</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {walletTransactions.map((txn, index) => (
-                <tr key={txn._id || txn.txnId || index} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 text-sm text-slate-600">
-                    {new Date(txn.date).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 font-mono text-sm text-slate-800">{txn.txnId || txn.id}</td>
-                  <td className="px-6 py-4">
-                    <span className={`flex items-center gap-1 text-xs font-bold ${txn.type === 'Credit In' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {txn.type === 'Credit In' ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
-                      {txn.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right font-medium">₹{txn.amount.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
-                      {txn.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right font-bold text-slate-700">₹{txn.closingBalance.toLocaleString()}</td>
+
+        {activeTab === 'ledger' ? (
+          /* Transaction Ledger Tab */
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 text-slate-500 text-xs uppercase">
+                  <th className="px-6 py-3">Date</th>
+                  <th className="px-6 py-3">Transaction ID</th>
+                  <th className="px-6 py-3">Type</th>
+                  <th className="px-6 py-3 text-right">Amount</th>
+                  <th className="px-6 py-3 text-center">Status</th>
+                  <th className="px-6 py-3 text-right">Closing Balance</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {walletTransactions.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center text-slate-400">
+                      No wallet transactions yet.
+                    </td>
+                  </tr>
+                ) : (
+                  walletTransactions.map((txn, index) => (
+                    <tr key={txn._id || txn.txnId || index} className="hover:bg-slate-50">
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {new Date(txn.date).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 font-mono text-sm text-slate-800">{txn.txnId || txn.id}</td>
+                      <td className="px-6 py-4">
+                        <span className={`flex items-center gap-1 text-xs font-bold ${txn.type === 'Credit In' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {txn.type === 'Credit In' ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
+                          {txn.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right font-medium">₹{txn.amount.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+                          {txn.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right font-bold text-slate-700">₹{txn.closingBalance.toLocaleString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Credit History Tab */
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-slate-500">All credit limit changes, assignments, and deductions by Techhansa Admin.</p>
+              <button
+                onClick={fetchCreditHistory}
+                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                title="Refresh"
+              >
+                <RefreshCcw size={16} className={historyLoading ? 'animate-spin' : ''} />
+              </button>
+            </div>
+
+            {historyLoading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
+                <p className="text-sm text-slate-500">Loading credit history...</p>
+              </div>
+            ) : creditHistory.length === 0 ? (
+              <div className="text-center py-12">
+                <History className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500 font-semibold">No credit history yet</p>
+                <p className="text-slate-400 text-sm mt-1">Your credit assignments and deductions will appear here.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {creditHistory.map((tx) => (
+                  <div key={tx._id} className="bg-slate-50 rounded-xl p-4 border border-slate-100 hover:border-slate-200 transition-colors">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className={`p-2 rounded-xl shrink-0 border ${getHistoryBadge(tx.type)}`}>
+                          {['Assigned', 'Increased', 'Refunded', 'Released'].includes(tx.type)
+                            ? <ArrowDownRight size={16} className="text-emerald-600" />
+                            : <ArrowUpRight size={16} className="text-red-600" />
+                          }
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900">{tx.description}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${getHistoryBadge(tx.type)}`}>
+                              {tx.type}
+                            </span>
+                            <span className="text-xs text-slate-400">{new Date(tx.date || tx.createdAt).toLocaleString()}</span>
+                          </div>
+                          {tx.referenceId && tx.referenceId !== 'ADMIN_UPDATE' && (
+                            <p className="text-xs text-slate-400 mt-1">Ref: <span className="font-medium text-slate-600">{tx.referenceId}</span></p>
+                          )}
+                        </div>
+                      </div>
+                      <p className={`text-base font-bold shrink-0 ${getHistoryColor(tx.type)}`}>
+                        {['Assigned', 'Increased', 'Refunded', 'Released'].includes(tx.type) ? '+' : '-'}
+                        {formatCurrency(tx.amount)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

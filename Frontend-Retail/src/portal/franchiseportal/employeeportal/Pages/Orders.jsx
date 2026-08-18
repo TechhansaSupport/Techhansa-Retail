@@ -3,7 +3,7 @@ import { Search, Download, Printer, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../../../../context/AuthContext';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export default function EmployeeOrders() {
   const { user } = useContext(AuthContext);
@@ -44,14 +44,19 @@ export default function EmployeeOrders() {
     doc.text(`Customer Name: ${order.customerName || 'Walk-in'}`, 14, 59);
     doc.text(`Phone: ${order.customerPhone || 'N/A'}`, 14, 66);
     
-    const tableBody = (order.items || []).map(item => [
-      item.name,
-      item.quantity,
-      `Rs. ${item.sellingPrice.toLocaleString()}`,
-      `Rs. ${(item.quantity * item.sellingPrice).toLocaleString()}`
-    ]);
+    const tableBody = (order.items || []).map(item => {
+      const itemName = item.serialNumbers && item.serialNumbers.length > 0
+        ? `${item.name}\n(SN: ${item.serialNumbers.join(', ')})`
+        : item.name;
+      return [
+        itemName,
+        item.quantity,
+        `Rs. ${(item.sellingPrice || 0).toLocaleString()}`,
+        `Rs. ${(item.quantity * (item.sellingPrice || 0)).toLocaleString()}`
+      ];
+    });
     
-    doc.autoTable({
+    autoTable(doc, {
       startY: 75,
       head: [['Item Name', 'Qty', 'Price', 'Total']],
       body: tableBody,
@@ -59,14 +64,14 @@ export default function EmployeeOrders() {
       headStyles: { fillColor: [79, 70, 229] }
     });
     
-    const finalY = doc.lastAutoTable.finalY + 10;
+    const finalY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 75) + 10;
     
-    doc.autoTable({
+    autoTable(doc, {
       startY: finalY,
       body: [
-        ['Subtotal', `Rs. ${order.subtotalAmount?.toLocaleString() || '-'}`],
-        ['Tax (18% GST)', `Rs. ${(order.amount - (order.subtotalAmount || 0)).toLocaleString()}`],
-        ['Grand Total', `Rs. ${order.amount?.toLocaleString()}`]
+        ['Subtotal', `Rs. ${(order.subtotalAmount || 0).toLocaleString()}`],
+        ['Tax (18% GST)', `Rs. (((order.amount || 0) - (order.subtotalAmount || 0))).toLocaleString()`],
+        ['Grand Total', `Rs. ${(order.amount || 0).toLocaleString()}`]
       ],
       theme: 'plain',
       styles: { halign: 'right' },

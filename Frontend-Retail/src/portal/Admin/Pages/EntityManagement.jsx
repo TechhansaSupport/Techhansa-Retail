@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from '../../../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, ShieldCheck, Search, Users, Plus, Trash2, X, AlertTriangle, Wallet, Eye, EyeOff } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Search, Users, Plus, Trash2, X, AlertTriangle, Wallet, Eye, EyeOff, History, ArrowUpRight, ArrowDownRight, IndianRupee, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function EntityManagement() {
@@ -21,6 +21,9 @@ export default function EntityManagement() {
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const [creditUserId, setCreditUserId] = useState(null);
   const [creditAmount, setCreditAmount] = useState('');
+  const [creditHistory, setCreditHistory] = useState([]);
+  const [creditHistoryLoading, setCreditHistoryLoading] = useState(false);
+  const [creditTab, setCreditTab] = useState('assign'); // 'assign' | 'history'
 
   const [formData, setFormData] = useState({
     userId: '',
@@ -128,16 +131,29 @@ export default function EntityManagement() {
     }
   };
 
+  const fetchCreditHistory = async (userId) => {
+    setCreditHistoryLoading(true);
+    try {
+      const res = await axios.get(`/api/admin/entities/${userId}/credit-history`);
+      setCreditHistory(res.data || []);
+    } catch (error) {
+      console.error('Failed to fetch credit history', error);
+      setCreditHistory([]);
+    } finally {
+      setCreditHistoryLoading(false);
+    }
+  };
+
   const handleCreditSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
       await axios.put(`/api/admin/entities/${creditUserId}/credit`, { totalCredit: Number(creditAmount) });
       toast.success('Credit limit updated successfully!');
-      setIsCreditModalOpen(false);
-      setCreditUserId(null);
-      setCreditAmount('');
       fetchEntities();
+      // Refresh history after update
+      fetchCreditHistory(creditUserId);
+      setCreditTab('history');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to assign credit');
     } finally {
@@ -148,7 +164,23 @@ export default function EntityManagement() {
   const openCreditModal = (userId, currentCredit) => {
     setCreditUserId(userId);
     setCreditAmount(currentCredit || 0);
+    setCreditTab('assign');
     setIsCreditModalOpen(true);
+    fetchCreditHistory(userId);
+  };
+
+  const formatCurrency = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
+
+  const getHistoryColor = (type) => {
+    if (['Assigned', 'Increased', 'Refunded', 'Released'].includes(type)) return 'text-emerald-600';
+    if (['Reserved'].includes(type)) return 'text-amber-600';
+    return 'text-red-600';
+  };
+
+  const getHistoryBadge = (type) => {
+    if (['Assigned', 'Increased', 'Refunded', 'Released'].includes(type)) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (['Reserved'].includes(type)) return 'bg-amber-50 text-amber-700 border-amber-200';
+    return 'bg-red-50 text-red-700 border-red-200';
   };
 
   const filteredEntities = entities.filter(entity => {
@@ -331,7 +363,7 @@ export default function EntityManagement() {
         </div>
       </motion.div>
 
-      {/* Credit Assignment Modal */}
+      {/* Credit Assignment Modal with History */}
       {createPortal(
         <AnimatePresence>
           {isCreditModalOpen && (
@@ -340,53 +372,148 @@ export default function EntityManagement() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+              className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]"
             >
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-indigo-50/50">
+              {/* Header */}
+              <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-indigo-50/50 shrink-0">
                 <div className="flex items-center">
                    <Wallet className="text-indigo-600 mr-2" size={20} />
-                   <h3 className="text-lg font-bold text-gray-800">Assign Credit Limit</h3>
+                   <h3 className="text-lg font-bold text-gray-800">Credit Management</h3>
                 </div>
                 <button onClick={() => setIsCreditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                   <X size={20} />
                 </button>
               </div>
-              <form onSubmit={handleCreditSubmit} className="p-6">
-                <p className="text-sm text-gray-500 mb-4">
-                  Update the maximum operating credit line for <span className="font-bold text-gray-800">{creditUserId}</span>.
-                </p>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Total Credit Line (₹)</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-gray-500 font-medium">₹</span>
-                    <input
-                      required
-                      type="number"
-                      min="0"
-                      step="1000"
-                      value={creditAmount}
-                      onChange={(e) => setCreditAmount(e.target.value)}
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-bold"
-                    />
+
+              {/* Tabs */}
+              <div className="flex border-b border-gray-100 px-5 shrink-0">
+                <button
+                  onClick={() => setCreditTab('assign')}
+                  className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                    creditTab === 'assign' 
+                      ? 'border-indigo-600 text-indigo-700' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Wallet size={16} /> Assign Credit
+                </button>
+                <button
+                  onClick={() => setCreditTab('history')}
+                  className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                    creditTab === 'history' 
+                      ? 'border-indigo-600 text-indigo-700' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <History size={16} /> History
+                  {creditHistory.length > 0 && (
+                    <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{creditHistory.length}</span>
+                  )}
+                </button>
+              </div>
+
+              {/* Tab Content */}
+              <div className="flex-1 overflow-y-auto">
+                {creditTab === 'assign' ? (
+                  <form onSubmit={handleCreditSubmit} className="p-6">
+                    <p className="text-sm text-gray-500 mb-4">
+                      Update the maximum operating credit line for <span className="font-bold text-gray-800">{creditUserId}</span>.
+                    </p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Total Credit Line (₹)</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-gray-500 font-medium">₹</span>
+                        <input
+                          required
+                          type="number"
+                          min="0"
+                          step="1000"
+                          value={creditAmount}
+                          onChange={(e) => setCreditAmount(e.target.value)}
+                          className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-bold"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-6 flex justify-end gap-3">
+                      <button 
+                        type="button"
+                        onClick={() => setIsCreditModalOpen(false)}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200"
+                      >
+                        {isSubmitting ? 'Updating...' : 'Assign Limit'}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="p-5 space-y-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm text-gray-500">
+                        All credit changes for <span className="font-bold text-gray-800">{creditUserId}</span>
+                      </p>
+                      <button
+                        onClick={() => fetchCreditHistory(creditUserId)}
+                        className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Refresh"
+                      >
+                        <RefreshCcw size={14} className={creditHistoryLoading ? 'animate-spin' : ''} />
+                      </button>
+                    </div>
+
+                    {creditHistoryLoading ? (
+                      <div className="flex flex-col items-center justify-center py-10">
+                        <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-indigo-600 mb-3"></div>
+                        <p className="text-sm text-gray-500">Loading history...</p>
+                      </div>
+                    ) : creditHistory.length === 0 ? (
+                      <div className="text-center py-10">
+                        <History className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500 font-medium">No credit history found</p>
+                        <p className="text-gray-400 text-sm mt-1">Credit transactions will appear here after the first assignment.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {creditHistory.map((tx) => (
+                          <div key={tx._id} className="bg-gray-50 rounded-xl p-3.5 border border-gray-100 hover:border-gray-200 transition-colors">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3 min-w-0 flex-1">
+                                <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${getHistoryBadge(tx.type).split(' ')[0]} border ${getHistoryBadge(tx.type).split(' ').slice(2).join(' ')}`}>
+                                  {['Assigned', 'Increased', 'Refunded', 'Released'].includes(tx.type) 
+                                    ? <ArrowDownRight size={14} className="text-emerald-600" />
+                                    : <ArrowUpRight size={14} className="text-red-600" />
+                                  }
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold text-gray-900 truncate">{tx.description}</p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${getHistoryBadge(tx.type)}`}>
+                                      {tx.type}
+                                    </span>
+                                    <span className="text-[11px] text-gray-400">{new Date(tx.date || tx.createdAt).toLocaleString()}</span>
+                                  </div>
+                                  {tx.referenceId && tx.referenceId !== 'ADMIN_UPDATE' && (
+                                    <p className="text-[11px] text-gray-400 mt-1">Ref: {tx.referenceId}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <p className={`text-sm font-bold shrink-0 ${getHistoryColor(tx.type)}`}>
+                                {['Assigned', 'Increased', 'Refunded', 'Released'].includes(tx.type) ? '+' : '-'}
+                                {formatCurrency(tx.amount)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div className="mt-6 flex justify-end gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => setIsCreditModalOpen(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200"
-                  >
-                    {isSubmitting ? 'Updating...' : 'Assign Limit'}
-                  </button>
-                </div>
-              </form>
+                )}
+              </div>
             </motion.div>
           </div>
         )}

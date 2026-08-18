@@ -210,7 +210,11 @@ export default function Cart() {
                       <tr key={item.productId || idx}>
                         <td className="py-3 text-slate-800 font-medium">
                           {item.name}
-
+                          {item.serialNumbers && item.serialNumbers.length > 0 && (
+                            <div className="text-xs text-slate-500 mt-1 font-mono">
+                              SN: {item.serialNumbers.join(', ')}
+                            </div>
+                          )}
                         </td>
                         <td className="py-3 text-center text-slate-600">{item.quantity}</td>
                         <td className="py-3 text-right text-slate-600">₹{item.sellingPrice.toLocaleString()}</td>

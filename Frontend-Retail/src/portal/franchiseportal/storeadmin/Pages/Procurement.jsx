@@ -3,6 +3,8 @@ import { useFranchise } from '../context/FranchiseContext';
 import { useNavigate } from 'react-router-dom';
 import { Plus, X, Trash2, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function Procurement() {
   const { techhansaCatalog, b2bInvoices, approveB2BInvoice, orders, submitOrderRequest, metrics } = useFranchise();
@@ -28,6 +30,58 @@ export default function Procurement() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
+
+  const handleDownloadPDF = (inv) => {
+    const doc = new jsPDF();
+    doc.text(`Techhansa Retail - ${inv.type} Receipt`, 14, 15);
+    doc.text(`Invoice No: ${inv.invoiceNo}`, 14, 25);
+    doc.text(`Date: ${inv.date}`, 14, 32);
+    doc.text(`Status: ${inv.status}`, 14, 39);
+
+    const tableBody = [];
+    let subtotal = 0;
+    
+    if (inv.items && inv.items.length > 0) {
+      inv.items.forEach((item, index) => {
+        const qty = item.quantity || 1;
+        const price = item.unitPrice || item.price || 0;
+        const total = item.totalAmount || (qty * price) || 0;
+        subtotal += total;
+        tableBody.push([
+          index + 1,
+          item.productName || item.model || 'Item',
+          qty,
+          `Rs. ${price.toLocaleString()}`,
+          `Rs. ${total.toLocaleString()}`
+        ]);
+      });
+    } else {
+      subtotal = inv.amount;
+      tableBody.push([1, 'Procurement Services / Goods', 1, `Rs. ${subtotal.toLocaleString()}`, `Rs. ${subtotal.toLocaleString()}`]);
+    }
+
+    autoTable(doc, {
+      startY: 45,
+      head: [['#', 'Description', 'Qty', 'Unit Price', 'Total']],
+      body: tableBody,
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229] }
+    });
+
+    const finalY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 45) + 10;
+    
+    autoTable(doc, {
+      startY: finalY,
+      body: [
+        ['Total Amount', `Rs. ${inv.amount.toLocaleString()}`]
+      ],
+      theme: 'plain',
+      styles: { fontStyle: 'bold', halign: 'right' },
+      columnStyles: { 0: { cellWidth: 140 } }
+    });
+
+    doc.save(`${inv.invoiceNo}.pdf`);
+  };
 
   const categories = [...new Set(techhansaCatalog.map(item => item.category).filter(Boolean))];
   const brands = [...new Set(techhansaCatalog.filter(item => !selectedCategory || item.category === selectedCategory).map(item => item.brand).filter(Boolean))];
@@ -250,13 +304,9 @@ export default function Procurement() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {inv.invoiceFile ? (
-                      <a href={`#${inv.invoiceFile}`} className="text-indigo-600 hover:underline flex items-center justify-center gap-1 text-sm font-medium">
-                         📄 PDF
-                      </a>
-                    ) : (
-                      <span className="text-slate-400 text-sm">N/A</span>
-                    )}
+                    <button onClick={() => handleDownloadPDF(inv)} className="text-indigo-600 hover:underline flex items-center justify-center gap-1 text-sm font-medium w-full">
+                       📄 PDF
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-center">
                     {inv.status === 'Pending' && (
