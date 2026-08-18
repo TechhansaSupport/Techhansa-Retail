@@ -55,7 +55,7 @@ export default function RfpManagement() {
   const [statusFilter, setStatusFilter] = useState(location.state?.filter || 'All');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [rfps, setRfps] = useState([]);
-  const [selectedRfp, setSelectedRfp] = useState(null);
+  const [selectedRfp, setSelectedRfp] = useState(location.state?.openRfp || null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function RfpManagement() {
     navigate('/channel/rfp/create', { state: { rfp } });
   };
 
-  const statuses = ['All', 'Draft', 'Submitted', 'Under Review', 'Approved', 'Quotation Received', 'Rejected'];
+  const statuses = ['All', 'Active', 'Draft', 'Submitted', 'Under Review', 'Approved', 'Quotation Received', 'Rejected'];
 
   const handleExport = () => {
     exportToCSV('rfps.csv', filteredRFPs, [
@@ -98,7 +98,16 @@ export default function RfpManagement() {
     const title = rfp.title || '';
     const rfpId = rfp.rfpId || '';
     const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) || rfpId.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || rfp.status === statusFilter;
+    
+    let matchesStatus = false;
+    if (statusFilter === 'All') {
+      matchesStatus = true;
+    } else if (statusFilter === 'Active') {
+      matchesStatus = ['Submitted', 'Under Review', 'Quotation Received'].includes(rfp.status);
+    } else {
+      matchesStatus = rfp.status === statusFilter;
+    }
+    
     return matchesSearch && matchesStatus;
   });
 
@@ -132,12 +141,22 @@ export default function RfpManagement() {
       {/* Summary Cards */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total RFPs', count: totalRFPs, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Draft', count: draftCount, icon: Edit3, color: 'text-slate-600', bg: 'bg-slate-100' },
-          { label: 'Active', count: activeCount, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-          { label: 'Approved', count: approvedCount, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Total RFPs', count: totalRFPs, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50', filterValue: 'All' },
+          { label: 'Draft', count: draftCount, icon: Edit3, color: 'text-slate-600', bg: 'bg-slate-100', filterValue: 'Draft' },
+          { label: 'Active', count: activeCount, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', filterValue: 'Active' },
+          { label: 'Approved', count: approvedCount, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', filterValue: 'Approved' },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+          <div 
+            key={stat.label} 
+            onClick={() => {
+              if (statusFilter === stat.filterValue) {
+                window.location.reload();
+              } else {
+                setStatusFilter(stat.filterValue);
+              }
+            }}
+            className="cursor-pointer bg-white rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all"
+          >
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${stat.bg}`}>
                 <stat.icon className={`w-4 h-4 ${stat.color}`} />

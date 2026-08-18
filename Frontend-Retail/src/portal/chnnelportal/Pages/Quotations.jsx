@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Filter, FileText, Download, Eye, ExternalLink, XCircle } from 'lucide-react';
 import { exportToCSV } from '../../../utils/exportUtils';
 import { AuthContext } from '../../../context/AuthContext';
@@ -19,10 +19,11 @@ const itemVariants = {
 
 export default function Quotations() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useContext(AuthContext) || { user: null };
   const [quotations, setQuotations] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [selectedQuotation, setSelectedQuotation] = useState(location.state?.openQuotation || null);
   const [rfps, setRfps] = useState([]);
 
   useEffect(() => {

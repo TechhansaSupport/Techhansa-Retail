@@ -729,7 +729,9 @@ router.put('/entities/:userId/credit', async (req, res) => {
         type: diff > 0 ? 'Assigned' : 'Decreased',
         amount: Math.abs(diff),
         referenceId: 'ADMIN_UPDATE',
-        description: `Super Admin adjusted credit limit from ₹${oldCredit.toLocaleString('en-IN')} to ₹${user.totalCredit.toLocaleString('en-IN')}`
+        description: diff > 0 
+          ? `Credit assingned by super admin  ${oldCredit} to ${user.totalCredit}`
+          : `Credit removed by admin from ${oldCredit} to ${user.totalCredit}`
       });
       await transaction.save();
 

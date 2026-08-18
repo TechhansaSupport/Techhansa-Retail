@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, MoreHorizontal, ChevronDown } from 'lucide-react';
-
-const tableVariants = {
+import { Search, Filter, MoreHorizontal, ChevronDown, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';const tableVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 };
@@ -28,8 +27,11 @@ import { AuthContext } from '../../../context/AuthContext';
 
 export default function ProcurementTables() {
   const { user } = useContext(AuthContext) || { user: null };
+  const navigate = useNavigate();
   const [rfps, setRfps] = useState([]);
   const [quotations, setQuotations] = useState([]);
+  const [selectedRfp, setSelectedRfp] = useState(null);
+  const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [rfpSearch, setRfpSearch] = useState('');
   const [showRfpSearch, setShowRfpSearch] = useState(false);
   const [rfpFilter, setRfpFilter] = useState('All');
@@ -72,7 +74,8 @@ export default function ProcurementTables() {
   }, [user]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
 
       {/* Recent RFPs - Card List Layout */}
       <motion.div variants={tableVariants} className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col">
@@ -100,7 +103,7 @@ export default function ProcurementTables() {
               <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-slate-100 shadow-xl rounded-xl py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
                 {statuses.map(s => (
                   <button key={s} onClick={() => setRfpFilter(s)} className={`block w-full text-left px-4 py-2 text-sm ${rfpFilter === s ? 'text-blue-600 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}`}>
-                    {s}
+                    {s === 'Submitted' ? 'Pending' : s}
                   </button>
                 ))}
               </div>
@@ -114,7 +117,11 @@ export default function ProcurementTables() {
             const styles = getStatusStyles(rfp.status);
             const date = new Date(rfp.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             return (
-              <div key={rfp._id} className="p-4 hover:bg-slate-50/80 transition-colors group cursor-pointer">
+              <div 
+                key={rfp._id} 
+                onClick={() => setSelectedRfp(rfp)}
+                className="p-4 hover:bg-slate-50/80 transition-colors group cursor-pointer"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-semibold text-blue-600 text-sm group-hover:underline">{rfp.rfpId}</span>
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${styles.bg} ${styles.text}`}>
@@ -140,12 +147,12 @@ export default function ProcurementTables() {
           <h2 className="text-lg font-bold text-slate-900">Recent Quotations</h2>
           <div className="flex gap-2 relative group">
             <button className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors">
-              {qtFilter === 'All' ? 'Filter' : qtFilter} <ChevronDown className="w-4 h-4" />
+              {qtFilter === 'All' ? 'Filter' : (qtFilter === 'Pending' ? 'Pending Admin Approval' : qtFilter)} <ChevronDown className="w-4 h-4" />
             </button>
             <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-slate-100 shadow-xl rounded-xl py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
               {qtStatuses.map(s => (
                 <button key={s} onClick={() => setQtFilter(s)} className={`block w-full text-left px-4 py-2 text-sm ${qtFilter === s ? 'text-blue-600 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}`}>
-                  {s}
+                  {s === 'Pending' ? 'Pending Admin Approval' : s}
                 </button>
               ))}
             </div>
@@ -158,15 +165,19 @@ export default function ProcurementTables() {
             const styles = getStatusStyles(qt.status);
             const date = new Date(qt.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             return (
-              <div key={qt._id} className="p-4 hover:bg-slate-50/80 transition-colors group cursor-pointer">
+              <div 
+                key={qt._id} 
+                onClick={() => setSelectedQuotation(qt)}
+                className="p-4 hover:bg-slate-50/80 transition-colors group cursor-pointer"
+              >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-blue-600 text-sm group-hover:underline">{qt.quotationId || 'QT-XXXX'}</span>
+                  <span className="font-semibold text-blue-600 text-sm group-hover:underline">{qt.quotationNo || qt.quotationId || 'QT-XXXX'}</span>
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${styles.bg} ${styles.text}`}>
-                    {qt.status}
+                    {styles.label || qt.status}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-700 font-medium">{qt.vendorName || 'Vendor'}</span>
+                  <span className="text-sm text-slate-700 font-medium">{qt.vendorName || (qt.vendor === 'TBD' ? 'Techhansa Retail' : qt.vendor) || 'Techhansa Retail'}</span>
                   <span className="text-sm text-slate-600 font-semibold">{date}</span>
                 </div>
               </div>
@@ -176,5 +187,163 @@ export default function ProcurementTables() {
       </motion.div>
 
     </div>
+
+      {/* View RFP Modal */}
+      {selectedRfp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">{selectedRfp.title}</h2>
+                <p className="text-sm text-slate-500 mt-1">RFP ID: {selectedRfp.rfpId}</p>
+              </div>
+              <button onClick={() => setSelectedRfp(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Expected Delivery Date</p>
+                  <p className="text-slate-900 font-semibold">{new Date(selectedRfp.expectedDeliveryDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Priority</p>
+                  <p className="text-slate-900 font-semibold">{selectedRfp.priority}</p>
+                </div>
+                {selectedRfp.remarks && (
+                  <div className="col-span-2">
+                    <p className="text-sm font-medium text-slate-500 mb-1">Remarks</p>
+                    <p className="text-slate-900 bg-slate-50 p-4 rounded-xl text-sm border border-slate-100">{selectedRfp.remarks}</p>
+                  </div>
+                )}
+              </div>
+
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Product Requirements</h3>
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700">Category</th>
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700">Brand</th>
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700">Model</th>
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700">Configuration</th>
+                      <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center">Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {selectedRfp.products?.map((p, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 text-sm text-slate-900">{p.category}</td>
+                        <td className="px-4 py-3 text-sm text-slate-900">{p.brand}</td>
+                        <td className="px-4 py-3 text-sm text-slate-900">{p.model}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600 max-w-[200px] truncate" title={p.configuration}>{p.configuration}</td>
+                        <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{p.quantity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button onClick={() => navigate('/channel/rfp', { state: { openRfp: selectedRfp } })} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors mr-3">
+                Manage Details
+              </button>
+              <button onClick={() => setSelectedRfp(null)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-colors">
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* View Quotation Modal */}
+      {selectedQuotation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Quotation Details</h2>
+                <p className="text-sm text-slate-500 mt-1">{selectedQuotation.quotationNo || selectedQuotation.quotationId}</p>
+              </div>
+              <button onClick={() => setSelectedQuotation(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Vendor</p>
+                  <p className="text-slate-900 font-semibold">{selectedQuotation.vendorName || (selectedQuotation.vendor === 'TBD' ? 'Techhansa Retail' : selectedQuotation.vendor) || 'Techhansa Retail'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Total Amount</p>
+                  <p className="font-bold text-emerald-600">₹{(selectedQuotation.amount || selectedQuotation.totalAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Valid Until</p>
+                  <p className="text-slate-900 font-semibold">{new Date(selectedQuotation.validUntil || Date.now()).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Status</p>
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                    {selectedQuotation.status}
+                  </span>
+                </div>
+              </div>
+              
+              {selectedQuotation.items && selectedQuotation.items.length > 0 && (
+                <>
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">Quoted Items</h3>
+                  <div className="border border-slate-200 rounded-xl overflow-hidden mb-6">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700">Item</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center">Qty</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Unit Price</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {selectedQuotation.items.map((item, i) => (
+                          <tr key={i} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || item.brand}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{item.quantity}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{item.unitPrice?.toLocaleString('en-IN') || 0}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{item.totalAmount?.toLocaleString('en-IN') || 0}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button onClick={() => navigate('/channel/quotations', { state: { openQuotation: selectedQuotation } })} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors mr-3">
+                Manage Details
+              </button>
+              <button onClick={() => setSelectedQuotation(null)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-colors">
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </>
   );
 }
