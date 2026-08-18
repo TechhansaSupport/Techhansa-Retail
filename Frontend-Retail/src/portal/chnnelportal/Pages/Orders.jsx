@@ -116,6 +116,26 @@ export default function Orders() {
                   }`}>
                     {order.status === 'Pending' ? 'Pending Admin Approval' : order.status === 'Confirmed' ? 'Approved' : order.status}
                   </span>
+                  
+                  {/* Payment Status Badge */}
+                  {order.quotationReference?.paymentStatus && order.quotationReference.paymentStatus !== 'None' && (
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      order.quotationReference.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' :
+                      order.quotationReference.paymentStatus === 'Pending Verification' ? 'bg-amber-100 text-amber-800' :
+                      'bg-slate-100 text-slate-800'
+                    }`}>
+                      {order.quotationReference.paymentStatus}
+                    </span>
+                  )}
+                  {(!order.quotationReference?.paymentStatus || order.quotationReference.paymentStatus === 'None') && order.paymentStatus && order.paymentStatus !== 'None' && (
+                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      order.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800' :
+                      order.paymentStatus === 'Pending Verification' ? 'bg-amber-100 text-amber-800' :
+                      'bg-slate-100 text-slate-800'
+                    }`}>
+                      {order.paymentStatus}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => navigate('/channel/tracking', { state: { order } })} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Track Delivery">
