@@ -185,7 +185,7 @@ router.post('/quotations/:id/pay', async (req, res) => {
       // Automatically confirm the order since payment is cleared
       await Order.findOneAndUpdate(
         { quotationReference: quotation._id },
-        { status: 'Confirmed', totalAmount: quotation.amount }
+        { status: 'Confirmed', totalAmount: quotation.amount, paymentStatus: quotation.paymentStatus, paymentMethod: quotation.paymentMethod }
       );
     } else {
       quotation.paymentStatus = 'Pending Verification';
