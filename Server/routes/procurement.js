@@ -35,10 +35,10 @@ router.get('/dashboard-stats', async (req, res) => {
     }
     const filter = { userId };
 
-    // Include 'Approved' in the active RFP count so it doesn't disappear from the dashboard until it's converted to a paid order
     const pendingRFPs = await RFP.countDocuments({ ...filter, status: { $in: ['Draft', 'Submitted', 'Under Review', 'Approved'] } });
-    const approvedOrders = await Order.countDocuments({ ...filter, status: { $in: ['Confirmed', 'Processing'] } });
+    const approvedOrders = await RFP.countDocuments({ ...filter, status: 'Approved' });
     const deliveredOrders = await Order.countDocuments({ ...filter, status: 'Delivered' });
+    const totalInvoices = await Invoice.countDocuments(filter);
 
     // Calculate total spending (actual deducted credit)
     const user = await User.findOne({ userId });
@@ -48,6 +48,7 @@ router.get('/dashboard-stats', async (req, res) => {
       pendingRFPs, // This now represents "Active RFPs"
       approvedOrders,
       deliveredOrders,
+      totalInvoices,
       totalSpending
     });
   } catch (error) {

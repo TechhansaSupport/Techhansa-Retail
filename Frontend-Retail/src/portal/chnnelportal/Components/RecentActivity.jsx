@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Edit3, Send, MessageSquare, Clock, XCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -62,7 +63,7 @@ export default function RecentActivity() {
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
-        <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">View All</button>
+        <Link to="/channel/rfp" className="text-sm font-semibold text-blue-600 hover:text-blue-700">View All</Link>
       </div>
 
       <motion.div

@@ -66,7 +66,7 @@ export default function KPIGrid() {
 
   const displayCards = stats ? [
     { title: 'Active RFPs', value: stats.pendingRFPs || stats.activeRFPs || 0, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100', route: '/channel/rfp', state: { filter: 'All' } },
-    { title: 'Approved Orders', value: stats.approvedOrders || 0, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', route: '/channel/orders', state: { filter: 'Confirmed' } },
+    { title: 'Approved Orders', value: stats.approvedOrders || 0, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', route: '/channel/rfp', state: { filter: 'Approved' } },
     { title: 'Delivered Orders', value: stats.deliveredOrders || 0, icon: Truck, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', route: '/channel/orders', state: { filter: 'Delivered' } },
     { title: 'Total Invoices', value: stats.totalInvoices || 0, icon: FileText, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', route: '/channel/invoices' },
     { title: 'Total Spending', value: formatCurrency(stats.totalSpending || 0), icon: IndianRupee, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', route: '/channel/credit-history' },
