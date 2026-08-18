@@ -173,6 +173,17 @@ router.get('/:storeId/profile', async (req, res) => {
     const profile = await StoreProfile.findOne({ storeId: req.params.storeId }).lean();
     if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
     
+    // Find the franchise owner user (not employees) — supports comma-separated storeIds
+    const user = await User.findOne({ 
+      role: 'franchise',
+      storeId: { $regex: req.params.storeId }
+    });
+    if (user) {
+      profile.totalCredit = user.totalCredit || 0;
+      profile.usedCredit = user.usedCredit || 0;
+      profile.reservedCredit = user.reservedCredit || 0;
+    }
+
     // Map credit logic to walletBalance for frontend compatibility
     profile.walletBalance = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
     
@@ -182,6 +193,32 @@ router.get('/:storeId/profile', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+// Update Store Profile
+router.put('/:storeId/profile', async (req, res) => {
+  try {
+    const allowedUpdates = ['storeName', 'address', 'manager', 'employees', 'timings', 'gst', 'contact', 'email'];
+    const updateData = {};
+    for (const key of allowedUpdates) {
+      if (req.body[key] !== undefined) {
+        updateData[key] = req.body[key];
+      }
+    }
+    
+    const profile = await StoreProfile.findOneAndUpdate(
+      { storeId: req.params.storeId },
+      { $set: updateData },
+      { new: true }
+    );
+    
+    if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
+    res.json({ success: true, data: profile });
+  } catch (error) {
+    console.error('Error updating store profile:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 // 2. Get Wallet Transactions
 router.get('/:storeId/wallet', async (req, res) => {
@@ -211,7 +248,8 @@ router.get('/:storeId/b2b-invoices', async (req, res) => {
       status: q.paymentStatus,
       date: new Date(q.createdAt).toLocaleDateString(),
       type: 'Quotation',
-      invoiceFile: `/quotations/${q.quotationNo}.pdf`
+      invoiceFile: `/quotations/${q.quotationNo}.pdf`,
+      items: q.items || []
     }));
 
     const mappedInvoices = invoices.map(inv => ({
@@ -222,7 +260,8 @@ router.get('/:storeId/b2b-invoices', async (req, res) => {
       status: inv.status,
       date: new Date(inv.createdAt).toLocaleDateString(),
       type: 'Invoice',
-      invoiceFile: inv.invoiceFile || `/invoices/${inv.invoiceNo}.pdf`
+      invoiceFile: inv.invoiceFile || `/invoices/${inv.invoiceNo}.pdf`,
+      items: inv.items || []
     }));
 
     // Merge and sort
@@ -282,6 +321,13 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
       profile.usedCredit = (profile.usedCredit || 0) + itemToApprove.amount;
     }
     await profile.save();
+    
+    const user = await User.findOne({ role: 'franchise', storeId: { $regex: storeId } });
+    if (user) {
+      user.reservedCredit = profile.reservedCredit;
+      user.usedCredit = profile.usedCredit;
+      await user.save();
+    }
     
     // Update item
     if (isQuotation) {

@@ -4,7 +4,7 @@ import { useFranchise } from '../context/FranchiseContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import { Download, IndianRupee, TrendingUp, Calendar, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export default function Sales() {
   const { metrics, salesHistory, invoices } = useFranchise();
@@ -167,7 +167,7 @@ export default function Sales() {
     const doc = new jsPDF();
     doc.text(`Sales & Order Report (${timeRange})`, 14, 15);
     
-    doc.autoTable({
+    autoTable(doc, {
       startY: 25,
       head: [['Date', 'Sales (INR)', 'Orders']],
       body: chartData.map(row => [row.date, `Rs. ${row.sales.toLocaleString()}`, row.orders]),
@@ -176,10 +176,15 @@ export default function Sales() {
 
     if (invoices && invoices.length > 0) {
       doc.text("Recent Invoices", 14, doc.lastAutoTable.finalY + 15);
-      doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 20,
-        head: [['Invoice No', 'Date', 'Customer Name', 'Total Amount']],
-        body: invoices.map(inv => [inv.id, inv.date, inv.customer?.name || 'Walk-in', `Rs. ${inv.total.toLocaleString()}`]),
+      autoTable(doc, {
+        startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : 50,
+        head: [['Invoice', 'Date', 'Customer', 'Amount (INR)']],
+        body: invoices.slice(0, 50).map(inv => [
+          inv.invoiceNumber,
+          new Date(inv.createdAt).toLocaleDateString(),
+          inv.customerName || 'Walk-in',
+          `Rs. ${inv.amount.toLocaleString()}`
+        ]),
         headStyles: { fillColor: [79, 70, 229] }
       });
     }
@@ -319,14 +324,19 @@ export default function Sales() {
                          doc.text(`Customer Name: ${inv.customerName || 'Walk-in'}`, 14, 59);
                          doc.text(`Phone: ${inv.customerPhone || 'N/A'}`, 14, 66);
                          
-                         const tableBody = (inv.items || []).map(item => [
-                           item.name,
-                           item.quantity,
-                           `Rs. ${item.sellingPrice.toLocaleString()}`,
-                           `Rs. ${(item.quantity * item.sellingPrice).toLocaleString()}`
-                         ]);
+                         const tableBody = (inv.items || []).map(item => {
+                           const itemName = item.serialNumbers && item.serialNumbers.length > 0
+                             ? `${item.name}\n(SN: ${item.serialNumbers.join(', ')})`
+                             : item.name;
+                           return [
+                             itemName,
+                             item.quantity,
+                             `Rs. ${(item.sellingPrice || 0).toLocaleString()}`,
+                             `Rs. ${(item.quantity * (item.sellingPrice || 0)).toLocaleString()}`
+                           ];
+                         });
                          
-                         doc.autoTable({
+                         autoTable(doc, {
                            startY: 75,
                            head: [['Item Name', 'Qty', 'Price', 'Total']],
                            body: tableBody,
@@ -334,14 +344,14 @@ export default function Sales() {
                            headStyles: { fillColor: [79, 70, 229] }
                          });
                          
-                         const finalY = doc.lastAutoTable.finalY + 10;
+                         const finalY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 75) + 10;
                          
-                         doc.autoTable({
+                         autoTable(doc, {
                            startY: finalY,
                            body: [
-                             ['Subtotal', `Rs. ${inv.subtotalAmount?.toLocaleString() || '-'}`],
-                             ['Tax (18% GST)', `Rs. ${(inv.amount - (inv.subtotalAmount || 0)).toLocaleString()}`],
-                             ['Grand Total', `Rs. ${inv.amount?.toLocaleString()}`]
+                             ['Subtotal', `Rs. ${(inv.subtotalAmount || 0).toLocaleString()}`],
+                             ['Tax (18% GST)', `Rs. (((inv.amount || 0) - (inv.subtotalAmount || 0))).toLocaleString()`],
+                             ['Grand Total', `Rs. ${(inv.amount || 0).toLocaleString()}`]
                            ],
                            theme: 'plain',
                            styles: { halign: 'right' },

@@ -6,12 +6,11 @@ const Notification = require('../models/Notification');
 // Depending on auth implementation, we might want to just get 'admin' notifications
 // For this simple implementation, we'll fetch notifications intended for 'admin'
 
-// GET /api/notifications
-// Fetch all notifications
-router.get('/', async (req, res) => {
+// GET /api/notifications/:userId
+// Fetch all notifications for a user
+router.get('/:userId', async (req, res) => {
   try {
-    // Usually you'd filter by req.user.userId, but for admin portal we can just use 'admin'
-    const notifications = await Notification.find({ userId: 'admin' }).sort({ createdAt: -1 });
+    const notifications = await Notification.find({ userId: req.params.userId }).sort({ createdAt: -1 });
     res.json(notifications);
   } catch (err) {
     console.error(err);
@@ -19,11 +18,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// PATCH /api/notifications/read-all
-// Mark all notifications as read
-router.patch('/read-all', async (req, res) => {
+// PATCH /api/notifications/:userId/read-all
+// Mark all notifications as read for a user
+router.patch('/:userId/read-all', async (req, res) => {
   try {
-    await Notification.updateMany({ userId: 'admin', unread: true }, { $set: { unread: false } });
+    await Notification.updateMany({ userId: req.params.userId, unread: true }, { $set: { unread: false } });
     res.json({ success: true, message: 'All notifications marked as read' });
   } catch (err) {
     console.error(err);
@@ -31,12 +30,12 @@ router.patch('/read-all', async (req, res) => {
   }
 });
 
-// PATCH /api/notifications/:id/read
+// PATCH /api/notifications/:userId/:id/read
 // Mark a specific notification as read
-router.patch('/:id/read', async (req, res) => {
+router.patch('/:userId/:id/read', async (req, res) => {
   try {
     const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, userId: 'admin' },
+      { _id: req.params.id, userId: req.params.userId },
       { $set: { unread: false } },
       { new: true }
     );

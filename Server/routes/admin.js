@@ -721,7 +721,7 @@ router.put('/entities/:userId/credit', async (req, res) => {
       );
     }
 
-    // Log the transaction
+    // Log the credit transaction
     const diff = user.totalCredit - oldCredit;
     if (diff !== 0) {
       const transaction = new CreditTransaction({
@@ -729,9 +729,31 @@ router.put('/entities/:userId/credit', async (req, res) => {
         type: diff > 0 ? 'Assigned' : 'Decreased',
         amount: Math.abs(diff),
         referenceId: 'ADMIN_UPDATE',
-        description: `Super Admin adjusted credit limit from ${oldCredit} to ${user.totalCredit}`
+        description: `Super Admin adjusted credit limit from ₹${oldCredit.toLocaleString('en-IN')} to ₹${user.totalCredit.toLocaleString('en-IN')}`
       });
       await transaction.save();
+
+      // Also create a WalletTransaction for franchise stores so it shows in the Store Admin wallet ledger
+      if (user.role === 'franchise' && user.storeId) {
+        const WalletTransaction = require('../models/WalletTransaction');
+        const storeIds = user.storeId.split(',').map(s => s.trim());
+        const newBalance = (user.totalCredit || 0) - (user.usedCredit || 0) - (user.reservedCredit || 0);
+        for (const sid of storeIds) {
+          const walletTxn = new WalletTransaction({
+            storeId: sid,
+            txnId: `CRD-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            date: new Date(),
+            type: diff > 0 ? 'Credit In' : 'Credit Out',
+            amount: Math.abs(diff),
+            status: 'Success',
+            closingBalance: newBalance,
+            description: diff > 0
+              ? `Credit limit increased by ₹${Math.abs(diff).toLocaleString('en-IN')} (Admin)`
+              : `Credit limit decreased by ₹${Math.abs(diff).toLocaleString('en-IN')} (Admin)`
+          });
+          await walletTxn.save();
+        }
+      }
     }
 
     // Exclude password
@@ -741,6 +763,18 @@ router.put('/entities/:userId/credit', async (req, res) => {
     res.json(userResponse);
   } catch (error) {
     console.error('Error assigning credit:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/admin/entities/:userId/credit-history
+router.get('/entities/:userId/credit-history', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const transactions = await CreditTransaction.find({ userId }).sort({ date: -1 });
+    res.json(transactions);
+  } catch (error) {
+    console.error('Error fetching credit history:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
