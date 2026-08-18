@@ -138,7 +138,7 @@ export default function SmartAnalytics() {
                   <Cell 
                     key={`cell-${index}`} 
                     fill={STATUS_COLORS[index % STATUS_COLORS.length]} 
-                    onClick={() => navigate('/channel/rfp-management', { state: { filter: entry.originalStatus } })}
+                    onClick={() => navigate('/channel/rfp', { state: { filter: entry.originalStatus } })}
                     style={{ cursor: 'pointer', outline: 'none' }}
                   />
                 ))}

@@ -173,15 +173,7 @@ function App() {
             <Route path="orders" element={<EmployeeOrders />} />
           </Route>
 
-          {/* Channel Partner Portal */}
-          <Route path="/channel" element={
-            <ProtectedRoute allowedRoles={['channel']}>
-              <ChannelLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<ChannelDashboard />} />
-            <Route path="rfp/create" element={<CreateRFP />} />
-          </Route>
+
           {/* Channel Partner Portal */}
           <Route path="/channel" element={
             <ProtectedRoute allowedRoles={['channel']}>

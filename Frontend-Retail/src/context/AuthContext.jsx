@@ -68,13 +68,23 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(newUserData));
     
     try {
-      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/profile`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUserData)
       });
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+      }
+      const data = await res.json();
+      // Only persist to local state & storage if backend was successful
+      setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
     } catch (error) {
       console.error('Failed to sync profile to server:', error);
+      // Revert to old user state if backend failed
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) setUser(JSON.parse(storedUser));
     }
   };
 
