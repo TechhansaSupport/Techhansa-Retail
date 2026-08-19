@@ -20,7 +20,7 @@ export default function Inventory() {
     brand: '',
     model: '',
     name: '',
-
+    specs: '',
     serialNumber: '',
     buyingPrice: '',
     mrp: '',
@@ -187,6 +187,7 @@ export default function Inventory() {
               <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
                 <th className="px-6 py-4 font-medium">Hardware Category</th>
                 <th className="px-6 py-4 font-medium">Brand & Model</th>
+                <th className="px-6 py-4 font-medium">Specifications</th>
                 <th className="px-6 py-4 font-medium text-right">B2B Purchase Price</th>
                 <th className="px-6 py-4 font-medium text-right">Store Selling Price</th>
                 <th className="px-6 py-4 font-medium text-center">Available Qty</th>
@@ -207,6 +208,9 @@ export default function Inventory() {
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-800">{item.brand}</div>
                       <div className="text-xs text-slate-500 font-mono mt-0.5">{item.model}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs text-slate-600 leading-relaxed">{item.specs || '—'}</span>
                     </td>
                     <td className="px-6 py-4 text-right font-medium text-slate-700">
                       ₹{item.buyingPrice?.toLocaleString()}
@@ -239,7 +243,7 @@ export default function Inventory() {
               
               {filteredData.length === 0 && (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan="8" className="px-6 py-12 text-center text-slate-500">
                     No products found matching your search.
                   </td>
                 </tr>
@@ -257,7 +261,7 @@ export default function Inventory() {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-bold text-slate-800 text-lg">{item.name}</div>
-
+                    {item.specs && <div className="text-xs text-slate-500 mt-1">{item.specs}</div>}
                   </div>
                   <button 
                     onClick={() => handleOpenModal(item)}
@@ -347,8 +351,12 @@ export default function Inventory() {
                       <input type="text" name="model" value={formData.model} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. XPS 13" />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Full Product Name</label>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Full Product Name *</label>
                       <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Dell XPS 13" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Specifications</label>
+                      <textarea name="specs" value={formData.specs} onChange={handleChange} rows="3" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-y" placeholder="e.g. Intel Core i7, 16GB RAM, 512GB SSD" />
                     </div>
                   </div>
                 </div>
