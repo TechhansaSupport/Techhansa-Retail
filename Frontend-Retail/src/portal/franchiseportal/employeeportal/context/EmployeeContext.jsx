@@ -8,6 +8,7 @@ export function EmployeeProvider({ children }) {
   const { user } = useContext(AuthContext);
   
   const [inventory, setInventory] = useState([]);
+  const [storeProfileData, setStoreProfileData] = useState(null);
   
   // Initialize cart from localStorage for persistence
   const [globalCart, setGlobalCart] = useState(() => {
@@ -26,6 +27,12 @@ export function EmployeeProvider({ children }) {
       const inventoryRes = await axios.get(`http://localhost:5000/api/inventory/${user.storeId}`);
       if (inventoryRes.data.success) {
         setInventory(inventoryRes.data.data);
+      }
+      
+      // Fetch store profile data so the employee has access to store details (for invoices, etc.)
+      const profileRes = await axios.get(`http://localhost:5000/api/franchise/${user.storeId}/profile`);
+      if (profileRes.data.success) {
+        setStoreProfileData(profileRes.data.data);
       }
     } catch (error) {
       console.error("Failed to fetch employee inventory", error);
@@ -102,6 +109,7 @@ export function EmployeeProvider({ children }) {
   return (
     <EmployeeContext.Provider value={{
       inventory,
+      storeProfileData,
       globalCart,
       addToGlobalCart,
       updateGlobalCartQuantity,

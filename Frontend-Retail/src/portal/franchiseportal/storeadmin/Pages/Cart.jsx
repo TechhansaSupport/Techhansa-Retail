@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
 import { Minus, Plus, Trash2, Printer, CheckCircle2, User, Phone, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import InvoiceTemplate from '../../../../Component/InvoiceTemplate';
 
 export default function Cart() {
   const { globalCart, updateGlobalCartQuantity, removeGlobalCartItem, clearGlobalCart, processSale, storeProfileData } = useFranchise();
@@ -165,7 +166,7 @@ export default function Cart() {
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-emerald-50">
                 <div className="flex gap-3">
@@ -180,61 +181,9 @@ export default function Cart() {
                 <button onClick={() => setGeneratedInvoice(null)} className="text-slate-400 hover:text-slate-600">✕</button>
               </div>
 
-              <div className="p-8 flex-1 overflow-y-auto bg-white" id="invoice-print-area">
-                <div className="text-center mb-8 border-b border-slate-100 pb-6">
-                  <h2 className="text-2xl font-bold text-slate-800">Techhansa Retail</h2>
-                  <p className="text-slate-500 text-sm">{storeProfileData?.storeName || 'Store'}</p>
-                  <p className="text-slate-400 text-xs mt-2">Invoice: {generatedInvoice.invoiceNumber}</p>
-                  <p className="text-slate-400 text-xs">{new Date(generatedInvoice.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                </div>
-                
-                <div className="mb-6">
-                  <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">Billed To:</p>
-                  <p className="font-bold text-slate-800">{generatedInvoice.customerName}</p>
-                  <p className="text-sm text-slate-500">Phone: {generatedInvoice.customerPhone}</p>
-                </div>
-
-                <table className="w-full text-sm mb-8">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-left text-slate-500">
-                      <th className="pb-2 font-medium">Item</th>
-                      <th className="pb-2 font-medium text-center">Qty</th>
-                      <th className="pb-2 font-medium text-right">Price</th>
-                      <th className="pb-2 font-medium text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {generatedInvoice.items.map((item, idx) => (
-                      <tr key={item.productId || idx}>
-                        <td className="py-3 text-slate-800 font-medium">
-                          {item.name}
-                          {item.serialNumbers && item.serialNumbers.length > 0 && (
-                            <div className="text-xs text-slate-500 mt-1 font-mono">
-                              SN: {item.serialNumbers.join(', ')}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3 text-center text-slate-600">{item.quantity}</td>
-                        <td className="py-3 text-right text-slate-600">₹{item.sellingPrice.toLocaleString()}</td>
-                        <td className="py-3 text-right text-slate-800 font-bold">₹{(item.sellingPrice * item.quantity).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                <div className="space-y-2 pt-4 border-t-2 border-slate-800">
-                  <div className="flex justify-between items-center text-sm text-slate-500">
-                    <span>Subtotal</span>
-                    <span>₹{generatedInvoice.subtotalAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm text-slate-500">
-                    <span>Tax (GST 18%)</span>
-                    <span>₹{(generatedInvoice.amount - generatedInvoice.subtotalAmount).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-slate-200">
-                    <span className="font-bold text-slate-800">Grand Total</span>
-                    <span className="text-2xl font-black text-indigo-600">₹{generatedInvoice.amount.toLocaleString()}</span>
-                  </div>
+              <div className="p-8 flex-1 overflow-y-auto bg-white flex justify-center w-full">
+                <div className="w-full">
+                  <InvoiceTemplate invoice={generatedInvoice} storeData={storeProfileData} />
                 </div>
               </div>
               
