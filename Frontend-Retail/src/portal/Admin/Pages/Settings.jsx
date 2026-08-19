@@ -38,7 +38,7 @@ export default function Settings() {
       toast.success('Profile updated successfully!');
       
       // Update local auth context
-      login({ ...user, name: profileData.name, email: profileData.email }, localStorage.getItem('token'));
+      login({ ...user, name: profileData.name, email: profileData.email }, sessionStorage.getItem('token'));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {

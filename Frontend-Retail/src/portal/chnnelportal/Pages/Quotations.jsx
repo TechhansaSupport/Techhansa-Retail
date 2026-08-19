@@ -301,6 +301,14 @@ export default function Quotations() {
                   {isPaying ? 'Processing...' : `Pay ₹${displayTotalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`}
                 </button>
               )}
+              {selectedQuotation.paymentStatus === 'Pending Verification' && (
+                <button
+                  disabled
+                  className="px-6 py-2 bg-amber-100 text-amber-700 font-bold rounded-lg cursor-not-allowed border border-amber-200"
+                >
+                  Payment Verifying
+                </button>
+              )}
               {selectedQuotation.paymentStatus === 'Paid' && (
                 <button
                   disabled

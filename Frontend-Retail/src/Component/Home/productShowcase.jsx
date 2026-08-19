@@ -4,18 +4,18 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 
 // Import all product images
-import LaptopImg from '../../assets/buisness-laptops.jpg';
-import DesktopImg from '../../assets/desktop-computers.jpg';
-import WorkstationImg from '../../assets/pro-workstation.jpg';
-import MonitorImg from '../../assets/LED monitor.jpg';
-import MotherboardImg from '../../assets/motherboard.jpg';
-import ProcessorImg from '../../assets/processor.jpg';
-import RAMImg from '../../assets/RAM.jpg';
-import StorageImg from '../../assets/SSD.jpg';
-import NetworkingImg from '../../assets/Networking devices.jpg';
-import PrinterImg from '../../assets/Printer.jpg';
-import KeyboardImg from '../../assets/Keyboard.jpg';
-import AccessoriesImg from '../../assets/Accessories.jpg';
+import LaptopImg from '../../assets/buisness-laptops.jpg?v=2';
+import DesktopImg from '../../assets/desktop-computers.jpg?v=2';
+import WorkstationImg from '../../assets/pro-workstation.jpg?v=2';
+import MonitorImg from '../../assets/LED monitor.jpg?v=2';
+import MotherboardImg from '../../assets/motherboard.jpg?v=2';
+import ProcessorImg from '../../assets/processor.jpg?v=2';
+import RAMImg from '../../assets/RAM.jpg?v=2';
+import StorageImg from '../../assets/SSD.jpg?v=2';
+import NetworkingImg from '../../assets/Networking devices.jpg?v=2';
+import PrinterImg from '../../assets/Printer.jpg?v=2';
+import KeyboardImg from '../../assets/Keyboard.jpg?v=2';
+import AccessoriesImg from '../../assets/Accessories.jpg?v=2';
 
 const categories = [
   { name: "Business Laptops", imageSrc: LaptopImg }, 

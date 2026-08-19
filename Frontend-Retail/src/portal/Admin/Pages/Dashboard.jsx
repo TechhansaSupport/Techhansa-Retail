@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import axios from '../../../api/axios';
 import { Users, Wallet, Package, TrendingUp, BarChart3, Activity, IndianRupee, ShieldAlert } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -6,8 +6,12 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, 
   BarChart, Bar, PieChart, Pie, Cell, Legend 
 } from 'recharts';
+import { Navigate } from 'react-router-dom';
+import { AuthContext } from '../../../context/AuthContext';
 
 export default function Dashboard() {
+  const { user } = useContext(AuthContext);
+
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalCreditDistributed: 0,
@@ -19,6 +23,16 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeRevenueRange, setActiveRevenueRange] = useState('7 Days');
+
+  if (user?.role === 'account_manager') {
+    return <Navigate to="/admin/orders" replace />;
+  }
+  if (user?.role === 'inventory_manager') {
+    return <Navigate to="/admin/catalog" replace />;
+  }
+  if (user?.role === 'finance_manager') {
+    return <Navigate to="/admin/finance" replace />;
+  }
 
   useEffect(() => {
     const fetchDashboardData = async () => {

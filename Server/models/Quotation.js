@@ -15,7 +15,7 @@ const QuotationSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['Pending', 'Pending Verification', 'Paid'],
+    enum: ['Pending', 'Pending Verification', 'Paid', 'Rejected'],
     default: 'Pending'
   },
   paymentMethod: { type: String },

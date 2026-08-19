@@ -5,9 +5,10 @@ const b2bInvoiceSchema = new mongoose.Schema({
   invoiceNo: { type: String, required: true, unique: true },
   requestId: { type: String },
   amount: { type: Number, required: true },
-  status: { type: String, enum: ['Pending', 'Payment Verification', 'Paid'], default: 'Pending' },
+  status: { type: String, enum: ['Pending', 'Payment Verification', 'Paid', 'Rejected'], default: 'Pending' },
   invoiceFile: { type: String },
-  paymentDetails: { type: mongoose.Schema.Types.Mixed }
+  paymentDetails: { type: mongoose.Schema.Types.Mixed },
+  invoiceSent: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('B2BInvoice', b2bInvoiceSchema);

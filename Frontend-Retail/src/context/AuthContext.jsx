@@ -9,8 +9,8 @@ export const AuthProvider = ({ children }) => {
 
   // Check for existing token and sync with backend on initial load
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
+    const storedUser = sessionStorage.getItem('user');
+    const token = sessionStorage.getItem('token');
 
     const syncUser = async () => {
       if (storedUser && token) {
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
           if (res.ok) {
             const freshUser = await res.json();
             setUser(freshUser);
-            localStorage.setItem('user', JSON.stringify(freshUser));
+            sessionStorage.setItem('user', JSON.stringify(freshUser));
           }
         } catch (error) {
           console.error('Failed to sync user data', error);
@@ -35,11 +35,11 @@ export const AuthProvider = ({ children }) => {
     syncUser();
   }, []);
 
-  // Login function to save data globally and to localStorage
+  // Login function to save data globally and to sessionStorage
   const login = (userData, token) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', token);
+    sessionStorage.setItem('user', JSON.stringify(userData));
+    sessionStorage.setItem('token', token);
   };
 
   // Logout function to clear data
@@ -59,13 +59,13 @@ export const AuthProvider = ({ children }) => {
     }
 
     setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
   };
 
   const updateUser = async (newUserData) => {
     setUser(newUserData);
-    localStorage.setItem('user', JSON.stringify(newUserData));
+    sessionStorage.setItem('user', JSON.stringify(newUserData));
     
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/profile`, {
