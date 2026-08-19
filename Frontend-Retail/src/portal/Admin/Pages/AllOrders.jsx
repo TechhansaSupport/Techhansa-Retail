@@ -42,7 +42,6 @@ export default function AllOrders() {
         const res = await axios.get(`/api/admin/orders/${orderId}`);
         setSelectedOrder({ ...res.data, orderType });
       }
-      setInvoiceTotal('');
       setIsModalOpen(true);
     } catch (error) {
       console.error('Failed to fetch order details:', error);

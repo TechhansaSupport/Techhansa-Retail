@@ -55,7 +55,7 @@ export default function AdminLayout() {
     const fetchNotifications = async () => {
       try {
         const response = await axios.get('/api/notifications');
-        setNotifications(response.data);
+        setNotifications(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         console.error('Failed to fetch notifications', err);
       }
@@ -63,9 +63,10 @@ export default function AdminLayout() {
     fetchNotifications();
   }, []);
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const unreadCount = Array.isArray(notifications) ? notifications.filter(n => n.unread).length : 0;
 
   const handleMarkAllAsRead = async () => {
+    if (!Array.isArray(notifications)) return;
     try {
       await axios.patch('/api/notifications/read-all');
       setNotifications(notifications.map(n => ({ ...n, unread: false })));
@@ -75,6 +76,7 @@ export default function AdminLayout() {
   };
 
   const handleNotificationClick = async (id) => {
+    if (!Array.isArray(notifications)) return;
     try {
       await axios.patch(`/api/notifications/${id}/read`);
       setNotifications(notifications.map(n => n._id === id ? { ...n, unread: false } : n));
@@ -170,7 +172,7 @@ export default function AdminLayout() {
                       <button onClick={handleMarkAllAsRead} className="text-xs text-indigo-600 font-medium hover:text-indigo-700">Mark all as read</button>
                     </div>
                     <div className="max-h-80 overflow-y-auto relative z-50">
-                      {notifications.length === 0 ? (
+                      {!Array.isArray(notifications) || notifications.length === 0 ? (
                         <div className="px-4 py-6 text-center text-slate-500 text-sm">
                           No notifications yet.
                         </div>
