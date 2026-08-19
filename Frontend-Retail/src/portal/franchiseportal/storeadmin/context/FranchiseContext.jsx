@@ -45,7 +45,6 @@ export function FranchiseProvider({ children }) {
            walletBalance: profileRes.value.data.data.walletBalance || 0,
            totalCredit: profileRes.value.data.data.totalCredit || 0,
            usedCredit: profileRes.value.data.data.usedCredit || 0,
-           reservedCredit: profileRes.value.data.data.reservedCredit || 0,
            completedOrders: profileRes.value.data.data.completedOrders || 0,
            pendingOrders: profileRes.value.data.data.pendingOrders || 0,
          });

@@ -820,7 +820,7 @@ router.put('/entities/:userId/credit', async (req, res) => {
       if (user.role === 'franchise' && user.storeId) {
         const WalletTransaction = require('../models/WalletTransaction');
         const storeIds = user.storeId.split(',').map(s => s.trim());
-        const newBalance = (user.totalCredit || 0) - (user.usedCredit || 0) - (user.reservedCredit || 0);
+        const newBalance = (user.totalCredit || 0) - (user.usedCredit || 0);
         for (const sid of storeIds) {
           const walletTxn = new WalletTransaction({
             storeId: sid,

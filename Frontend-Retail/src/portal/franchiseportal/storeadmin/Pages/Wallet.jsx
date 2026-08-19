@@ -26,22 +26,20 @@ export default function Wallet() {
   };
 
   useEffect(() => {
-    if (activeTab === 'history') {
+    if (user?.userId) {
       fetchCreditHistory();
     }
-  }, [activeTab, user?.userId]);
+  }, [user?.userId]);
 
   const formatCurrency = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 
   const getHistoryColor = (type) => {
     if (['Assigned', 'Increased', 'Refunded', 'Released'].includes(type)) return 'text-emerald-600';
-    if (['Reserved'].includes(type)) return 'text-amber-600';
     return 'text-red-600';
   };
 
   const getHistoryBadge = (type) => {
     if (['Assigned', 'Increased', 'Refunded', 'Released'].includes(type)) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    if (['Reserved'].includes(type)) return 'bg-amber-50 text-amber-700 border-amber-200';
     return 'bg-red-50 text-red-700 border-red-200';
   };
 
@@ -75,7 +73,7 @@ export default function Wallet() {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-indigo-500/30">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-indigo-500/30">
                <div>
                   <p className="text-indigo-300 text-xs font-semibold tracking-wider uppercase mb-1 flex items-center gap-1">
                     <ArrowUpRight size={14} className="text-rose-400" />
@@ -84,16 +82,6 @@ export default function Wallet() {
                   <p className="text-xl font-bold flex items-center">
                     <IndianRupee size={16} className="mr-1" />
                     {(metrics.usedCredit || 0).toLocaleString()}
-                  </p>
-               </div>
-               <div>
-                  <p className="text-indigo-300 text-xs font-semibold tracking-wider uppercase mb-1 flex items-center gap-1">
-                    <ArrowDownRight size={14} className="text-amber-400" />
-                    Reserved Credit
-                  </p>
-                  <p className="text-xl font-bold flex items-center text-slate-100">
-                    <IndianRupee size={16} className="mr-1" />
-                    {(metrics.reservedCredit || 0).toLocaleString()}
                   </p>
                </div>
             </div>

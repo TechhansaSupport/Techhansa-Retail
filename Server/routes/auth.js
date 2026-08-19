@@ -130,8 +130,7 @@ router.post('/login', async (req, res) => {
         profilePhoto: user.profilePhoto,
         storeId: user.storeId,
         totalCredit: user.totalCredit || 0,
-        usedCredit: user.usedCredit || 0,
-        reservedCredit: user.reservedCredit || 0
+        usedCredit: user.usedCredit || 0
       }
     });
 
@@ -180,8 +179,7 @@ router.get('/me', async (req, res) => {
       profilePhoto: user.profilePhoto,
       storeId: user.storeId,
       totalCredit: user.totalCredit || 0,
-      usedCredit: user.usedCredit || 0,
-      reservedCredit: user.reservedCredit || 0
+      usedCredit: user.usedCredit || 0
     });
   } catch (error) {
     console.error('Fetch me error:', error);
