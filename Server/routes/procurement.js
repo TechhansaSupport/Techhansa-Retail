@@ -182,14 +182,26 @@ router.post('/quotations/:id/pay', async (req, res) => {
       });
       await transaction.save();
       
-      quotation.paymentStatus = 'Paid';
-      // Automatically confirm the order since payment is cleared
+      quotation.paymentStatus = 'Pending Verification';
       await Order.findOneAndUpdate(
         { quotationReference: quotation._id },
-        { status: 'Confirmed', totalAmount: quotation.amount, paymentStatus: quotation.paymentStatus, paymentMethod: quotation.paymentMethod }
+        { 
+          paymentStatus: 'Pending Verification', 
+          paymentMethod: quotation.paymentMethod,
+          transactionDate: new Date()
+        }
       );
     } else {
       quotation.paymentStatus = 'Pending Verification';
+      await Order.findOneAndUpdate(
+        { quotationReference: quotation._id },
+        { 
+          paymentStatus: 'Pending Verification', 
+          utrNumber: utrNumber, 
+          transactionDate: new Date(), 
+          paymentMethod: paymentMethod 
+        }
+      );
     }
     
     await quotation.save();

@@ -9,15 +9,15 @@ export function EmployeeProvider({ children }) {
   
   const [inventory, setInventory] = useState([]);
   
-  // Initialize cart from localStorage for persistence
+  // Initialize cart from sessionStorage for persistence
   const [globalCart, setGlobalCart] = useState(() => {
-    const savedCart = localStorage.getItem('employee_cart');
+    const savedCart = sessionStorage.getItem('employee_cart');
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  // Persist cart to localStorage whenever it changes
+  // Persist cart to sessionStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('employee_cart', JSON.stringify(globalCart));
+    sessionStorage.setItem('employee_cart', JSON.stringify(globalCart));
   }, [globalCart]);
 
   const refreshData = async () => {
@@ -68,7 +68,7 @@ export function EmployeeProvider({ children }) {
 
   const clearGlobalCart = () => {
     setGlobalCart([]);
-    localStorage.removeItem('employee_cart');
+    sessionStorage.removeItem('employee_cart');
   };
 
   const processSale = async (cartItems, customerDetails, totalAmount) => {

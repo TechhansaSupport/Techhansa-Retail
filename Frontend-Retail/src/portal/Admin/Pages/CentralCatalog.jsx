@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../../api/axios';
 import { motion } from 'framer-motion';
-import { Search, Filter, AlertTriangle, Edit2, Plus, X, Trash2, PackageSearch } from 'lucide-react';
+import { Search, Filter, AlertTriangle, Edit2, Plus, X, Trash2, PackageSearch, Truck, Calendar, Eye, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function CentralCatalog() {
@@ -12,9 +12,16 @@ export default function CentralCatalog() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  const [activeTab, setActiveTab] = useState('catalog');
+  const [dispatchOrders, setDispatchOrders] = useState([]);
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+
+  // View Order Modal State
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   
   const initialFormState = {
     category: '',
@@ -22,7 +29,6 @@ export default function CentralCatalog() {
     model: '',
     name: '',
     specs: '',
-
     serialNumber: '',
     buyingPrice: '',
     mrp: '',
@@ -35,7 +41,18 @@ export default function CentralCatalog() {
 
   useEffect(() => {
     fetchCatalog();
+    fetchOrders();
   }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await axios.get('/api/admin/orders');
+      const processingOrders = response.data.filter(o => o.status === 'Processing');
+      setDispatchOrders(processingOrders);
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+    }
+  };
 
   const fetchCatalog = async () => {
     try {
@@ -43,6 +60,7 @@ export default function CentralCatalog() {
       const response = await axios.get(`/api/admin/catalog`);
       setCatalog(response.data);
     } catch (error) {
+      console.error(error);
       toast.error('Failed to fetch catalog');
     } finally {
       setLoading(false);
@@ -128,9 +146,31 @@ export default function CentralCatalog() {
         toast.success('Product deleted');
         fetchCatalog();
       } catch (error) {
+        console.error(error);
         toast.error('Failed to delete product');
       }
     }
+  };
+
+  const handleDispatch = async (orderId, orderType) => {
+    try {
+      if (orderType === 'Franchise Procurement') {
+        await axios.patch(`/api/admin/procurement-requests/${orderId}/status`, { status: 'DISPATCHED' });
+      } else {
+        await axios.patch(`/api/admin/orders/${orderId}/status`, { status: 'Dispatched' });
+      }
+      toast.success('Order dispatched successfully!');
+      fetchOrders();
+      fetchCatalog(); // Refresh catalog to show deducted inventory
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to dispatch order');
+    }
+  };
+
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setIsOrderModalOpen(true);
   };
 
   return (
@@ -202,11 +242,36 @@ export default function CentralCatalog() {
         </div>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
-      >
+      {/* Tabs */}
+      <div className="flex border-b border-slate-200 gap-6">
+        <button
+          onClick={() => setActiveTab('catalog')}
+          className={`pb-3 font-semibold text-sm transition-colors relative ${activeTab === 'catalog' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Catalog Management
+          {activeTab === 'catalog' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-full"></div>}
+        </button>
+        <button
+          onClick={() => setActiveTab('dispatch')}
+          className={`pb-3 font-semibold text-sm transition-colors relative flex items-center ${activeTab === 'dispatch' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Pending Dispatches
+          {dispatchOrders.length > 0 && (
+            <span className="ml-2 inline-flex items-center justify-center bg-rose-500 text-white text-[10px] w-5 h-5 rounded-full font-bold">
+              {dispatchOrders.length}
+            </span>
+          )}
+          {activeTab === 'dispatch' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-full"></div>}
+        </button>
+      </div>
+
+      {activeTab === 'catalog' && (
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+          >
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -368,6 +433,8 @@ export default function CentralCatalog() {
           )}
         </div>
       </motion.div>
+      </>
+      )}
 
       {/* Add / Edit Modal */}
       {isModalOpen && (
@@ -456,6 +523,176 @@ export default function CentralCatalog() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'dispatch' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
+                  <th className="px-6 py-4 font-medium">Order ID</th>
+                  <th className="px-6 py-4 font-medium">Partner</th>
+                  <th className="px-6 py-4 font-medium">Type</th>
+                  <th className="px-6 py-4 font-medium text-right">Amount</th>
+                  <th className="px-6 py-4 font-medium text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {dispatchOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                      No orders pending dispatch.
+                    </td>
+                  </tr>
+                ) : dispatchOrders.map((order) => (
+                  <tr key={order._id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-slate-800 flex items-center gap-2">
+                        <PackageSearch size={16} className="text-slate-400" />
+                        {order.orderNumber}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                        <Calendar size={12} />
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="font-medium text-slate-700">{order.userId || 'Unknown'}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${order.orderType === 'Franchise Procurement' ? 'bg-indigo-50 text-indigo-700' : 'bg-blue-50 text-blue-700'}`}>
+                        {order.orderType}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right font-bold text-slate-800">
+                      ₹{order.totalAmount?.toLocaleString() || 0}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex justify-center gap-2">
+                        <button 
+                          onClick={() => handleViewOrder(order)}
+                          className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-2 font-medium text-sm"
+                          title="View Order Details"
+                        >
+                          <Eye size={16} />
+                          View
+                        </button>
+                        {order.status === 'Dispatched' ? (
+                          <span className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg text-sm font-semibold flex items-center gap-2">
+                            <Truck size={16} />
+                            Dispatched
+                          </span>
+                        ) : (
+                          <button 
+                            onClick={() => handleDispatch(order._id, order.orderType)}
+                            className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                          >
+                            <Truck size={16} />
+                            Dispatch Order
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
+
+      {/* View Order Modal */}
+      {isOrderModalOpen && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsOrderModalOpen(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
+                  <Package size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Order Details</h3>
+                  <p className="text-sm text-slate-500 mt-1">Review the order items before dispatching.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsOrderModalOpen(false)}
+                className="w-10 h-10 flex items-center justify-center bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors border border-slate-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div>
+                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Requested Items</h3>
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <th className="px-4 py-3">Item</th>
+                        <th className="px-4 py-3">Configuration</th>
+                        <th className="px-4 py-3 text-center">Qty</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {(selectedOrder.items || []).map((item, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="font-bold text-slate-800">{item.productName || item.hardwareType || item.otherType}</div>
+                            <div className="text-xs text-slate-500">{item.brand} {item.model ? `- ${item.model}` : ''}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-xs text-slate-600 whitespace-pre-wrap">
+                              {typeof item.configuration === 'string' ? item.configuration : 
+                               typeof item.specs === 'string' ? item.specs :
+                               item.specs ? JSON.stringify(item.specs, null, 2) : 'Standard Configuration'}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center font-bold text-slate-800">
+                            {item.quantity}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 flex-shrink-0 bg-slate-50/50">
+              <button
+                onClick={() => setIsOrderModalOpen(false)}
+                className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                Close
+              </button>
+              {selectedOrder.status !== 'Dispatched' && (
+                <button
+                  onClick={() => {
+                    setIsOrderModalOpen(false);
+                    handleDispatch(selectedOrder._id, selectedOrder.orderType);
+                  }}
+                  className="px-6 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <Truck size={18} />
+                  Dispatch Order
+                </button>
+              )}
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

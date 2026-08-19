@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 router.post('/seed', async (req, res) => {
   try {
     // Clear out old test users to avoid duplicate key errors if this is run multiple times
-    await User.deleteMany({ userId: { $in: ['admin123', 'franchise123', 'employee123', 'channel123'] } });
+    await User.deleteMany({ userId: { $in: ['admin123', 'franchise123', 'employee123', 'channel123', 'accountmanager123', 'inventorymanager123'] } });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('password123', salt);
@@ -41,12 +41,32 @@ router.post('/seed', async (req, res) => {
       role: 'channel'
     });
 
+    const accountManagerUser = new User({
+      userId: 'accountmanager123',
+      password: hashedPassword,
+      role: 'account_manager'
+    });
+
+    const inventoryManagerUser = new User({
+      userId: 'inventorymanager123',
+      password: hashedPassword,
+      role: 'inventory_manager'
+    });
+
+    const financeManagerUser = new User({
+      userId: 'financemanager123',
+      password: hashedPassword,
+      role: 'finance_manager'
+    });
+
     await adminUser.save();
     await franchiseUser.save();
     await employeeUser.save();
     await channelUser.save();
-    
-    res.send('Test admin, franchise, employee, and channel users created successfully!');
+    await accountManagerUser.save();
+    await inventoryManagerUser.save();
+    await financeManagerUser.save();
+    res.send('Test admin, franchise, employee, channel, account manager, inventory manager, and finance manager users created successfully!');
   } catch (error) {
     console.error('Seed error:', error);
     res.status(500).send('Error seeding database: ' + error.message);

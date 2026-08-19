@@ -16,7 +16,7 @@ const OrderSchema = new mongoose.Schema({
   },
   trackingId: { type: String },
   totalAmount: { type: Number, default: 0 },
-  paymentMethod: { type: String, enum: ['Credit', 'NEFT', 'UPI', 'Advance Payment'], default: null },
+  paymentMethod: { type: String, enum: ['Credit', 'Credit Lines', 'NEFT', 'UPI', 'Advance Payment'], default: null },
   paymentStatus: { type: String, enum: ['Pending Verification', 'Reserved', 'Verified', 'Rejected', 'None', 'Paid'], default: 'None' },
   utrNumber: { type: String },
   transactionDate: { type: Date },
