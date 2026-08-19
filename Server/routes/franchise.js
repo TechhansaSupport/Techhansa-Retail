@@ -181,11 +181,10 @@ router.get('/:storeId/profile', async (req, res) => {
     if (user) {
       profile.totalCredit = user.totalCredit || 0;
       profile.usedCredit = user.usedCredit || 0;
-      profile.reservedCredit = user.reservedCredit || 0;
     }
 
     // Map credit logic to walletBalance for frontend compatibility
-    profile.walletBalance = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
+    profile.walletBalance = (profile.totalCredit || 0) - (profile.usedCredit || 0);
     
     res.json({ success: true, data: profile });
   } catch (error) {
@@ -299,9 +298,7 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
     const profile = await StoreProfile.findOne({ storeId });
     if (!profile) return res.status(404).json({ success: false, message: 'Store not found' });
     
-    const availableCredit = (profile.totalCredit || 0) - (profile.usedCredit || 0) - (profile.reservedCredit || 0);
-    
-    let originalReserved = itemToApprove.amount; // default fallback
+    const availableCredit = (profile.totalCredit || 0) - (profile.usedCredit || 0);
     
     const isAdvancePayment = (paymentMethod && paymentMethod !== 'Credit');
 
@@ -309,14 +306,12 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
     if (reqstId) {
        const reqst = isQuotation ? await ProcurementRequest.findById(reqstId) : await ProcurementRequest.findOne({ requestId: reqstId });
        if (reqst) {
-          originalReserved = reqst.total || itemToApprove.amount;
           reqst.status = isAdvancePayment ? 'PAYMENT_VERIFICATION' : (isQuotation ? 'Paid' : 'DISPATCHED');
           await reqst.save();
        }
     }
 
     // Adjust credits
-    profile.reservedCredit = Math.max(0, (profile.reservedCredit || 0) - originalReserved);
     if (!isAdvancePayment) {
       profile.usedCredit = (profile.usedCredit || 0) + itemToApprove.amount;
     }
@@ -324,9 +319,36 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
     
     const user = await User.findOne({ role: 'franchise', storeId: { $regex: storeId } });
     if (user) {
-      user.reservedCredit = profile.reservedCredit;
       user.usedCredit = profile.usedCredit;
       await user.save();
+
+      if (!isAdvancePayment) {
+        const CreditTransaction = require('../models/CreditTransaction');
+        
+        // Log Credit Deduction
+        const creditTxn = new CreditTransaction({
+          userId: user.userId,
+          type: 'Deducted',
+          amount: itemToApprove.amount,
+          referenceId: isQuotation ? itemToApprove.quotationNo : itemToApprove.invoiceNo,
+          description: `Payment for ${isQuotation ? 'Quotation' : 'Invoice'} ${isQuotation ? itemToApprove.quotationNo : itemToApprove.invoiceNo}`
+        });
+        await creditTxn.save();
+
+        // Log Wallet Transaction for Transaction Ledger
+        const newBalance = (profile.totalCredit || 0) - (profile.usedCredit || 0);
+        const walletTxn = new WalletTransaction({
+          storeId: storeId,
+          txnId: `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          date: new Date(),
+          type: 'Credit Out',
+          amount: itemToApprove.amount,
+          status: 'Success',
+          closingBalance: newBalance,
+          description: `Payment for ${isQuotation ? 'Quotation' : 'Invoice'} ${isQuotation ? itemToApprove.quotationNo : itemToApprove.invoiceNo}`
+        });
+        await walletTxn.save();
+      }
     }
     
     // Update item

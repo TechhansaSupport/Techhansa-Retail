@@ -12,7 +12,7 @@ const storeProfileSchema = new mongoose.Schema({
   email: { type: String },
   totalCredit: { type: Number, default: 0 },
   usedCredit: { type: Number, default: 0 },
-  reservedCredit: { type: Number, default: 0 },
+  deletedAt: { type: Date, default: null },
   todaysSales: { type: Number, default: 0 },
   monthlySales: { type: Number, default: 0 },
   completedOrders: { type: Number, default: 0 },
