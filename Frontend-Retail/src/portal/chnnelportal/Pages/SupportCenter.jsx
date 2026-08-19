@@ -1,16 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, PhoneCall, Mail, Send } from 'lucide-react';
+import { MessageSquare, PhoneCall, Mail, Send, Loader2 } from 'lucide-react';
+import { AuthContext } from '../../../context/AuthContext';
 
 export default function SupportCenter() {
+  const { user } = useContext(AuthContext) || { user: null };
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Support ticket submitted successfully!');
-    setSubject('');
-    setMessage('');
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: user?.name || 'Channel Partner',
+          companyName: user?.companyName || 'Channel Partner',
+          email: user?.email || 'partner@techhansa.com',
+          phone: user?.phone || 'N/A',
+          businessType: 'Channel Partner Support',
+          subject: subject,
+          emailSubject: `The message is from channel partner portal ${user?.name || 'Unknown'}`,
+          message: `The message is from Our Channel partner ${user?.name || 'Unknown'}.\n\n${message}`,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Support ticket submitted successfully!');
+        setSubject('');
+        setMessage('');
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to submit: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error submitting support ticket:', error);
+      alert('Something went wrong. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -48,8 +82,17 @@ export default function SupportCenter() {
                 ></textarea>
               </div>
               <div className="pt-2">
-                <button type="submit" className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors">
-                  <Send className="w-4 h-4" /> Submit Ticket
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  {isSubmitting ? 'Submitting...' : 'Submit Ticket'}
                 </button>
               </div>
             </form>

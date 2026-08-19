@@ -364,9 +364,9 @@ export default function Quotations() {
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
                   <p className="text-sm font-medium text-slate-700 mb-2">Scan this QR Code</p>
                   <div className="w-32 h-32 bg-white border border-slate-200 rounded-lg mx-auto flex items-center justify-center p-2 mb-2">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=techhansa@bank&pn=Techhansa&am=${displayTotalAmount}`} alt="UPI QR" className="w-full h-full object-contain" />
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=Techhansa@bank&pn=Techhansa&am=${displayTotalAmount}`} alt="UPI QR" className="w-full h-full object-contain" />
                   </div>
-                  <p className="text-xs text-slate-500 font-mono">techhansa@bank</p>
+                  <p className="text-xs text-slate-500 font-mono">Techhansa@bank</p>
                 </div>
               )}
 

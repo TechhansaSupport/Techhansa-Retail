@@ -8,7 +8,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // POST Route: Save to DB
 router.post('/', async (req, res) => {
-  const { fullName, companyName, email, phone, businessType, subject, message } = req.body;
+  const { fullName, companyName, email, phone, businessType, subject, message, emailSubject } = req.body;
 
   // Validation
   if (!fullName || !email || !phone || !businessType || !subject || !message) {
@@ -45,7 +45,7 @@ router.post('/', async (req, res) => {
       await resend.emails.send({
         from: 'Techhansa Notifications <onboarding@resend.dev>',
         to: 'customer.support@techhansha.com',
-        subject: 'Notification from Contact Form',
+        subject: emailSubject || 'Notification from Contact Form',
         html: `
           <h2>New Contact Form Submission</h2>
           <p><strong>Name:</strong> ${fullName}</p>

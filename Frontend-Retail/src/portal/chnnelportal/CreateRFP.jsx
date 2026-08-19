@@ -2,6 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Plus, Trash2, FileUp, Save, Send, Calendar, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import * as XLSX from 'xlsx';
+import { useRef } from 'react';
 
 export default function CreateRFP() {
   const { user } = useContext(AuthContext) || { user: null };
@@ -23,15 +25,18 @@ export default function CreateRFP() {
         model: p.model || '',
         config: p.configuration || '',
         qty: p.quantity || 1,
+        price: p.price || 0,
         remarks: p.remarks || ''
       })) : 
-      [{ id: 1, category: '', brand: '', model: '', config: '', qty: 1, remarks: '' }]
+      [{ id: 1, category: '', brand: '', model: '', config: '', qty: 1, price: 0, remarks: '' }]
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
+
+  const fileInputRef = useRef(null);
 
   const [catalog, setCatalog] = useState([]);
   
@@ -60,6 +65,43 @@ export default function CreateRFP() {
     if (products.length > 1) {
       setProducts(products.filter(p => p.id !== id));
     }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+        
+        if (data && data.length > 0) {
+          const newProducts = data.map((row, index) => ({
+            id: Date.now() + index,
+            catalogItemId: '',
+            category: row.Category || row.category || '',
+            brand: row.Brand || row.brand || '',
+            model: row.Model || row.model || '',
+            config: row.Configuration || row.configuration || row.Config || row.config || '',
+            qty: row.Quantity || row.quantity || row.Qty || row.qty || 1,
+            remarks: row.Remarks || row.remarks || '',
+            price: row.Price || row.price || row['Est. Price'] || 0
+          }));
+          
+          setProducts(newProducts);
+        }
+      } catch (error) {
+        console.error("Error parsing Excel:", error);
+        alert("Failed to parse Excel file. Please ensure it has columns like Category, Brand, Model, Configuration, Qty.");
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = '';
   };
 
   const updateProduct = (index, field, value) => {
@@ -301,7 +343,17 @@ export default function CreateRFP() {
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h2 className="text-lg font-semibold text-gray-900">Product Requirements</h2>
               <div className="flex gap-2">
-                <button className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 bg-white px-3 py-1.5 rounded-md font-medium transition-colors shadow-sm">
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileUpload} 
+                  accept=".xlsx, .xls, .csv" 
+                  className="hidden" 
+                />
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 bg-white px-3 py-1.5 rounded-md font-medium transition-colors shadow-sm"
+                >
                   <FileUp className="w-4 h-4 text-blue-600" /> Import Excel
                 </button>
               </div>
