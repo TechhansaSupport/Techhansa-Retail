@@ -3,6 +3,8 @@ import axios from '../../../api/axios';
 import { motion } from 'framer-motion';
 import { Search, ShoppingCart, Eye, Package, Calendar, Check, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AuthContext } from '../../../context/AuthContext';
+import { useContext } from 'react';
 
 export default function AllOrders() {
   const [orders, setOrders] = useState([]);
@@ -11,7 +13,8 @@ export default function AllOrders() {
   const [roleFilter, setRoleFilter] = useState('All');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [invoiceTotal, setInvoiceTotal] = useState('');
+
+  const { user } = useContext(AuthContext) || { user: null };
 
   useEffect(() => {
     fetchOrders();
@@ -59,10 +62,10 @@ export default function AllOrders() {
         await axios.patch(`/api/admin/orders/${orderId}/status`, { status: newStatus });
       }
       toast.success(`Order ${newStatus.toLowerCase()} successfully`);
-      
+
       // Update local state handling different string cases
       const mappedStatus = (targetOrder && targetOrder.orderType === 'Franchise Procurement' && newStatus === 'Declined') ? 'Declined' : newStatus;
-      
+
       setOrders(orders.map(o => o._id === orderId ? { ...o, status: mappedStatus } : o));
     } catch (error) {
       console.error('Failed to update order status:', error);
@@ -89,20 +92,24 @@ export default function AllOrders() {
     }
   };
 
-  const handleSendInvoice = async (orderId) => {
+  const handleSendToInventory = async (orderId) => {
     try {
       await axios.post(`/api/admin/orders/${orderId}/invoice`);
-      toast.success('Invoice generated and sent successfully');
+      toast.success('Order sent to Inventory Manager successfully');
       fetchOrders();
     } catch (error) {
-      console.error('Failed to send invoice:', error);
-      toast.error(error.response?.data?.message || 'Failed to send invoice');
+      console.error('Failed to send order to inventory manager:', error);
+      toast.error(error.response?.data?.message || 'Failed to process order');
     }
   };
 
   const handleConfirmPayment = async (orderId) => {
     try {
-      await axios.post(`/api/admin/procurement-requests/${orderId}/confirm-payment`);
+      if (selectedOrder && selectedOrder.orderType === 'Enterprise') {
+        await axios.patch(`/api/admin/orders/${orderId}/status`, { status: 'Paid' });
+      } else {
+        await axios.post(`/api/admin/procurement-requests/${orderId}/confirm-payment`);
+      }
       toast.success('Payment confirmed successfully!');
       setIsModalOpen(false);
       fetchOrders();
@@ -112,11 +119,24 @@ export default function AllOrders() {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getDisplayStatus = (status, paymentStatus) => {
+    if (paymentStatus === 'Rejected' || (status === 'Declined' && paymentStatus === 'Pending Verification')) return 'Payment Declined';
+    if (status === 'Declined') return 'Declined';
+    if (status === 'Paid') return 'Paid';
+    if (status === 'Payment Verification' || paymentStatus === 'Pending Verification') return 'Verification Pending';
+    if (status === 'Pending' || status === 'PENDING') return 'New Order';
+    return status;
+  };
+
+  const getStatusColor = (status, paymentStatus) => {
+    if (paymentStatus === 'Rejected' || (status === 'Declined' && paymentStatus === 'Pending Verification')) return 'bg-red-100 text-red-700';
+    if (status === 'Paid') return 'bg-emerald-100 text-emerald-800';
+    if (status === 'Payment Verification' || paymentStatus === 'Pending Verification') return 'bg-orange-100 text-orange-700';
+
     switch (status) {
-      case 'Pending': return 'bg-amber-100 text-amber-700';
+      case 'Pending':
+      case 'PENDING': return 'bg-amber-100 text-amber-700';
       case 'Quotation Sent': return 'bg-blue-100 text-blue-700';
-      case 'Paid': return 'bg-emerald-100 text-emerald-800';
       case 'Confirmed': return 'bg-blue-100 text-blue-700';
       case 'Processing': return 'bg-indigo-100 text-indigo-700';
       case 'Dispatched': return 'bg-purple-100 text-purple-700';
@@ -239,13 +259,13 @@ export default function AllOrders() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
-                        {order.status}
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status, order.paymentStatus)}`}>
+                        {getDisplayStatus(order.status, order.paymentStatus)}
                       </span>
                     </td>
                     <td className="p-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        {order.status === 'Pending' && (
+                        {getDisplayStatus(order.status, order.paymentStatus) === 'New Order' && (
                           <>
                             <button
                               onClick={() => handleViewOrder(order._id, order.orderType)}
@@ -270,16 +290,16 @@ export default function AllOrders() {
                         >
                           <Eye size={18} />
                         </button>
-  
-                      {order.status === 'Paid' && (
-                        <button
-                          onClick={() => handleSendInvoice(order._id)}
-                          className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
-                          title="Send Invoice"
-                        >
-                          <Package size={18} />
-                        </button>
-                      )}</div>
+
+                        {order.status === 'Paid' && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') && (
+                          <button
+                            onClick={() => handleSendToInventory(order._id)}
+                            className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
+                            title="Send to Inventory Manager"
+                          >
+                            <Package size={18} />
+                          </button>
+                        )}</div>
                     </td>
                   </motion.tr>
                 ))
@@ -305,13 +325,21 @@ export default function AllOrders() {
                   <Package size={24} />
                 </div>
                 <div>
-                <h3 className="text-xl font-bold text-slate-900">
-                  {selectedOrder.status === 'Payment Verification' ? 'Verify Payment' : 'Send Quotation'}
-                </h3>
-                <p className="text-sm text-slate-500 mt-1">
-                  {selectedOrder.status === 'Payment Verification' ? 'Review the payment details and confirm.' : 'Review the order and confirm the final quotation amount.'}
-                </p>
-              </div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    {getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'Verification Pending'
+                      ? 'Verify Payment'
+                      : getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'New Order'
+                        ? 'Send Quotation'
+                        : 'Order Details'}
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'Verification Pending'
+                      ? 'Review the payment details and confirm.'
+                      : getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'New Order'
+                        ? 'Review the order and confirm the final quotation amount.'
+                        : 'View the complete details of this order.'}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -329,8 +357,8 @@ export default function AllOrders() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 text-sm font-medium">Order Status</span>
-                      <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${getStatusColor(selectedOrder.status)}`}>
-                        {selectedOrder.status}
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${getStatusColor(selectedOrder.status, selectedOrder.paymentStatus)}`}>
+                        {getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -433,14 +461,14 @@ export default function AllOrders() {
                   <span className="text-indigo-800 font-bold uppercase tracking-wider text-sm mb-1">Total Amount</span>
                   <span className="text-2xl font-black text-indigo-900">₹{selectedOrder.totalAmount?.toLocaleString() || 0}</span>
                 </div>
-                {selectedOrder.status === 'PENDING' || selectedOrder.status === 'Pending' ? (
+                {getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'New Order' ? (
                   <button
                     onClick={() => handleApproveProcurement(selectedOrder._id)}
                     className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap"
                   >
                     Confirm & Send Quotation
                   </button>
-                ) : selectedOrder.status === 'Payment Verification' ? (
+                ) : getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'Verification Pending' ? (
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleUpdateStatus(selectedOrder._id, 'Declined')}
@@ -455,6 +483,13 @@ export default function AllOrders() {
                       Verify Payment
                     </button>
                   </div>
+                ) : selectedOrder.status === 'Paid' && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') ? (
+                  <button
+                    onClick={() => handleSendToInventory(selectedOrder._id)}
+                    className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap"
+                  >
+                    Send to Inventory Manager
+                  </button>
                 ) : null}
               </div>
             </div>

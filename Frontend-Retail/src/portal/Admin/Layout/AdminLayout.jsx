@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Package, FileText, LogOut, Bell, User, Menu, X, ChevronDown, Shield, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, Users, Package, FileText, LogOut, Bell, User, Menu, X, ChevronDown, Shield, ShoppingCart, IndianRupee } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/logo.png';
@@ -32,10 +32,22 @@ export default function AdminLayout() {
   const navItems = [
     { name: 'Dashboard', path: '/admin', end: true, icon: <LayoutDashboard size={20} /> },
     { name: 'Entity Management', path: '/admin/entities', icon: <Users size={20} /> },
-    { name: 'Central Catalog', path: '/admin/catalog', icon: <Package size={20} /> },
+    { name: 'Inventory', path: '/admin/catalog', icon: <Package size={20} /> },
     { name: 'Global Orders', path: '/admin/orders', icon: <ShoppingCart size={20} /> },
+    { name: 'Payment Approvals', path: '/admin/finance', icon: <IndianRupee size={20} /> },
     { name: 'Audit Logs', path: '/admin/audit', icon: <FileText size={20} /> },
-  ];
+  ].filter(item => {
+    if (user?.role === 'account_manager') {
+      return item.name === 'Global Orders' || item.name === 'Audit Logs';
+    }
+    if (user?.role === 'inventory_manager') {
+      return item.name === 'Inventory' || item.name === 'Audit Logs';
+    }
+    if (user?.role === 'finance_manager') {
+      return item.name === 'Payment Approvals' || item.name === 'Audit Logs';
+    }
+    return true;
+  });
 
   const [notifications, setNotifications] = useState([]);
 
@@ -194,7 +206,10 @@ export default function AdminLayout() {
                   <User size={18} />
                 </div>
                 <div className="text-sm hidden md:block">
-                  <p className="font-semibold text-slate-700">System Admin</p>
+                  <p className="font-semibold text-slate-700">
+                    {user?.role === 'account_manager' ? 'Account Manager' : 
+                     user?.role === 'inventory_manager' ? 'Inventory Manager' : 'System Admin'}
+                  </p>
                   <p className="text-slate-500 text-xs">ID: {user?.userId || 'admin123'}</p>
                 </div>
                 <ChevronDown size={14} className="text-slate-400 hidden md:block" />

@@ -211,25 +211,44 @@ router.get('/orders', async (req, res) => {
 
     const procurements = await ProcurementRequest.aggregate([
       {
+        $lookup: {
+          from: 'quotations',
+          localField: '_id',
+          foreignField: 'procurementReference',
+          as: 'quotations'
+        }
+      },
+      {
         $addFields: {
           orderNumber: '$requestId',
           userRole: 'franchise',
           userId: '$storeId',
           totalAmount: '$total',
-          orderType: 'Franchise Procurement'
+          orderType: 'Franchise Procurement',
+          quotationPaymentStatus: { $arrayElemAt: ['$quotations.paymentStatus', 0] }
         }
+      },
+      {
+        $project: { quotations: 0 }
       }
     ]);
 
-    const mappedProcurements = procurements.map(pr => ({
-      ...pr,
-      paymentStatus: (pr.status === 'PENDING' || pr.status === 'PAYMENT_VERIFICATION') ? 'Pending Verification' : 'Verified',
-      status: pr.status === 'PENDING' ? 'Pending' :
-        pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
+    const mappedProcurements = procurements.map(pr => {
+      let paymentStatus = pr.status === 'PENDING' ? 'Pending' : (pr.status === 'PAYMENT_VERIFICATION' ? 'Pending Verification' : 'Verified');
+      if (pr.status === 'PAYMENT_REJECTED' || (pr.status === 'PENDING' && pr.quotationPaymentStatus === 'Rejected')) {
+        paymentStatus = 'Rejected';
+      }
+      return {
+        ...pr,
+        paymentStatus,
+        status: pr.status === 'PENDING' ? 'Pending' :
+          pr.status === 'PAYMENT_REJECTED' ? 'Declined' :
+          pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
           pr.status === 'APPROVED' ? 'Processing' :
-            pr.status === 'DISPATCHED' ? 'Dispatched' :
-              pr.status === 'DELIVERED' ? 'Delivered' : pr.status
-    }));
+              pr.status === 'DISPATCHED' ? 'Dispatched' :
+                pr.status === 'DELIVERED' ? 'Delivered' : pr.status
+      };
+    });
 
     const allOrders = [...orders, ...mappedProcurements].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json(allOrders);
@@ -269,6 +288,32 @@ router.patch('/orders/:id/status', async (req, res) => {
         await Quotation.findByIdAndUpdate(order.quotationReference._id, { status: 'Rejected' });
         if (order.quotationReference.rfpReference) {
           await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, { status: 'Rejected' });
+        }
+      }
+    }
+
+    // Deduct inventory when dispatched
+    if (status === 'Dispatched') {
+      let itemsToDeduct = order.items && order.items.length > 0 ? order.items : [];
+      if (itemsToDeduct.length === 0 && order.quotationReference && order.quotationReference.items) {
+         itemsToDeduct = order.quotationReference.items;
+      }
+      
+      for (const item of itemsToDeduct) {
+        if (!item.brand || (!item.model && !item.productName)) continue;
+        
+        let product;
+        if (item.model) {
+          product = await GlobalProduct.findOne({ brand: item.brand, model: item.model });
+        }
+        if (!product && item.productName) {
+          product = await GlobalProduct.findOne({ name: item.productName });
+        }
+        
+        if (product) {
+          product.quantity = Math.max(0, product.quantity - item.quantity);
+          product.availableStock = Math.max(0, product.availableStock - item.quantity);
+          await product.save();
         }
       }
     }
@@ -442,6 +487,34 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
     if (!request) {
       return res.status(404).json({ message: 'Procurement request not found' });
     }
+
+    // Deduct inventory when dispatched
+    if (status === 'DISPATCHED') {
+      for (const item of request.items) {
+        if (!item.hardwareType) continue;
+        // Franchise requests use hardwareType/otherType as name, and brand as brand.
+        const productName = item.hardwareType === 'Others' ? item.otherType : item.hardwareType;
+        
+        let product;
+        if (item.model) {
+          product = await GlobalProduct.findOne({ brand: item.brand, model: item.model });
+        }
+        if (!product && item.specs && item.specs.model) {
+          product = await GlobalProduct.findOne({ brand: item.brand, model: item.specs.model });
+        }
+        if (!product) {
+          // Fallback to searching by brand and category/name
+          product = await GlobalProduct.findOne({ brand: item.brand, category: item.hardwareType });
+        }
+        
+        if (product) {
+          product.quantity = Math.max(0, product.quantity - item.quantity);
+          product.availableStock = Math.max(0, product.availableStock - item.quantity);
+          await product.save();
+        }
+      }
+    }
+
     res.json(request);
   } catch (error) {
     console.error('Error updating procurement request status:', error);
@@ -499,10 +572,18 @@ router.post('/orders/:id/invoice', async (req, res) => {
     let invoiceData = null;
     let orderUpdate = null;
 
+    // Check if it's already a B2BInvoice (Franchise B2B Invoice from Dashboard)
+    const existingB2B = await B2BInvoice.findById(orderId);
+    if (existingB2B) {
+      existingB2B.invoiceSent = true;
+      await existingB2B.save();
+      return res.json({ message: 'Invoice sent successfully', invoice: existingB2B });
+    }
+
     // Check if it's an Order (Channel)
     const order = await Order.findById(orderId).populate('quotationReference');
     if (order) {
-      if (order.status !== 'Paid') {
+      if (order.status !== 'Paid' && order.paymentStatus !== 'Paid') {
         return res.status(400).json({ message: 'Only Paid orders can be invoiced.' });
       }
       
@@ -561,7 +642,7 @@ router.post('/orders/:id/invoice', async (req, res) => {
     res.json({ message: 'Invoice generated and sent successfully', invoice: invoiceData, order: orderUpdate });
   } catch (error) {
     console.error('Error generating invoice:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 });
 

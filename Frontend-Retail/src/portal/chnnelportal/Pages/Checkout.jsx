@@ -89,8 +89,8 @@ export default function Checkout() {
           ...user,
           usedCredit: (user.usedCredit || 0) + totalAmount
         };
-        // In real app, call a profile refresh API
-        login(updatedUser, localStorage.getItem('token')); 
+        const updatedUserFinal = { ...updatedUser, walletBalance: data.walletBalance };
+        login(updatedUserFinal, sessionStorage.getItem('token')); 
       }
 
       navigate('/channel/orders', { state: { success: 'Order placed successfully!' } });

@@ -29,6 +29,7 @@ import AuditLogs from './portal/Admin/Pages/AuditLogs';
 import AdminNotifications from './portal/Admin/Pages/Notifications';
 import AdminSettings from './portal/Admin/Pages/Settings';
 import AllOrders from './portal/Admin/Pages/AllOrders';
+import FinanceDashboard from './portal/Admin/Pages/FinanceDashboard';
 import FranchiseLayout from './portal/franchiseportal/storeadmin/Layout/FranchiseLayout';
 import FranchiseDashboard from './portal/franchiseportal/storeadmin/Pages/Dashboard';
 import FranchiseProfile from './portal/franchiseportal/storeadmin/Pages/StoreProfile';
@@ -94,14 +95,16 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   // If not logged in, redirect to login page
   if (!user) return <Navigate to="/login" replace />;
 
-  // Remove role-based portal restrictions so any logged-in user can view any portal
-  // if (allowedRoles && !allowedRoles.includes(user.role) && user.role !== 'admin') {
-  //   return (
-  //     <div className="flex min-h-screen items-center justify-center">
-  //       <h2 className="text-2xl font-bold text-red-600">Unauthorized: You do not have permission to view this portal.</h2>
-  //     </div>
-  //   );
-  // }
+  if (allowedRoles && !allowedRoles.includes(user.role) && user.role !== 'admin') {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Unauthorized Access</h2>
+          <p className="text-slate-600">You do not have permission to view this portal.</p>
+        </div>
+      </div>
+    );
+  }
 
   return children;
 };
@@ -125,7 +128,7 @@ function App() {
 
           {/* Admin Portal */}
           <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['admin', 'franchise', 'channel']}>
+            <ProtectedRoute allowedRoles={['admin', 'account_manager', 'inventory_manager', 'finance_manager']}>
               <AdminLayout />
             </ProtectedRoute>
           }>
@@ -136,6 +139,7 @@ function App() {
             <Route path="notifications" element={<AdminNotifications />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="orders" element={<AllOrders />} />
+            <Route path="finance" element={<FinanceDashboard />} />
           </Route>
 
           {/* Franchise Portal */}

@@ -86,6 +86,15 @@ export default function LoginPage() {
           case 'admin':
             navigate('/admin');
             break;
+          case 'account_manager':
+            navigate('/admin/orders');
+            break;
+          case 'inventory_manager':
+            navigate('/admin/catalog');
+            break;
+          case 'finance_manager':
+            navigate('/admin/finance');
+            break;
           case 'franchise':
             navigate('/franchise');
             break;
