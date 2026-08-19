@@ -159,8 +159,8 @@ export default function FranchiseLayout() {
                       <button onClick={markAllAsRead} className="text-xs text-indigo-600 font-medium hover:text-indigo-700">Mark all as read</button>
                     </div>
                     <div className="max-h-80 overflow-y-auto relative z-50">
-                      {notifications.map(note => (
-                        <div key={note._id || note.id} onClick={() => note.unread && markAsRead(note._id || note.id)} className={`px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer ${note.unread ? 'bg-indigo-50/30' : ''}`}>
+                      {notifications.map((note, index) => (
+                        <div key={note._id || note.id || `notification-${index}`} onClick={() => note.unread && markAsRead(note._id || note.id)} className={`px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer ${note.unread ? 'bg-indigo-50/30' : ''}`}>
                           <div className="flex justify-between items-start mb-1">
                             <h4 className={`text-sm font-semibold ${note.unread ? 'text-slate-800' : 'text-slate-600'}`}>{note.title}</h4>
                             <span className="text-[10px] text-slate-400">{note.time}</span>
