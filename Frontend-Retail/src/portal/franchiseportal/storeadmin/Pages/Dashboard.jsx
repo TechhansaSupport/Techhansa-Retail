@@ -296,8 +296,8 @@ export default function Dashboard() {
                  All stock levels are healthy!
                </div>
             ) : (
-              inventory.filter(i => i.availableStock <= i.lowStockAlert).map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-red-50 hover:border-red-100 transition-colors">
+              inventory.filter(i => i.availableStock <= i.lowStockAlert).map((item, index) => (
+                <div key={item._id || item.id || `low-stock-${index}`} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-red-50 hover:border-red-100 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-400 group-hover:text-red-500 transition-colors">
                       {item.category === 'Laptops' ? <Monitor size={24} /> : 
@@ -331,8 +331,8 @@ export default function Dashboard() {
             <button onClick={() => navigate('/franchise/procurement')} className="text-indigo-600 text-sm font-semibold hover:text-indigo-800">Order History</button>
           </div>
           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-            {orders.slice(0, 4).map((order) => (
-              <div key={order.id} className="p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow bg-white flex justify-between items-center group">
+            {orders.slice(0, 4).map((order, index) => (
+              <div key={order._id || order.id || `order-${index}`} className="p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow bg-white flex justify-between items-center group">
                 <div className="flex items-center gap-4">
                   <div className={`w-2 h-12 rounded-full ${
                     order.status === 'Delivered' ? 'bg-emerald-400' :
