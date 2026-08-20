@@ -21,7 +21,9 @@ const InvoiceSchema = new mongoose.Schema({
   items: [{
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
     name: String,
-
+    brand: String,
+    model: String,
+    specs: String,
     quantity: Number,
     sellingPrice: Number,
     serialNumbers: [String]

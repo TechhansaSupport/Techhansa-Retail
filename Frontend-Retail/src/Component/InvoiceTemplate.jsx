@@ -29,9 +29,9 @@ export default function InvoiceTemplate({ invoice, storeData }) {
               <p className="leading-tight">
                 {storeData?.address || 'REGD. OFF-SHI 8/27A-K-3 GILAT BAZAR BYPASS\nSHIVPURKOT, VARANASI, UP-221002'}
               </p>
-              <p className="mt-1">GSTIN/UIN: {storeData?.gstin || 'N/A'}</p>
+              <p className="mt-1">GSTIN/UIN: {storeData?.gst || 'N/A'}</p>
               <p>State Name: {storeData?.state || 'Uttar Pradesh'}</p>
-              <p>Contact: {storeData?.phone || '+91-7607650206 , 9711888951'}</p>
+              <p>Contact: {storeData?.phone || storeData?.contact || '+91-7607650206 , 9711888951'}</p>
               <p>E-Mail: {storeData?.email || 'finance@techhansa.com'}</p>
             </div>
           </div>
@@ -50,7 +50,7 @@ export default function InvoiceTemplate({ invoice, storeData }) {
             </div>
             <div className="flex border-b-2 border-black">
               <div className="w-1/2 p-2 border-r-2 border-black">
-                <p className="text-[10px] text-gray-600">Related Order</p>
+                <p className="text-[10px] text-gray-600">Order ID</p>
                 <p className="font-bold truncate" title={invoice._id || invoice.id}>{invoice._id || invoice.id || 'N/A'}</p>
               </div>
               <div className="w-1/2 p-2">
@@ -80,8 +80,7 @@ export default function InvoiceTemplate({ invoice, storeData }) {
                 <th className="p-2 border-r-2 border-black">Item / Category</th>
                 <th className="p-2 border-r-2 border-black">Brand</th>
                 <th className="p-2 border-r-2 border-black">Model</th>
-                <th className="p-2 border-r-2 border-black">Configuration</th>
-                <th className="p-2 border-r-2 border-black text-center">HSN</th>
+                <th className="p-2 border-r-2 border-black">Specification</th>
                 <th className="p-2 border-r-2 border-black text-center">Qty</th>
                 <th className="p-2 border-r-2 border-black text-right">Rate</th>
                 <th className="p-2 border-r-2 border-black text-right">GST Amount</th>
@@ -101,10 +100,9 @@ export default function InvoiceTemplate({ invoice, storeData }) {
                         <p className="text-[10px] mt-1 text-gray-600">SN: {item.serialNumbers.join(', ')}</p>
                       )}
                     </td>
-                    <td className="p-2 border-r-2 border-black align-top">-</td>
-                    <td className="p-2 border-r-2 border-black align-top">-</td>
-                    <td className="p-2 border-r-2 border-black align-top">-</td>
-                    <td className="p-2 border-r-2 border-black align-top text-center">-</td>
+                    <td className="p-2 border-r-2 border-black align-top">{item.brand || '-'}</td>
+                    <td className="p-2 border-r-2 border-black align-top">{item.model || '-'}</td>
+                    <td className="p-2 border-r-2 border-black align-top">{item.specs || '-'}</td>
                     <td className="p-2 border-r-2 border-black align-top text-center">{item.quantity}</td>
                     <td className="p-2 border-r-2 border-black align-top text-right">{item.sellingPrice.toFixed(2)}</td>
                     <td className="p-2 border-r-2 border-black align-top text-right">{itemTax.toFixed(2)}</td>
@@ -114,7 +112,7 @@ export default function InvoiceTemplate({ invoice, storeData }) {
               })}
               {/* Total Row */}
               <tr className="border-b-2 border-black font-bold">
-                <td colSpan="6" className="p-2 border-r-2 border-black text-right">Total</td>
+                <td colSpan="5" className="p-2 border-r-2 border-black text-right">Total</td>
                 <td className="p-2 border-r-2 border-black text-center">
                   {invoice.items.reduce((acc, item) => acc + item.quantity, 0)}
                 </td>
@@ -164,18 +162,9 @@ export default function InvoiceTemplate({ invoice, storeData }) {
             <p>We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</p>
           </div>
           
-          {/* Bank & Signatory */}
+          {/* Signatory */}
           <div className="w-1/2 flex flex-col">
-            <div className="p-2 border-b-2 border-black flex-1">
-              <p className="text-[10px] text-gray-600 mb-1">Company's Bank Details</p>
-              <div className="grid grid-cols-[120px_1fr] gap-y-1">
-                <span>A/c Holder's Name</span><span className="font-bold">: {storeData?.storeName || 'Techhansa Retail'}</span>
-                <span>Bank Name</span><span className="font-bold">: N/A</span>
-                <span>A/c No.</span><span className="font-bold">: N/A</span>
-                <span>Branch & IFS Code</span><span className="font-bold">: N/A</span>
-              </div>
-            </div>
-            <div className="p-2 text-right flex flex-col justify-between min-h-[80px]">
+            <div className="p-2 text-right flex flex-col justify-between min-h-[120px]">
               <p className="font-bold">for {storeData?.storeName || 'Techhansa Retail'}</p>
               <div className="mt-8">
                 <p className="text-[10px]">Verified by & Authorised Signatory</p>
