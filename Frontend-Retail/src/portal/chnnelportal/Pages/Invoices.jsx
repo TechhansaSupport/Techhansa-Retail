@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Receipt, Download, ExternalLink, Eye, XCircle, Printer } from 'lucide-react';
+import { Search, Receipt, Download, ExternalLink, Eye, XCircle, Printer, MessageCircle, Send } from 'lucide-react';
 import { printInvoice } from '../../../utils/printUtils';
 import { AuthContext } from '../../../context/AuthContext';
 import { numberToWords } from '../../../utils/numberToWords';
@@ -22,6 +22,8 @@ export default function Invoices() {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [rfps, setRfps] = useState([]);
   const [companySettings, setCompanySettings] = useState(null);
+  const [showWhatsappModal, setShowWhatsappModal] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState('');
 
   useEffect(() => {
     if (user?.userId) {
@@ -181,7 +183,7 @@ export default function Invoices() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-white rounded-2xl shadow-xl w-full max-w-7xl h-[125vh] max-h-[125vh] overflow-hidden flex flex-col"
           >
             <div className="flex items-center justify-between p-6 border-b border-slate-100">
               <div>
@@ -258,46 +260,117 @@ export default function Invoices() {
                 <>
                   <h3 className="text-lg font-bold text-slate-900 mb-4">Invoice Items</h3>
                   {/* Product Details Table */}
-                  <div className="border border-slate-700 mb-6">
-                    <table className="w-full text-sm text-left border-collapse">
+                  <div className="border border-slate-200 rounded-xl overflow-hidden mb-6">
+                    <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-700 bg-slate-50/50">
-                          <th className="px-4 py-2 border-r border-slate-700 font-semibold text-slate-700">Product Name</th>
-                          <th className="px-4 py-2 border-r border-slate-700 font-semibold text-slate-700">Brand</th>
-                          <th className="px-4 py-2 border-r border-slate-700 font-semibold text-slate-700">Model</th>
-                          <th className="px-4 py-2 border-r border-slate-700 font-semibold text-slate-700">Configuration</th>
-                          <th className="px-4 py-2 border-r border-slate-700 font-semibold text-slate-700">Serial Number</th>
-                          <th className="px-4 py-2 border-r border-slate-700 font-semibold text-slate-700 text-right">Rate</th>
-                          <th className="px-4 py-2 border-r border-slate-700 font-semibold text-slate-700 text-right">GST Amount</th>
-                          <th className="px-4 py-2 font-semibold text-slate-700 text-right">Total Amount</th>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 whitespace-nowrap">Serial No.</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 whitespace-nowrap">Item / Category</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 whitespace-nowrap">Brand</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 whitespace-nowrap">Model</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 whitespace-nowrap">Configuration</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 whitespace-nowrap">Purchase Date</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center whitespace-nowrap">Qty</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right whitespace-nowrap">Rate</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right whitespace-nowrap">GST Amount</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right whitespace-nowrap">Total Amount</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-700">
-                        {invoiceItems.map((item, index) => (
-                          <tr key={index}>
-                            <td className="px-4 py-2 border-r border-slate-700 text-slate-900">{item.productName || item.name || item.category || '-'}</td>
-                            <td className="px-4 py-2 border-r border-slate-700 text-slate-900">{item.brand || '-'}</td>
-                            <td className="px-4 py-2 border-r border-slate-700 text-slate-900">{item.model || '-'}</td>
-                            <td className="px-4 py-2 border-r border-slate-700 text-slate-600 text-xs">{item.configuration || item.specs || item.config || '-'}</td>
-                            <td className="px-4 py-2 border-r border-slate-700 text-slate-900 text-xs">{item.serialNumber || item.serial || '-'}</td>
-                            <td className="px-4 py-2 border-r border-slate-700 text-slate-900 text-right">₹{(item.rate || item.unitPrice || item.price || 0).toLocaleString('en-IN')}</td>
-                            <td className="px-4 py-2 border-r border-slate-700 text-slate-900 text-right">₹{(item.gstAmount || ((item.rate || item.unitPrice || 0) * (item.taxRate || 18) / 100)).toLocaleString('en-IN')}</td>
-                            <td className="px-4 py-2 font-medium text-slate-900 text-right">₹{(item.totalAmount || item.total || 0).toLocaleString('en-IN')}</td>
-                          </tr>
-                        ))}
+                      <tbody className="divide-y divide-slate-100">
+                        {invoiceItems.map((item, i) => {
+                          const rate = item.rate || item.unitPrice || 0;
+                          const qty = item.quantity || 0;
+                          const hsn = item.hsn || '-';
+                          const gstRate = item.taxRate || 18;
+                          const taxableValue = rate * qty;
+                          const gstAmount = taxableValue * (gstRate / 100);
+                          const totalAmount = taxableValue + gstAmount;
+
+                          return (
+                            <tr key={i} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-3 text-sm text-slate-900 font-medium text-center">{i + 1}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || item.category || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900">{item.brand || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900">{item.model || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-slate-500 whitespace-pre-wrap">{item.configuration || item.specs || item.details || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-slate-500">{new Date(selectedRfp?.createdAt || selectedInvoice.createdAt).toLocaleDateString()}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{qty}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium"> {rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium text-slate-500">
+                                {gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-slate-900 text-right font-bold text-emerald-600">
+                                {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
+                      <tfoot className="bg-slate-50 border-t border-slate-200">
+                        <tr>
+                          <td colSpan="6" className="px-4 py-3 text-sm font-bold text-slate-700 text-right">TOTAL</td>
+                          <td className="px-4 py-3 text-sm font-bold text-slate-900 text-center">{selectedInvoice.totalQuantity || invoiceItems.reduce((acc, item) => acc + (item.quantity || 0), 0)}</td>
+                          <td className="px-4 py-3 text-sm font-bold text-slate-900 text-center text-slate-400">-</td>
+                          <td className="px-4 py-3 text-sm font-bold text-slate-700 text-right">
+                            {(() => {
+                              const totalGst = invoiceItems.reduce((acc, item) => {
+                                const r = item.rate || item.unitPrice || 0;
+                                const q = item.quantity || 0;
+                                const gRate = item.taxRate || 18;
+                                return acc + (r * q * (gRate / 100));
+                              }, 0);
+                              return ` ${totalGst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                            })()}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-bold text-emerald-700 text-right">
+                            {(() => {
+                              const amt = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => {
+                                const r = item.rate || item.unitPrice || 0;
+                                const q = item.quantity || 0;
+                                const gRate = item.taxRate || 18;
+                                const tVal = r * q;
+                                return acc + tVal + (tVal * (gRate / 100));
+                              }, 0) : selectedInvoice.amount;
+                              return ` ${amt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                            })()}
+                          </td>
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
 
                   {/* Professional Invoice Summary & Footer */}
                   <div className="border border-slate-700 border-t-0 mt-[-24px] mb-6 flex flex-col">
 
+                    {/* Buyer Details */}
+                    {(() => {
+                      const buyer = (selectedInvoice.buyerDetails && selectedInvoice.buyerDetails.buyerId)
+                        ? selectedInvoice.buyerDetails
+                        : {
+                            buyerId: user?.userId || selectedInvoice.userId || '-',
+                            productId: selectedRfp?.rfpId || selectedInvoice.orderReference?.orderNumber || (typeof selectedInvoice.orderReference === 'string' ? selectedInvoice.orderReference : '-'),
+                            buyerName: user?.name || user?.companyName || '-',
+                            paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
+                          };
+                      return (
+                        <div className="p-4 border-b border-slate-700 bg-white">
+                          <h3 className="font-bold text-slate-900 mb-3 text-sm">Buyer Details</h3>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-slate-700">
+                            <p><strong>Buyer ID:</strong> {buyer.buyerId}</p>
+                            <p><strong>Product ID:</strong> {buyer.productId}</p>
+                            <p><strong>Buyer Name:</strong> {buyer.buyerName}</p>
+                            <p><strong>Payment Details:</strong> {buyer.paymentDetails}</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {/* Amount Chargeable (in words) */}
                     <div className="p-4 border-b border-slate-700 flex justify-between items-center">
                       <div className="p-4 border-r border-slate-700 flex flex-col justify-between">
                         <span className="text-slate-500">Amount Chargeable (in words)</span>
                         <p className="font-bold text-slate-900 capitalize">
-                          INR {numberToWords(Math.round(selectedInvoice.amount || invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0)))} Only
+                          INR {numberToWords(Math.round((invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) : selectedInvoice.amount))} Only
                         </p>
                       </div>
                       <div className="text-sm text-right">
@@ -333,11 +406,20 @@ export default function Invoices() {
                     <div className="p-4 border-b border-slate-700 flex justify-between bg-white">
                       <div className="text-sm flex items-center gap-2">
                         <span className="text-slate-500">Received Amount:</span>
-                        <span className="font-bold text-emerald-600"> {(selectedInvoice.receivedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span className="font-bold text-emerald-600"> {(() => {
+                          const computedTotal = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) : selectedInvoice.amount;
+                          const received = (selectedInvoice.paymentStatus === 'Paid' || selectedInvoice.paymentStatus === 'Credit') ? computedTotal : (selectedInvoice.receivedAmount || 0);
+                          return received.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        })()}</span>
                       </div>
                       <div className="text-sm flex items-center gap-2">
                         <span className="text-slate-500">Balance Amount:</span>
-                        <span className="font-bold text-amber-600"> {(selectedInvoice.balanceAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span className="font-bold text-amber-600"> {(() => {
+                          const computedTotal = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) : selectedInvoice.amount;
+                          const received = (selectedInvoice.paymentStatus === 'Paid' || selectedInvoice.paymentStatus === 'Credit') ? computedTotal : (selectedInvoice.receivedAmount || 0);
+                          const balance = Math.max(0, computedTotal - received);
+                          return balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        })()}</span>
                       </div>
                     </div>
 
@@ -455,8 +537,89 @@ export default function Invoices() {
               <button onClick={() => setSelectedInvoice(null)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-colors">
                 Close
               </button>
+              <button onClick={() => setShowWhatsappModal(true)} className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+                <MessageCircle className="w-4 h-4" /> Share on WhatsApp
+              </button>
               <button onClick={() => printInvoice({ invoice: selectedInvoice, companySettings, user, rfp: selectedRfp })} className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm">
                 <Printer className="w-4 h-4" /> Print PDF
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* WhatsApp Share Modal */}
+      {showWhatsappModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-emerald-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Share via WhatsApp</h3>
+                  <p className="text-xs text-slate-500">Send Invoice Details to any Number</p>
+                </div>
+              </div>
+              <button onClick={() => setShowWhatsappModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-emerald-100 rounded-full transition-colors">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">WhatsApp Mobile Number</label>
+              <div className="flex flex-col gap-2">
+                <input
+                  type="tel"
+                  placeholder="+91 98765 43210"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  autoFocus
+                />
+                <p className="text-xs text-slate-500">Include country code (e.g. +91). A chat will open with pre-filled invoice details.</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <button 
+                onClick={() => setShowWhatsappModal(false)}
+                className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  if (!whatsappNumber) {
+                    alert('Please enter a WhatsApp number');
+                    return;
+                  }
+                  
+                  const formattedNumber = whatsappNumber.replace(/[^\d+]/g, '');
+                  const invoiceItems = selectedInvoice.items || [];
+                  const computedTotal = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) : selectedInvoice.amount;
+                  const formattedTotal = computedTotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                  const date = new Date(selectedInvoice.createdAt).toLocaleDateString('en-GB');
+                  
+                  const message = `Hello,\n\nHere are the details for your recent Techhansa Retail Invoice:\n\n*Invoice No:* ${selectedInvoice.invoiceNumber || 'N/A'}\n*Date:* ${date}\n*Total Amount:* ${formattedTotal}\n*Status:* ${selectedInvoice.paymentStatus || 'Pending'}\n\nPlease check your email or partner portal to download the full PDF.`;
+                  
+                  const encodedMessage = encodeURIComponent(message);
+                  const waUrl = `https://wa.me/${formattedNumber}?text=${encodedMessage}`;
+                  
+                  window.open(waUrl, '_blank');
+                  
+                  setShowWhatsappModal(false);
+                  setWhatsappNumber('');
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+              >
+                <Send className="w-4 h-4" />
+                Open WhatsApp
               </button>
             </div>
           </motion.div>

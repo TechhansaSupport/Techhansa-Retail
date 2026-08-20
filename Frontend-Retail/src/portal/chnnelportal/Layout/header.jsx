@@ -15,8 +15,6 @@ export default function Header({ toggleSidebar }) {
   const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [hasUnread, setHasUnread] = useState(true);
 
   const handleLogout = () => {
     logout();
@@ -39,34 +37,6 @@ export default function Header({ toggleSidebar }) {
       </div>
       
       <div className="flex items-center gap-4 md:gap-6">
-        <div className="relative">
-          <button 
-            onClick={() => { 
-              setShowNotifications(!showNotifications); 
-              setHasUnread(false); 
-            }} 
-            className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50"
-          >
-            <Bell size={20} />
-            {hasUnread && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>}
-          </button>
-          {showNotifications && (
-            <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden z-50">
-              <div className="p-3 border-b border-slate-100 font-semibold text-slate-800 text-sm">Notifications</div>
-              <div className="max-h-64 overflow-y-auto p-2">
-                <div className="p-2 hover:bg-slate-50 rounded-lg text-sm cursor-pointer mb-1">
-                  <p className="text-slate-800 font-medium">New RFP Approved</p>
-                  <p className="text-slate-500 text-xs">Admin approved RFP-2024-089</p>
-                </div>
-                <div className="p-2 hover:bg-slate-50 rounded-lg text-sm cursor-pointer">
-                  <p className="text-slate-800 font-medium">Quotation Received</p>
-                  <p className="text-slate-500 text-xs">Dell sent a quotation.</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        
         <div className="relative border-l border-slate-200 pl-6 flex items-center gap-2">
           <button onClick={() => navigate('/channel/profile')} className="flex items-center gap-3 hover:bg-slate-50 p-2 rounded-xl transition-colors text-left">
             <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 overflow-hidden">

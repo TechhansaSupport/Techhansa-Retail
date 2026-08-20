@@ -28,7 +28,9 @@ const QuotationSchema = new mongoose.Schema({
     configuration: String,
     quantity: Number,
     unitPrice: Number,
-    totalAmount: Number
+    totalAmount: Number,
+    hsn: String,
+    taxRate: { type: Number, default: 18 }
   }],
   userId: { type: String, required: false }
 }, { timestamps: true });

@@ -8,7 +8,9 @@ const RFPProductSchema = new mongoose.Schema({
   quantity: { type: Number, required: true },
   price: { type: Number, default: 0 },
   unit: { type: String, required: true, default: 'Nos' },
-  remarks: { type: String }
+  remarks: { type: String },
+  hsn: String,
+  taxRate: { type: Number, default: 18 }
 });
 
 const RFPSchema = new mongoose.Schema({

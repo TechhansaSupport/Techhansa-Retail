@@ -11,6 +11,10 @@ export default function CentralCatalog() {
   const [showFilters, setShowFilters] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit] = useState(20);
 
   const [activeTab, setActiveTab] = useState('catalog');
   const [dispatchOrders, setDispatchOrders] = useState([]);
@@ -40,25 +44,31 @@ export default function CentralCatalog() {
   const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
-    fetchCatalog();
+    fetchCatalog(currentPage);
     fetchOrders();
-  }, []);
+  }, [currentPage, searchTerm]);
 
   const fetchOrders = async () => {
     try {
       const response = await axios.get('/api/admin/orders');
-      const processingOrders = response.data.filter(o => o.status === 'Processing');
+      const processingOrders = response.data.filter(o => o.status === 'Processing' || o.status === 'Dispatched' || o.status === 'DISPATCHED');
       setDispatchOrders(processingOrders);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     }
   };
 
-  const fetchCatalog = async () => {
+  const fetchCatalog = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/admin/catalog`);
-      setCatalog(response.data);
+      const params = new URLSearchParams({ page, limit });
+      if (searchTerm) params.append('search', searchTerm);
+      
+      const response = await axios.get(`/api/admin/catalog?${params.toString()}`);
+      setCatalog(response.data.products || response.data);
+      if (response.data.totalPages) {
+        setTotalPages(response.data.totalPages);
+      }
     } catch (error) {
       console.error(error);
       toast.error('Failed to fetch catalog');
@@ -67,19 +77,16 @@ export default function CentralCatalog() {
     }
   };
 
-  const categories = ['All', ...new Set(catalog.map(i => i.category).filter(Boolean))];
+  const categories = ['All', 'Networking', 'Desktops', 'Laptops', 'Storage', 'Displays', 'Peripherals']; // Predefine as we only fetch 20 items
 
   const filteredData = catalog.filter(item => {
-    const matchesSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.serialNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.category?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
     const isLowStock = item.availableStock <= item.lowStockAlert;
     const matchesStatus = statusFilter === 'All' || 
                           (statusFilter === 'Low Stock' && isLowStock) || 
                           (statusFilter === 'In Stock' && !isLowStock);
     
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesCategory && matchesStatus;
   });
 
   const handleOpenModal = (item = null) => {
@@ -177,7 +184,7 @@ export default function CentralCatalog() {
     <div className="space-y-4 md:space-y-6 pb-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+          <h2 className="text-2xl font-bold text-slate-800 flex items-center">
             <PackageSearch className="mr-2 text-indigo-500" size={28} />
             Central Catalog
           </h2>
@@ -243,25 +250,23 @@ export default function CentralCatalog() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 gap-6">
+      <div className="flex bg-slate-100 p-1.5 rounded-xl w-fit gap-2 mb-2 shadow-sm border border-slate-200">
         <button
           onClick={() => setActiveTab('catalog')}
-          className={`pb-3 font-semibold text-sm transition-colors relative ${activeTab === 'catalog' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`px-5 py-2 font-bold text-sm rounded-lg transition-all ${activeTab === 'catalog' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
         >
           Catalog Management
-          {activeTab === 'catalog' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-full"></div>}
         </button>
         <button
           onClick={() => setActiveTab('dispatch')}
-          className={`pb-3 font-semibold text-sm transition-colors relative flex items-center ${activeTab === 'dispatch' ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`px-5 py-2 font-bold text-sm rounded-lg transition-all flex items-center ${activeTab === 'dispatch' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
         >
-          Pending Dispatches
+          Dispatches
           {dispatchOrders.length > 0 && (
-            <span className="ml-2 inline-flex items-center justify-center bg-rose-500 text-white text-[10px] w-5 h-5 rounded-full font-bold">
+            <span className={`ml-2 inline-flex items-center justify-center text-[10px] w-5 h-5 rounded-full font-bold ${activeTab === 'dispatch' ? 'bg-rose-100 text-rose-700' : 'bg-slate-300 text-slate-700'}`}>
               {dispatchOrders.length}
             </span>
           )}
-          {activeTab === 'dispatch' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-full"></div>}
         </button>
       </div>
 
@@ -319,12 +324,18 @@ export default function CentralCatalog() {
                       ₹{item.sellingPrice?.toLocaleString() || 0}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <div className="flex flex-col items-center">
-                        <span className={`font-bold text-lg ${isLowStock ? 'text-red-500' : 'text-slate-700'}`}>
+                      <div className="flex flex-col items-center gap-1.5">
+                        <span className={`font-black text-lg ${isLowStock ? 'text-rose-600' : 'text-slate-700'}`}>
                           {item.availableStock}
                         </span>
-                        {isLowStock && (
-                          <span className="text-[10px] font-bold text-red-500 uppercase mt-1">Low Stock</span>
+                        {isLowStock ? (
+                          <span className="px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-[10px] font-bold uppercase tracking-wide">
+                            Low Stock
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold uppercase tracking-wide">
+                            In Stock
+                          </span>
                         )}
                       </div>
                     </td>
@@ -432,6 +443,31 @@ export default function CentralCatalog() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50">
+            <span className="text-sm text-slate-500 font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </motion.div>
       </>
       )}
@@ -547,7 +583,7 @@ export default function CentralCatalog() {
                 {dispatchOrders.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
-                      No orders pending dispatch.
+                      No dispatches found.
                     </td>
                   </tr>
                 ) : dispatchOrders.map((order) => (
@@ -656,9 +692,25 @@ export default function CentralCatalog() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="text-xs text-slate-600 whitespace-pre-wrap">
-                              {typeof item.configuration === 'string' ? item.configuration : 
-                               typeof item.specs === 'string' ? item.specs :
-                               item.specs ? JSON.stringify(item.specs, null, 2) : 'Standard Configuration'}
+                              {(() => {
+                                const config = item.configuration || item.specs;
+                                if (!config) return 'Standard Configuration';
+                                if (typeof config === 'object') {
+                                  return Object.entries(config).map(([k, v]) => `${k}: ${v}`).join('\n');
+                                }
+                                if (typeof config === 'string') {
+                                  try {
+                                    const parsed = JSON.parse(config);
+                                    if (typeof parsed === 'object' && parsed !== null) {
+                                      return Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join('\n');
+                                    }
+                                  } catch (e) {
+                                    return config;
+                                  }
+                                  return config;
+                                }
+                                return 'Standard Configuration';
+                              })()}
                             </div>
                           </td>
                           <td className="px-4 py-3 text-center font-bold text-slate-800">

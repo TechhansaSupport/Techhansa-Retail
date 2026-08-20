@@ -50,7 +50,20 @@ const seedData = async () => {
         amount: Math.floor(Math.random() * 50000) + 10000,
         validUntil: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         status: qtStatuses[i],
-        userId: USER_ID
+        userId: USER_ID,
+        items: [
+          {
+            productName: 'Mock Laptop',
+            brand: 'Dell',
+            model: 'Latitude 7420',
+            configuration: 'i7/16GB/512GB',
+            quantity: 5,
+            unitPrice: 40000,
+            totalAmount: 200000,
+            hsn: '84713010',
+            taxRate: 18
+          }
+        ]
       });
       await qt.save();
       qtDocs.push(qt);
@@ -70,7 +83,20 @@ const seedData = async () => {
         totalAmount: Math.floor(Math.random() * 50000) + 10000,
         paymentMethod: 'Credit',
         paymentStatus: 'Reserved',
-        userId: USER_ID
+        userId: USER_ID,
+        items: [
+          {
+            productName: 'Mock Laptop',
+            brand: 'Dell',
+            model: 'Latitude 7420',
+            configuration: 'i7/16GB/512GB',
+            quantity: 5,
+            unitPrice: 40000,
+            totalAmount: 200000,
+            hsn: '84713010',
+            taxRate: 18
+          }
+        ]
       });
       await order.save();
       orderDocs.push(order);
@@ -87,7 +113,20 @@ const seedData = async () => {
         amount: Math.floor(Math.random() * 50000) + 10000,
         paymentStatus: invoiceStatuses[i],
         dueDate: new Date(Date.now() + (invoiceStatuses[i] === 'Overdue' ? -5 : 5) * 24 * 60 * 60 * 1000),
-        userId: USER_ID
+        userId: USER_ID,
+        items: [
+          {
+            productName: 'Mock Laptop',
+            brand: 'Dell',
+            model: 'Latitude 7420',
+            configuration: 'i7/16GB/512GB',
+            quantity: 5,
+            unitPrice: 40000,
+            totalAmount: 200000,
+            hsn: '84713010',
+            taxRate: 18
+          }
+        ]
       });
       await invoice.save();
       console.log(`Created Invoice with status: ${invoiceStatuses[i]}`);
