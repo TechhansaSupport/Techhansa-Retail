@@ -441,6 +441,14 @@ export default function EntityManagement() {
                         Cancel
                       </button>
                       <button 
+                        type="button"
+                        onClick={() => { setCreditAmount(0); setCreditTab('assign'); }}
+                        className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100"
+                        title="Set credit limit to 0"
+                      >
+                        Revoke Credit
+                      </button>
+                      <button 
                         type="submit"
                         disabled={isSubmitting}
                         className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200"

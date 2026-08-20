@@ -333,7 +333,7 @@ export default function CreateRFP() {
                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
                           >
                             <option value="">All Categories</option>
-                            {[...new Set(catalog.map(item => item.category).filter(Boolean))].map(c => (
+                            {[...new Set(catalog.map(item => item.category?.trim()).filter(Boolean))].map(c => (
                               <option key={c} value={c}>{c}</option>
                             ))}
                           </select>
@@ -351,7 +351,7 @@ export default function CreateRFP() {
                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
                           >
                             <option value="">All Brands</option>
-                            {[...new Set(catalog.filter(item => !p.category || item.category === p.category).map(item => item.brand).filter(Boolean))].map(b => (
+                            {[...new Set(catalog.filter(item => !p.category || item.category?.trim() === p.category).map(item => item.brand?.trim()).filter(Boolean))].map(b => (
                               <option key={b} value={b}>{b}</option>
                             ))}
                           </select>
@@ -369,9 +369,9 @@ export default function CreateRFP() {
                           >
                             <option value="">All Models</option>
                             {[...new Set(catalog.filter(item => 
-                              (!p.category || item.category === p.category) && 
-                              (!p.brand || item.brand === p.brand)
-                            ).map(item => item.model).filter(Boolean))].map(m => (
+                              (!p.category || item.category?.trim() === p.category) && 
+                              (!p.brand || item.brand?.trim() === p.brand)
+                            ).map(item => item.model?.trim()).filter(Boolean))].map(m => (
                               <option key={m} value={m}>{m}</option>
                             ))}
                           </select>
@@ -384,9 +384,9 @@ export default function CreateRFP() {
                               if (item) {
                                 const newProducts = [...products];
                                 newProducts[i].catalogItemId = item._id;
-                                newProducts[i].category = item.category || item.name;
-                                newProducts[i].brand = item.brand || 'N/A';
-                                newProducts[i].model = item.model || 'N/A';
+                                newProducts[i].category = item.category?.trim() || item.name?.trim();
+                                newProducts[i].brand = item.brand?.trim() || 'N/A';
+                                newProducts[i].model = item.model?.trim() || 'N/A';
                                 newProducts[i].config = item.specs || 'N/A';
                                 newProducts[i].price = item.sellingPrice || 0;
                                 setProducts(newProducts);
@@ -396,12 +396,12 @@ export default function CreateRFP() {
                           >
                             <option value="">Select Specs...</option>
                             {catalog.filter(item => 
-                              (!p.category || item.category === p.category) && 
-                              (!p.brand || item.brand === p.brand) &&
-                              (!p.model || item.model === p.model)
-                            ).map(c => (
-                              <option key={c._id} value={c._id}>
-                                {c.specs ? c.specs.substring(0, 45) + (c.specs.length > 45 ? '...' : '') : c.name}
+                              (!p.category || item.category?.trim() === p.category) && 
+                              (!p.brand || item.brand?.trim() === p.brand) &&
+                              (!p.model || item.model?.trim() === p.model)
+                            ).map(item => (
+                              <option key={item._id} value={item._id}>
+                                {item.specs ? item.specs.substring(0, 45) + (item.specs.length > 45 ? '...' : '') : item.name}
                               </option>
                             ))}
                           </select>

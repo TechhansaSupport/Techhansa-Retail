@@ -32,7 +32,8 @@ const OrderSchema = new mongoose.Schema({
     hsn: String,
     taxRate: { type: Number, default: 18 }
   }],
-  userId: { type: String, required: false }
+  userId: { type: String, required: false },
+  invoiceSent: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', OrderSchema);

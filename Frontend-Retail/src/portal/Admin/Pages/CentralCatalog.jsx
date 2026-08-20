@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from '../../../api/axios';
 import { motion } from 'framer-motion';
 import { Search, Filter, AlertTriangle, Edit2, Plus, X, Trash2, PackageSearch, Truck, Calendar, Eye, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AuthContext } from '../../../context/AuthContext';
 
 export default function CentralCatalog() {
+  const { user } = useContext(AuthContext);
   const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -122,6 +124,10 @@ export default function CentralCatalog() {
     
     const processedData = {
       ...formData,
+      category: formData.category ? formData.category.trim() : '',
+      brand: formData.brand ? formData.brand.trim() : '',
+      model: formData.model ? formData.model.trim() : '',
+      name: formData.name ? formData.name.trim() : '',
       buyingPrice: Number(formData.buyingPrice),
       mrp: Number(formData.mrp),
       sellingPrice: Number(formData.sellingPrice),
@@ -239,13 +245,15 @@ export default function CentralCatalog() {
               </div>
             )}
           </div>
-          <button 
-            onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
-          >
-            <Plus size={16} />
-            Add Product
-          </button>
+          {user?.role !== 'account_manager' && (
+            <button 
+              onClick={() => handleOpenModal()}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+            >
+              <Plus size={16} />
+              Add Product
+            </button>
+          )}
         </div>
       </div>
 
@@ -257,17 +265,19 @@ export default function CentralCatalog() {
         >
           Catalog Management
         </button>
-        <button
-          onClick={() => setActiveTab('dispatch')}
-          className={`px-5 py-2 font-bold text-sm rounded-lg transition-all flex items-center ${activeTab === 'dispatch' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
-        >
-          Dispatches
-          {dispatchOrders.length > 0 && (
-            <span className={`ml-2 inline-flex items-center justify-center text-[10px] w-5 h-5 rounded-full font-bold ${activeTab === 'dispatch' ? 'bg-rose-100 text-rose-700' : 'bg-slate-300 text-slate-700'}`}>
-              {dispatchOrders.length}
-            </span>
-          )}
-        </button>
+        {user?.role !== 'account_manager' && (
+          <button
+            onClick={() => setActiveTab('dispatch')}
+            className={`px-5 py-2 font-bold text-sm rounded-lg transition-all flex items-center ${activeTab === 'dispatch' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+          >
+            Dispatches
+            {dispatchOrders.length > 0 && (
+              <span className={`ml-2 inline-flex items-center justify-center text-[10px] w-5 h-5 rounded-full font-bold ${activeTab === 'dispatch' ? 'bg-rose-100 text-rose-700' : 'bg-slate-300 text-slate-700'}`}>
+                {dispatchOrders.length}
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
       {activeTab === 'catalog' && (
@@ -288,7 +298,7 @@ export default function CentralCatalog() {
                 <th className="px-6 py-4 font-medium text-right">Base Purchase Price</th>
                 <th className="px-6 py-4 font-medium text-right">Store Selling Price</th>
                 <th className="px-6 py-4 font-medium text-center">Available Qty</th>
-                <th className="px-6 py-4 font-medium text-center">Actions</th>
+                {user?.role !== 'account_manager' && <th className="px-6 py-4 font-medium text-center">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -339,24 +349,26 @@ export default function CentralCatalog() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center space-x-2">
-                        <button 
-                          onClick={() => handleOpenModal(item)}
-                          className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                          title="Update Product"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(item._id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete Product"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+                    {user?.role !== 'account_manager' && (
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <button 
+                            onClick={() => handleOpenModal(item)}
+                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Update Product"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(item._id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Product"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -385,20 +397,22 @@ export default function CentralCatalog() {
                       <div className="text-xs text-slate-500 mt-1 line-clamp-2">{item.specs}</div>
                     )}
                   </div>
-                  <div className="flex space-x-1">
-                    <button 
-                      onClick={() => handleOpenModal(item)}
-                      className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(item._id)}
-                      className="p-1.5 bg-red-50 text-red-600 rounded-lg"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                  {user?.role !== 'account_manager' && (
+                    <div className="flex space-x-1">
+                      <button 
+                        onClick={() => handleOpenModal(item)}
+                        className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(item._id)}
+                        className="p-1.5 bg-red-50 text-red-600 rounded-lg"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-xl p-3">
