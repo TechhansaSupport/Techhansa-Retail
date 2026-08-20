@@ -1,20 +1,26 @@
-import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
-import { Download, IndianRupee, TrendingUp, Calendar, FileText } from 'lucide-react';
+import { Download, IndianRupee, TrendingUp, Calendar, FileText, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import InvoiceTemplate from '../../../../Component/InvoiceTemplate';
+import InvoiceActions from '../../../../Component/InvoiceActions';
 
 export default function Sales() {
-  const { metrics, salesHistory, invoices } = useFranchise();
+  const { metrics, salesHistory, invoices, storeProfileData } = useFranchise();
   const [timeRange, setTimeRange] = useState('Last 7 Days');
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAllInvoices, setShowAllInvoices] = useState(false);
+  const invoiceRef = useRef(null);
 
   const chartData = useMemo(() => {
     if (!invoices || invoices.length === 0) return [];
 
     const now = new Date();
-    const dataMap = new Map(); 
+    const dataMap = new Map();
 
     const formatDate = (date, range) => {
       if (range === 'This Month' || range === 'Last Month') {
@@ -28,34 +34,34 @@ export default function Sales() {
 
     if (timeRange === 'Last 7 Days') {
       startDate.setDate(startDate.getDate() - 6);
-      for(let i=0; i<7; i++) {
+      for (let i = 0; i < 7; i++) {
         let d = new Date(startDate);
         d.setDate(d.getDate() + i);
         dataMap.set(formatDate(d, timeRange), { date: formatDate(d, timeRange), sales: 0, orders: 0 });
       }
     } else if (timeRange === 'This Month') {
-      startDate.setDate(1); 
+      startDate.setDate(1);
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      for(let i=1; i<=daysInMonth; i++) {
+      for (let i = 1; i <= daysInMonth; i++) {
         let d = new Date(now.getFullYear(), now.getMonth(), i);
         dataMap.set(formatDate(d, timeRange), { date: formatDate(d, timeRange), sales: 0, orders: 0 });
       }
     } else if (timeRange === 'Last Month') {
       startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const daysInMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
-      for(let i=1; i<=daysInMonth; i++) {
+      for (let i = 1; i <= daysInMonth; i++) {
         let d = new Date(now.getFullYear(), now.getMonth() - 1, i);
         dataMap.set(formatDate(d, timeRange), { date: formatDate(d, timeRange), sales: 0, orders: 0 });
       }
     }
-    
+
     let endDate = new Date(startDate);
     if (timeRange === 'Last 7 Days') {
-       endDate = new Date();
+      endDate = new Date();
     } else if (timeRange === 'This Month') {
-       endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     } else if (timeRange === 'Last Month') {
-       endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+      endDate = new Date(now.getFullYear(), now.getMonth(), 0);
     }
     endDate.setHours(23, 59, 59, 999);
 
@@ -78,7 +84,7 @@ export default function Sales() {
     if (!invoices) return 0;
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     return invoices.reduce((total, inv) => {
       const invDate = new Date(inv.createdAt);
       if (invDate >= startOfMonth) {
@@ -92,73 +98,93 @@ export default function Sales() {
   const sparklineData = useMemo(() => {
     const revenue = [];
     const items = [];
-    
+
     const now = new Date();
-    now.setHours(0,0,0,0);
-    
-    for(let i=6; i>=0; i--) {
-       const d = new Date(now);
-       d.setDate(d.getDate() - i);
-       
-       let dayRevenue = 0;
-       let dayItems = 0;
-       
-       if (invoices) {
-         invoices.forEach(inv => {
-           const invDate = new Date(inv.createdAt);
-           if (invDate.toLocaleDateString() === d.toLocaleDateString()) {
-              dayRevenue += inv.amount;
-              const itemsCount = (inv.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
-              dayItems += itemsCount;
-           }
-         });
-       }
-       
-       revenue.push({v: dayRevenue});
-       items.push({v: dayItems});
+    now.setHours(0, 0, 0, 0);
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+
+      let dayRevenue = 0;
+      let dayItems = 0;
+
+      if (invoices) {
+        invoices.forEach(inv => {
+          const invDate = new Date(inv.createdAt);
+          if (invDate.toLocaleDateString() === d.toLocaleDateString()) {
+            dayRevenue += inv.amount;
+            const itemsCount = (inv.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+            dayItems += itemsCount;
+          }
+        });
+      }
+
+      revenue.push({ v: dayRevenue });
+      items.push({ v: dayItems });
     }
-    
+
     return { revenue, items };
   }, [invoices]);
 
+  const filteredInvoices = useMemo(() => {
+    if (!invoices) return [];
+    
+    // Sort descending by date (newest first)
+    let filtered = [...invoices].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    if (searchTerm.trim() !== '') {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(inv => 
+        (inv.invoiceNumber && inv.invoiceNumber.toLowerCase().includes(lower)) ||
+        (inv.customerName && inv.customerName.toLowerCase().includes(lower)) ||
+        (inv.customerPhone && inv.customerPhone.includes(lower)) ||
+        (inv.employeeId && inv.employeeId.toLowerCase().includes(lower))
+      );
+    }
+    return filtered;
+  }, [invoices, searchTerm]);
+
+  const displayedInvoices = showAllInvoices ? filteredInvoices : filteredInvoices.slice(0, 5);
+
   const salesStatCards = [
-    { 
-      title: "Monthly Revenue", 
-      value: `₹${metrics.monthlySales.toLocaleString()}`, 
-      subText: "This month's revenue", 
-      icon: <IndianRupee size={24} />, 
-      color: "text-indigo-600", 
-      bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50", 
-      iconBg: "bg-indigo-100/50", 
-      stroke: "#4f46e5", 
-      fill: "#c7d2fe", 
-      id: "colorRevenue", 
+    {
+      title: "Monthly Revenue",
+      value: `₹${metrics.monthlySales.toLocaleString()}`,
+      subText: "This month's revenue",
+      icon: <IndianRupee size={24} />,
+      color: "text-indigo-600",
+      bgBox: "bg-indigo-50/50 border-indigo-100 shadow-indigo-100/50",
+      iconBg: "bg-indigo-100/50",
+      stroke: "#4f46e5",
+      fill: "#c7d2fe",
+      id: "colorRevenue",
       data: sparklineData.revenue
     },
-    { 
-      title: "Avg. Daily Sales", 
-      value: `₹${(metrics.monthlySales / 30).toFixed(0).toLocaleString()}`, 
-      subText: "Based on 30 days rolling", 
-      icon: <Calendar size={24} />, 
-      color: "text-blue-600", 
-      bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50", 
-      iconBg: "bg-blue-100/50", 
-      stroke: "#2563eb", 
-      fill: "#bfdbfe", 
-      id: "colorDaily", 
+    {
+      title: "Avg. Daily Sales",
+      value: `₹${(metrics.monthlySales / 30).toFixed(0).toLocaleString()}`,
+      subText: "Based on 30 days rolling",
+      icon: <Calendar size={24} />,
+      color: "text-blue-600",
+      bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50",
+      iconBg: "bg-blue-100/50",
+      stroke: "#2563eb",
+      fill: "#bfdbfe",
+      id: "colorDaily",
       data: sparklineData.revenue
     },
-    { 
-      title: "Total Items Sold (Month)", 
-      value: totalItemsSoldThisMonth.toString(), 
-      subText: "Across all categories", 
-      icon: <TrendingUp size={24} />, 
-      color: "text-emerald-600", 
-      bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", 
-      iconBg: "bg-emerald-100/50", 
-      stroke: "#10b981", 
-      fill: "#a7f3d0", 
-      id: "colorItems", 
+    {
+      title: "Total Items Sold (Month)",
+      value: totalItemsSoldThisMonth.toString(),
+      subText: "Across all categories",
+      icon: <TrendingUp size={24} />,
+      color: "text-emerald-600",
+      bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50",
+      iconBg: "bg-emerald-100/50",
+      stroke: "#10b981",
+      fill: "#a7f3d0",
+      id: "colorItems",
       data: sparklineData.items
     }
   ];
@@ -166,7 +192,7 @@ export default function Sales() {
   const exportReport = () => {
     const doc = new jsPDF();
     doc.text(`Sales & Order Report (${timeRange})`, 14, 15);
-    
+
     autoTable(doc, {
       startY: 25,
       head: [['Date', 'Sales (INR)', 'Orders']],
@@ -223,15 +249,15 @@ export default function Sales() {
                 {stat.icon}
               </div>
             </div>
-            
+
             {/* Tiny Area Chart */}
             <div className="h-12 w-full mt-2 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={stat.data}>
                   <defs>
                     <linearGradient id={stat.id} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={stat.stroke} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={stat.stroke} stopOpacity={0}/>
+                      <stop offset="5%" stopColor={stat.stroke} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={stat.stroke} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Area type="monotone" dataKey="v" stroke={stat.stroke} strokeWidth={2.5} fillOpacity={1} fill={`url(#${stat.id})`} isAnimationActive={true} />
@@ -240,20 +266,20 @@ export default function Sales() {
             </div>
 
             <div className="mt-1 relative z-10">
-               <p className="text-slate-400 text-[11px] font-semibold">{stat.subText}</p>
+              <p className="text-slate-400 text-[11px] font-semibold">{stat.subText}</p>
             </div>
           </motion.div>
         ))}
       </div>
 
       {/* Main Chart */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}
         className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-bold text-slate-800">Revenue & Orders ({timeRange})</h2>
-          <select 
+          <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
             className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -267,11 +293,11 @@ export default function Sales() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-              <YAxis yAxisId="left" orientation="left" stroke="#6366f1" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} tickFormatter={(value) => `₹${value/1000}k`} />
-              <YAxis yAxisId="right" orientation="right" stroke="#10b981" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-              <Tooltip 
-                cursor={{fill: '#f8fafc'}}
+              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
+              <YAxis yAxisId="left" orientation="left" stroke="#6366f1" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={(value) => `₹${value / 1000}k`} />
+              <YAxis yAxisId="right" orientation="right" stroke="#10b981" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+              <Tooltip
+                cursor={{ fill: '#f8fafc' }}
                 contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
@@ -287,8 +313,19 @@ export default function Sales() {
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
         className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
       >
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+        <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
           <h2 className="text-lg font-bold text-slate-800">Order History</h2>
+          
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="Search invoice, customer, phone..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -303,7 +340,7 @@ export default function Sales() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {invoices && invoices.length > 0 ? invoices.map((inv) => (
+              {displayedInvoices && displayedInvoices.length > 0 ? displayedInvoices.map((inv) => (
                 <tr key={inv._id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 font-mono text-sm text-slate-700">{inv.invoiceNumber}</td>
                   <td className="px-6 py-4 text-sm text-slate-600">{new Date(inv.createdAt).toLocaleString()}</td>
@@ -312,57 +349,10 @@ export default function Sales() {
                   <td className="px-6 py-4 text-right font-medium text-indigo-600">₹{inv.amount.toLocaleString()}</td>
                   <td className="px-6 py-4 text-center">
                     <button 
-                      onClick={() => {
-                         const doc = new jsPDF();
-                         doc.setFontSize(20);
-                         doc.text("Techhansa Retail", 14, 22);
-                         doc.setFontSize(12);
-                         doc.text("Customer Invoice", 14, 32);
-                         doc.setFontSize(10);
-                         doc.text(`Invoice No: ${inv.invoiceNumber}`, 14, 45);
-                         doc.text(`Date: ${new Date(inv.createdAt).toLocaleString()}`, 14, 52);
-                         doc.text(`Customer Name: ${inv.customerName || 'Walk-in'}`, 14, 59);
-                         doc.text(`Phone: ${inv.customerPhone || 'N/A'}`, 14, 66);
-                         
-                         const tableBody = (inv.items || []).map(item => {
-                           const itemName = item.serialNumbers && item.serialNumbers.length > 0
-                             ? `${item.name}\n(SN: ${item.serialNumbers.join(', ')})`
-                             : item.name;
-                           return [
-                             itemName,
-                             item.quantity,
-                             `Rs. ${(item.sellingPrice || 0).toLocaleString()}`,
-                             `Rs. ${(item.quantity * (item.sellingPrice || 0)).toLocaleString()}`
-                           ];
-                         });
-                         
-                         autoTable(doc, {
-                           startY: 75,
-                           head: [['Item Name', 'Qty', 'Price', 'Total']],
-                           body: tableBody,
-                           theme: 'grid',
-                           headStyles: { fillColor: [79, 70, 229] }
-                         });
-                         
-                         const finalY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 75) + 10;
-                         
-                         autoTable(doc, {
-                           startY: finalY,
-                           body: [
-                             ['Subtotal', `Rs. ${(inv.subtotalAmount || 0).toLocaleString()}`],
-                             ['Tax (18% GST)', `Rs. (((inv.amount || 0) - (inv.subtotalAmount || 0))).toLocaleString()`],
-                             ['Grand Total', `Rs. ${(inv.amount || 0).toLocaleString()}`]
-                           ],
-                           theme: 'plain',
-                           styles: { halign: 'right' },
-                           columnStyles: { 0: { fontStyle: 'bold' } }
-                         });
-                         
-                         doc.save(`${inv.invoiceNumber}.pdf`);
-                      }}
+                      onClick={() => setSelectedInvoice(inv)}
                       className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg flex justify-center items-center gap-1 mx-auto"
                     >
-                      <FileText size={14} /> PDF
+                      <FileText size={14} /> View Invoice
                     </button>
                   </td>
                 </tr>
@@ -372,7 +362,69 @@ export default function Sales() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination / View All */}
+        {!showAllInvoices && filteredInvoices.length > 5 && (
+          <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-center">
+            <button 
+              onClick={() => setShowAllInvoices(true)}
+              className="px-4 py-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
+            >
+              View All Orders ({filteredInvoices.length})
+            </button>
+          </div>
+        )}
+        {showAllInvoices && filteredInvoices.length > 5 && (
+          <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-center">
+            <button 
+              onClick={() => setShowAllInvoices(false)}
+              className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              Show Less
+            </button>
+          </div>
+        )}
       </motion.div>
+
+      {/* Invoice Modal */}
+      <AnimatePresence>
+        {selectedInvoice && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-indigo-50" data-no-print>
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 bg-indigo-500 text-white rounded-full flex items-center justify-center shrink-0">
+                    <FileText size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-indigo-900">Invoice {selectedInvoice.invoiceNumber}</h3>
+                    <p className="text-indigo-700 text-sm">Past Order Record</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedInvoice(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+              </div>
+
+              <div className="p-8 flex-1 overflow-y-auto bg-white flex justify-center w-full">
+                <div className="w-full" ref={invoiceRef}>
+                  <InvoiceTemplate invoice={selectedInvoice} storeData={storeProfileData} />
+                </div>
+              </div>
+              
+              {/* Action Buttons: Close + Download + WhatsApp + Print */}
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-3" data-no-print>
+                <button onClick={() => setSelectedInvoice(null)} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-xl transition-colors">Close</button>
+                <div className="flex gap-3">
+                  <InvoiceActions invoice={selectedInvoice} storeData={storeProfileData} invoiceRef={invoiceRef} />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
