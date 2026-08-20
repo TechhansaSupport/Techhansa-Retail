@@ -348,6 +348,20 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
           description: `Payment for ${isQuotation ? 'Quotation' : 'Invoice'} ${isQuotation ? itemToApprove.quotationNo : itemToApprove.invoiceNo}`
         });
         await walletTxn.save();
+      } else {
+        // Log Wallet Transaction for Transaction Ledger even for advance payments
+        const newBalance = (profile.totalCredit || 0) - (profile.usedCredit || 0);
+        const walletTxn = new WalletTransaction({
+          storeId: storeId,
+          txnId: `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          date: new Date(),
+          type: `Advance Payment (${paymentMethod})`,
+          amount: itemToApprove.amount,
+          status: 'Pending',
+          closingBalance: newBalance,
+          description: `Advance Payment for ${isQuotation ? 'Quotation' : 'Invoice'} ${isQuotation ? itemToApprove.quotationNo : itemToApprove.invoiceNo} (UTR: ${utrNumber})`
+        });
+        await walletTxn.save();
       }
     }
     
