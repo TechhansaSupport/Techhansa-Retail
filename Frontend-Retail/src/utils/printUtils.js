@@ -46,27 +46,37 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.setFontSize(8);
   doc.text('Invoice No.', 112, 26);
   doc.setFont('helvetica', 'bold');
-  doc.text(invoice.invoiceNumber || invoice.invoiceId || '', 112, 30);
+  doc.text(invoice.documentNo || invoice.invoiceNo || invoice.invoiceNumber || invoice.invoiceId || invoice.id || invoice._id || 'N/A', 112, 30);
 
   doc.line(155, 20, 155, 34); // vertical line for Dated
   doc.setFont('helvetica', 'normal');
   doc.text('Dated', 157, 26);
   doc.setFont('helvetica', 'bold');
-  doc.text(new Date(invoice.createdAt).toLocaleDateString('en-GB'), 157, 30);
+
+  let formattedDate = 'N/A';
+  if (invoice.date) {
+    const d = new Date(invoice.date);
+    formattedDate = isNaN(d.getTime()) ? invoice.date : d.toLocaleDateString('en-GB');
+  } else if (invoice.createdAt) {
+    formattedDate = new Date(invoice.createdAt).toLocaleDateString('en-GB');
+  } else {
+    formattedDate = new Date().toLocaleDateString('en-GB');
+  }
+  doc.text(formattedDate, 157, 30);
 
   doc.line(110, 34, 196, 34); // horizontal line
 
   doc.setFont('helvetica', 'normal');
   doc.text('Related Order', 112, 40);
   doc.setFont('helvetica', 'bold');
-  const orderRef = invoice.orderReference?.orderId || invoice.orderReference?.orderNumber || (typeof invoice.orderReference === 'string' ? invoice.orderReference : '');
-  doc.text(orderRef, 112, 44);
+  const orderRef = invoice.requestId || invoice.orderId || invoice.orderRequestId || invoice.orderReference?.orderId || invoice.orderReference?.orderNumber || (typeof invoice.orderReference === 'string' ? invoice.orderReference : '');
+  doc.text(orderRef || 'N/A', 112, 44);
 
   doc.line(155, 34, 155, 48); // vertical line for Payment mode
   doc.setFont('helvetica', 'normal');
   doc.text('Mode/Terms of Payment', 157, 40);
   doc.setFont('helvetica', 'bold');
-  doc.text(invoice.paymentStatus || 'Pending', 157, 44);
+  doc.text(invoice.paymentStatus || invoice.status || 'Pending', 157, 44);
 
   doc.line(110, 48, 196, 48); // horizontal line
   doc.setFont('helvetica', 'normal');
@@ -83,9 +93,10 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.setFont('helvetica', 'normal');
   doc.text('Buyer (Bill to)', 15, 65);
   doc.setFont('helvetica', 'bold');
-  doc.text(user?.companyName || user?.name || '', 15, 70);
+  const buyerName = user?.companyName || user?.name || 'Techhansa Franchise';
+  doc.text(buyerName, 15, 70);
   doc.setFont('helvetica', 'normal');
-  const userAddr = user?.address || '';
+  const userAddr = user?.address || 'Franchise Address';
   // basic address wrapping
   const splitAddr = doc.splitTextToSize(userAddr, 90);
   doc.text(splitAddr, 15, 74);
@@ -105,20 +116,33 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   const tableData = invoiceItems.map((item, index) => {
     const rate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
-    const hsn = item.hsn || '-';
     const gstRate = item.taxRate || 18;
     const taxableValue = rate * qty;
     const gstAmount = taxableValue * (gstRate / 100);
     const totalAmount = taxableValue + gstAmount;
 
+    const purchaseDate = item.purchaseDate || invoice.date || invoice.createdAt || Date.now();
+
+    const configStr = (() => {
+      if (typeof item.configuration === 'string' && item.configuration) return item.configuration;
+      if (item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0) {
+        return Object.entries(item.specs)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(', ');
+      }
+      if (item.configuration && typeof item.configuration === 'object') {
+        return JSON.stringify(item.configuration);
+      }
+      return '-';
+    })();
+
     return [
       index + 1,
       item.name || item.productName || item.category || '-',
       item.brand || '-',
-      item.model || '-',
-      item.configuration || item.specs || item.details || '-',
-      new Date(rfp?.createdAt || invoice.createdAt).toLocaleDateString(),
-      hsn,
+      item.model || item.productName || '-',
+      configStr,
+      new Date(purchaseDate).toLocaleDateString('en-GB'),
       qty,
       `Rs. ${rate.toFixed(2)}`,
       `Rs. ${gstAmount.toFixed(2)}`,
@@ -149,7 +173,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
 
   // Adding the Totals row to the table data
   tableData.push([
-    '', '', '', '', '', '', 'Total',
+    '', '', '', '', '', 'Total',
     totalQty.toString(),
     '',
     `Rs. ${totalGstAmt.toFixed(2)}`,
@@ -159,28 +183,27 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   autoTable(doc, {
     startY: 85,
     margin: { left: 14, right: 14 },
-    head: [['Sl No.', 'Item / Category', 'Brand', 'Model', 'Configuration', 'Purchase Date', 'HSN', 'Qty', 'Rate', 'GST Amount', 'Total Amount']],
+    head: [['Sl No.', 'Item / Category', 'Brand', 'Model', 'Configuration', 'Purchase Date', 'Qty', 'Rate', 'GST Amount', 'Total Amount']],
     body: tableData,
     theme: 'grid',
     styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.2 },
     headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' },
     columnStyles: {
       0: { cellWidth: 8, halign: 'center' }, // Sl No
-      1: { cellWidth: 20 }, // Item
+      1: { cellWidth: 22 }, // Item
       2: { cellWidth: 15 }, // Brand
       3: { cellWidth: 15 }, // Model
-      4: { cellWidth: 32 }, // Config
+      4: { cellWidth: 34 }, // Config
       5: { cellWidth: 16 }, // Date
-      6: { cellWidth: 12 }, // HSN
-      7: { cellWidth: 10, halign: 'center' }, // Qty
-      8: { cellWidth: 18, halign: 'right' }, // Rate
-      9: { cellWidth: 18, halign: 'right' }, // GST
-      10: { cellWidth: 18, halign: 'right' }, // Total
+      6: { cellWidth: 10, halign: 'center' }, // Qty
+      7: { cellWidth: 20, halign: 'right' }, // Rate
+      8: { cellWidth: 20, halign: 'right' }, // GST
+      9: { cellWidth: 22, halign: 'right' }, // Total
     },
     didParseCell: function (data) {
       if (data.row.index === tableData.length - 1) {
         data.cell.styles.fontStyle = 'bold';
-        if (data.column.index === 6) data.cell.styles.halign = 'right';
+        if (data.column.index === 5) data.cell.styles.halign = 'right';
       }
     }
   });
@@ -193,19 +216,19 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   const prodList = (invoice.productDetails && invoice.productDetails.length > 0)
     ? invoice.productDetails
     : (rfp?.products || []).map(p => {
-        const perItemRate = assumedRate;
-        const gst = perItemRate * 0.18;
-        return {
-          productName: p.category || p.name || '-',
-          brand: p.brand || '-',
-          model: p.model || '-',
-          configuration: p.configuration || '-',
-          serialNumber: '',
-          rate: perItemRate,
-          gstAmount: gst,
-          totalAmount: perItemRate + gst
-        };
-      });
+      const perItemRate = assumedRate;
+      const gst = perItemRate * 0.18;
+      return {
+        productName: p.category || p.name || '-',
+        brand: p.brand || '-',
+        model: p.model || '-',
+        configuration: p.configuration || '-',
+        serialNumber: '',
+        rate: perItemRate,
+        gstAmount: gst,
+        totalAmount: perItemRate + gst
+      };
+    });
 
   if (prodList.length > 0) {
     finalY += 4;
@@ -253,11 +276,11 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   const buyer = (invoice.buyerDetails && invoice.buyerDetails.buyerId)
     ? invoice.buyerDetails
     : {
-        buyerId: user?.userId || invoice.userId || '-',
-        productId: rfp?.rfpId || invoice.orderReference?.orderNumber || '-',
-        buyerName: user?.name || user?.companyName || '-',
-        paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
-      };
+      buyerId: user?.userId || invoice.userId || '-',
+      productId: rfp?.rfpId || invoice.orderReference?.orderNumber || '-',
+      buyerName: user?.name || user?.companyName || '-',
+      paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
+    };
 
   finalY += 4;
   doc.setFontSize(10);

@@ -431,11 +431,15 @@ export default function AllOrders() {
                             </td>
                             <td className="px-4 py-3">
                               <p className="text-sm font-semibold text-slate-700">{item.brand}</p>
-                              {item.specs && Object.keys(item.specs).length > 0 && (
+                              {typeof item.specs === 'string' && item.specs ? (
+                                <p className="text-xs text-slate-500 line-clamp-2">
+                                  {item.specs}
+                                </p>
+                              ) : item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0 ? (
                                 <p className="text-xs text-slate-500 line-clamp-2">
                                   {Object.entries(item.specs).map(([k, v]) => `${k}: ${v}`).join(', ')}
                                 </p>
-                              )}
+                              ) : null}
                               {item.comments && (
                                 <p className="text-xs text-amber-600 mt-1 line-clamp-1 italic">"{item.comments}"</p>
                               )}

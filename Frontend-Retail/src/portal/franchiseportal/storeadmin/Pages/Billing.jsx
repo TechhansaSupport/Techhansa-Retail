@@ -10,10 +10,14 @@ export default function Billing() {
   const navigate = useNavigate();
 
   // Available inventory items (filtering out things with 0 stock)
+  const searchLower = searchTerm.toLowerCase();
   const availableItems = inventory.filter(item => 
     item.availableStock > 0 && 
-    (item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     item.category?.toLowerCase().includes(searchTerm.toLowerCase()))
+    (item.name?.toLowerCase().includes(searchLower) || 
+     item.category?.toLowerCase().includes(searchLower) ||
+     item.specs?.toLowerCase().includes(searchLower) ||
+     item.brand?.toLowerCase().includes(searchLower) ||
+     item.model?.toLowerCase().includes(searchLower))
   );
 
   return (
@@ -32,7 +36,7 @@ export default function Billing() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search products by Name or Category..."
+              placeholder="Search by Name, Category, Specs, Brand, Model..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
@@ -58,6 +62,12 @@ export default function Billing() {
                 >
                   <div className="flex-1">
                     <h3 className="font-bold text-slate-800 group-hover:text-indigo-700 leading-tight mb-1">{item.name}</h3>
+
+                    {item.specs && (
+                      <p className="text-[11px] text-slate-500 leading-snug mb-2 line-clamp-2" title={item.specs}>
+                        {item.specs}
+                      </p>
+                    )}
 
                     <span className={`text-xs font-semibold px-2 py-1 rounded-md ${
                       remainingStock > 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-red-50 text-red-600'

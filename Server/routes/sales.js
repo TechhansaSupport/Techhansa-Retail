@@ -44,7 +44,9 @@ router.post('/checkout', async (req, res) => {
     const invoiceItems = cart.map(item => ({
       productId: item._id || item.id,
       name: item.name,
-
+      brand: item.brand,
+      model: item.model,
+      specs: item.specs,
       quantity: item.quantity,
       sellingPrice: item.sellingPrice,
       serialNumbers: item.serialNumbers || []
@@ -53,8 +55,20 @@ router.post('/checkout', async (req, res) => {
     const tax = subtotal * 0.18; // 18% GST mock
     const grandTotal = subtotal + tax;
 
-    // Create Invoice
-    const invoiceNumber = 'INV-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+    // Create Invoice with sequential number
+    const year = new Date().getFullYear();
+    const lastInvoice = await Invoice.findOne({ invoiceNumber: { $regex: `^INV-${year}-` } }).sort({ createdAt: -1 });
+    let nextNum = 1;
+    if (lastInvoice && lastInvoice.invoiceNumber) {
+      const parts = lastInvoice.invoiceNumber.split('-');
+      if (parts.length === 3) {
+        const lastNum = parseInt(parts[2], 10);
+        if (!isNaN(lastNum)) {
+          nextNum = lastNum + 1;
+        }
+      }
+    }
+    const invoiceNumber = `INV-${year}-${String(nextNum).padStart(3, '0')}`;
 
     const invoice = new Invoice({
       invoiceNumber,
