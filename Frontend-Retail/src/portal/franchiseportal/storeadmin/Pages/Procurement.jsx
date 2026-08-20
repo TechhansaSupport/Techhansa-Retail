@@ -13,21 +13,21 @@ export default function Procurement() {
   const { user } = useContext(AuthContext) || { user: null };
   const [activeTab, setActiveTab] = useState('catalog');
   const navigate = useNavigate();
-  
+
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderItems, setOrderItems] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
-  const companySettingsMock = { 
-    companyName: 'TECHHANSA RETAIL PVT LTD', 
-    registeredAddress: 'REGD. OFF-SHI 8/27A-K-3 GILAT BAZAR BYPASS\nSHIVPURKOT, VARANASI, UP-221002', 
-    gstin: 'N/A', 
-    stateName: 'N/A', 
-    contactNumber: '+91-7007650206 , 9711888951', 
-    email: 'finance@techhansa.com' 
+  const companySettingsMock = {
+    companyName: 'TECHHANSA RETAIL PVT LTD',
+    registeredAddress: 'REGD. OFF-SHI 8/27A-K-3 GILAT BAZAR BYPASS\nSHIVPURKOT, VARANASI, UP-221002',
+    gstin: 'N/A',
+    stateName: 'N/A',
+    contactNumber: '+91-7007650206 , 9711888951',
+    email: 'finance@techhansa.com'
   };
-  
+
   const initialFormState = {
     catalogItemId: '',
     hardwareType: '',
@@ -51,13 +51,13 @@ export default function Procurement() {
 
   const categories = [...new Set(techhansaCatalog.map(item => item.category).filter(Boolean))];
   const brands = [...new Set(techhansaCatalog.filter(item => !selectedCategory || item.category === selectedCategory).map(item => item.brand).filter(Boolean))];
-  const models = [...new Set(techhansaCatalog.filter(item => 
-    (!selectedCategory || item.category === selectedCategory) && 
+  const models = [...new Set(techhansaCatalog.filter(item =>
+    (!selectedCategory || item.category === selectedCategory) &&
     (!selectedBrand || item.brand === selectedBrand)
   ).map(item => item.model).filter(Boolean))];
-  
-  const specifications = techhansaCatalog.filter(item => 
-    (!selectedCategory || item.category === selectedCategory) && 
+
+  const specifications = techhansaCatalog.filter(item =>
+    (!selectedCategory || item.category === selectedCategory) &&
     (!selectedBrand || item.brand === selectedBrand) &&
     (!selectedModel || item.model === selectedModel)
   );
@@ -83,8 +83,8 @@ export default function Procurement() {
 
   const handleHardwareTypeChange = (e) => {
     const value = e.target.value;
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       hardwareType: value,
       specs: {} // Reset specs when hardware type changes
     }));
@@ -113,7 +113,7 @@ export default function Procurement() {
       toast.error("Order list is empty. Add items first.");
       return;
     }
-    
+
     // Add to submitted orders via context
     const result = await submitOrderRequest(orderItems);
 
@@ -160,7 +160,7 @@ export default function Procurement() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold text-slate-800">Your Recent Requests</h2>
-            <button 
+            <button
               onClick={() => setIsModalOpen(true)}
               className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
             >
@@ -168,93 +168,84 @@ export default function Procurement() {
               New Order Request
             </button>
           </div>
-          
+
           {/* Submitted Orders Section */}
           {orders.length > 0 ? (
             <div className="space-y-6">
-                {orders.map(order => (
-                  <div key={order._id || order.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                      <div>
-                        <span className="font-bold text-slate-800 mr-4">Request {order.requestId || order.id}</span>
-                        <span className="text-sm text-slate-500">Submitted on: {order.date}</span>
-                      </div>
-                      <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
-                        {order.status}
-                      </span>
+              {orders.map(order => (
+                <div key={order._id || order.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                  <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <div>
+                      <span className="font-bold text-slate-800 mr-4">Request {order.requestId || order.id}</span>
+                      <span className="text-sm text-slate-500">Submitted on: {order.date}</span>
                     </div>
-                    <div className="p-6">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="text-slate-400 text-xs uppercase border-b border-slate-100">
-                            <th className="pb-3 font-semibold">Hardware</th>
-                            <th className="pb-3 font-semibold">Brand</th>
-                            <th className="pb-3 font-semibold">Specifications</th>
-                            <th className="pb-3 font-semibold text-center">Qty</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                          {Array.isArray(order.items) ? order.items.map((item, idx) => {
-                            const categoryStr = item.category || item.hardwareType || item.productName || 'Unknown Category';
-                            const modelStr = item.model || item.productName || item.name || 'Unknown Model';
-                            
-                            let specsDetail = '';
-                            if (typeof item.specs === 'string' && item.specs) {
-                              specsDetail = item.specs;
-                            } else if (item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0) {
-                              specsDetail = Object.entries(item.specs)
-                                .map(([key, val]) => val ? `${key.replace(/([A-Z])/g, ' $1').trim()}: ${val}` : null)
-                                .filter(Boolean)
-                                .join(', ');
-                            } else if (typeof item.configuration === 'string' && item.configuration) {
-                              specsDetail = item.configuration;
-                            } else if (item.configuration && typeof item.configuration === 'object') {
-                              specsDetail = JSON.stringify(item.configuration);
-                            }
-
-                            return (
-                              <tr key={item._id || item.id || idx}>
-                                <td className="py-3 font-medium text-slate-800">
-                                  {item.hardwareType === 'Others' ? item.otherType : (item.hardwareType || item.category || 'Item')}
-                                </td>
-                                <td className="py-3 text-slate-600">{item.brand || '-'}</td>
-                                <td className="py-3 text-sm text-slate-600">
-                                  <div className="space-y-1">
-                                    <p><span className="font-medium text-slate-700">Category:</span> {categoryStr}</p>
-                                    <p><span className="font-medium text-slate-700">Model:</span> {modelStr}</p>
-                                    {specsDetail && specsDetail !== 'None' && <p><span className="font-medium text-slate-700">Specs:</span> {specsDetail}</p>}
-                                  </div>
-                                  {item.comments && <span className="block mt-2 italic text-slate-500">"{item.comments}"</span>}
-                                </td>
-                                <td className="py-3 text-center font-bold text-indigo-600">{item.quantity}</td>
-                              </tr>
-                            );
-                          }) : (
-                            <tr>
-                              <td colSpan="4" className="py-3 text-center text-slate-500 italic">
-                                Legacy order items not structured for detailed view.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                    <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
+                      {order.status}
+                    </span>
                   </div>
-                ))}
+                  <div className="p-6">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="text-slate-400 text-xs uppercase border-b border-slate-100">
+                          <th className="pb-3 font-semibold">Hardware</th>
+                          <th className="pb-3 font-semibold">Brand</th>
+                          <th className="pb-3 font-semibold">Specifications</th>
+                          <th className="pb-3 font-semibold text-center">Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {Array.isArray(order.items) ? order.items.map((item, idx) => {
+                          return (
+                            <tr key={item._id || item.id || idx}>
+                              <td className="py-3 font-medium text-slate-800">
+                                {item.hardwareType === 'Others' ? item.otherType : item.hardwareType}
+                              </td>
+                              <td className="py-3 text-slate-600">{item.brand}</td>
+                              <td className="py-3 text-sm text-slate-500">
+                                {typeof item.specs === 'string' && item.specs ? (
+                                  <span className="block">{item.specs}</span>
+                                ) : (item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0) ? (
+                                  Object.entries(item.specs).map(([key, val]) => (
+                                    val ? <span key={key} className="block"><span className="font-medium text-slate-600 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {val}</span> : null
+                                  ))
+                                ) : (typeof item.configuration === 'string' && item.configuration) ? (
+                                  <span className="block">{item.configuration}</span>
+                                ) : (item.configuration && typeof item.configuration === 'object' && Object.keys(item.configuration).length > 0) ? (
+                                  <span className="block">{JSON.stringify(item.configuration)}</span>
+                                ) : (
+                                  <span className="text-slate-400 italic">None</span>
+                                )}
+                                {item.comments && <span className="block mt-1 italic">"{item.comments}"</span>}
+                              </td>
+                              <td className="py-3 text-center font-bold text-indigo-600">{item.quantity}</td>
+                            </tr>
+                          );
+                        }) : (
+                          <tr>
+                            <td colSpan="4" className="py-3 text-center text-slate-500 italic">
+                              Legacy order items not structured for detailed view.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center flex flex-col items-center">
-               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                 <ShoppingCart className="w-8 h-8 text-indigo-300" />
-               </div>
-               <h3 className="text-xl font-bold text-slate-800 mb-2">No active requests</h3>
-               <p className="text-slate-500 max-w-md mx-auto mb-6">You haven't submitted any B2B hardware requests yet. Click the button above to create your first order.</p>
-               <button 
-                 onClick={() => setIsModalOpen(true)}
-                 className="px-6 py-2.5 bg-indigo-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-100 transition-colors"
-               >
-                 Create New Request
-               </button>
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                <ShoppingCart className="w-8 h-8 text-indigo-300" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">No active requests</h3>
+              <p className="text-slate-500 max-w-md mx-auto mb-6">You haven't submitted any B2B hardware requests yet. Click the button above to create your first order.</p>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-6 py-2.5 bg-indigo-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-100 transition-colors"
+              >
+                Create New Request
+              </button>
             </div>
           )}
         </div>
@@ -294,12 +285,12 @@ export default function Procurement() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button onClick={() => setSelectedInvoice(inv)} className="text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-sm font-medium w-full transition-colors mx-auto">
-                       <Receipt className="w-4 h-4" /> View
+                      <Receipt className="w-4 h-4" /> View
                     </button>
                   </td>
                   <td className="px-4 py-3 text-center">
                     {inv.status === 'Pending' && (
-                      <button 
+                      <button
                         onClick={() => navigate('/franchise/checkout', { state: { invoice: inv } })}
                         className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"
                       >
@@ -318,27 +309,27 @@ export default function Procurement() {
       {isModalOpen && (
         <div className="fixed inset-0 z-[50] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl h-[85vh] flex overflow-hidden">
-            
+
             {/* Left Column: Form to add items */}
             <div className="w-3/5 border-r border-slate-100 flex flex-col h-full bg-white min-h-0">
               <div className="flex justify-between items-center p-6 border-b border-slate-100 flex-shrink-0">
                 <h3 className="text-xl font-bold text-slate-800">Add Item to Order</h3>
               </div>
-              
+
               <div className="p-6 overflow-y-auto flex-1">
                 <form id="add-item-form" onSubmit={handleAddItem} className="space-y-5">
-                  
+
                   {/* Catalog Selection & Quantity */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-sm font-semibold text-slate-700">Category</label>
-                      <select 
-                        value={selectedCategory} 
+                      <select
+                        value={selectedCategory}
                         onChange={e => {
                           setSelectedCategory(e.target.value);
                           setSelectedBrand('');
                           setSelectedModel('');
-                          setFormData(prev => ({...prev, catalogItemId: '', specs: {}, hardwareType: '', brand: '', price: 0}));
+                          setFormData(prev => ({ ...prev, catalogItemId: '', specs: {}, hardwareType: '', brand: '', price: 0 }));
                         }}
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
                       >
@@ -349,12 +340,12 @@ export default function Procurement() {
 
                     <div className="space-y-1">
                       <label className="text-sm font-semibold text-slate-700">Brand</label>
-                      <select 
-                        value={selectedBrand} 
+                      <select
+                        value={selectedBrand}
                         onChange={e => {
                           setSelectedBrand(e.target.value);
                           setSelectedModel('');
-                          setFormData(prev => ({...prev, catalogItemId: '', specs: {}, hardwareType: '', brand: '', price: 0}));
+                          setFormData(prev => ({ ...prev, catalogItemId: '', specs: {}, hardwareType: '', brand: '', price: 0 }));
                         }}
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
                       >
@@ -365,11 +356,11 @@ export default function Procurement() {
 
                     <div className="space-y-1">
                       <label className="text-sm font-semibold text-slate-700">Model</label>
-                      <select 
-                        value={selectedModel} 
+                      <select
+                        value={selectedModel}
                         onChange={e => {
                           setSelectedModel(e.target.value);
-                          setFormData(prev => ({...prev, catalogItemId: '', specs: {}, hardwareType: '', brand: '', price: 0}));
+                          setFormData(prev => ({ ...prev, catalogItemId: '', specs: {}, hardwareType: '', brand: '', price: 0 }));
                         }}
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
                       >
@@ -380,11 +371,11 @@ export default function Procurement() {
 
                     <div className="space-y-1">
                       <label className="text-sm font-semibold text-slate-700">Specification (Finalize)</label>
-                      <select 
+                      <select
                         value={formData.catalogItemId}
                         onChange={e => {
                           const item = techhansaCatalog.find(i => i._id === e.target.value);
-                          if(item) {
+                          if (item) {
                             const itemPrice = item.b2bPrice || item.price || item.sellingPrice || 0;
                             setFormData(prev => ({
                               ...prev,
@@ -399,7 +390,7 @@ export default function Procurement() {
                               specs: item.specs || item.specifications || {}
                             }));
                           } else {
-                            setFormData(prev => ({...prev, catalogItemId: '', price: 0, amount: 0, specs: {}}));
+                            setFormData(prev => ({ ...prev, catalogItemId: '', price: 0, amount: 0, specs: {} }));
                           }
                         }}
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
@@ -407,7 +398,7 @@ export default function Procurement() {
                         <option value="">Select Specific Variant</option>
                         {specifications.map(item => {
                           const itemPrice = item.b2bPrice || item.price || item.sellingPrice || 0;
-                          
+
                           let specStr = item.model || 'Variant';
                           if (typeof item.specs === 'string' && item.specs) {
                             specStr = item.specs;
@@ -432,7 +423,7 @@ export default function Procurement() {
 
                     <div className="space-y-1">
                       <label className="text-sm font-semibold text-slate-700">Quantity</label>
-                      <input 
+                      <input
                         type="number"
                         name="quantity"
                         min="1"
@@ -442,7 +433,7 @@ export default function Procurement() {
                           setFormData(prev => ({ ...prev, quantity: qty, amount: prev.price * qty }));
                         }}
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
-                        required 
+                        required
                       />
                     </div>
                   </div>
@@ -456,11 +447,11 @@ export default function Procurement() {
                       <p className="text-sm font-medium text-indigo-900">Item Total: <span className="font-bold text-lg text-indigo-700">Rs. {(formData.amount || 0).toLocaleString('en-IN')}</span></p>
                     </div>
                   </div>
-                  
+
                   {/* Comments */}
                   <div className="space-y-1">
                     <label className="text-sm font-semibold text-slate-700">Additional Comments / Remarks</label>
-                    <textarea 
+                    <textarea
                       name="comments"
                       value={formData.comments}
                       onChange={handleInputChange}
@@ -471,14 +462,14 @@ export default function Procurement() {
                 </form>
               </div>
               <div className="p-6 border-t border-slate-100 bg-slate-50 flex-shrink-0 flex justify-between items-center">
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="px-6 py-2.5 text-slate-600 font-semibold hover:bg-slate-200 rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   form="add-item-form"
                   className="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
@@ -522,30 +513,34 @@ export default function Procurement() {
                         <p className="text-sm text-slate-600 mb-1">
                           <span className="font-semibold text-slate-700">Brand:</span> {item.brand}
                         </p>
-                        
+
                         {/* Display Specs summary */}
-                        {item.specs && Object.keys(item.specs).length > 0 && (
+                        {(typeof item.specs === 'string' && item.specs) ? (
+                          <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg mt-2 mb-1">
+                            {item.specs}
+                          </div>
+                        ) : (item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0) ? (
                           <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg mt-2 mb-1">
                             {Object.entries(item.specs).map(([key, val]) => (
                               val ? <div key={key}><span className="capitalize font-medium">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {val}</div> : null
                             ))}
                           </div>
-                        )}
-                        
+                        ) : null}
+
                         {item.comments && (
                           <p className="text-xs text-slate-500 mt-2 line-clamp-2 italic">
                             "{item.comments}"
                           </p>
                         )}
-                        
+
                         <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center">
                           <p className="text-xs text-slate-500">Unit: ₹{item.price?.toLocaleString() || 0}</p>
                           <p className="text-sm font-bold text-slate-800">
                             Total: ₹{item.amount?.toLocaleString() || (item.price * item.quantity).toLocaleString()}
                           </p>
                         </div>
-                        
-                        <button 
+
+                        <button
                           onClick={() => handleRemoveItem(item.id)}
                           className="absolute -top-2 -right-2 bg-rose-100 text-rose-600 p-1.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-200"
                           title="Remove item"
@@ -563,20 +558,19 @@ export default function Procurement() {
                   <span className="font-semibold text-slate-600">Total Items:</span>
                   <span className="text-lg font-bold text-slate-800">{orderItems.reduce((acc, item) => acc + Number(item.quantity), 0)}</span>
                 </div>
-                <button 
+                <button
                   onClick={handleSubmitOrder}
                   disabled={orderItems.length === 0}
-                  className={`w-full py-3.5 rounded-xl font-bold shadow-sm transition-colors text-white ${
-                    orderItems.length > 0 
-                      ? 'bg-indigo-600 hover:bg-indigo-700' 
+                  className={`w-full py-3.5 rounded-xl font-bold shadow-sm transition-colors text-white ${orderItems.length > 0
+                      ? 'bg-indigo-600 hover:bg-indigo-700'
                       : 'bg-slate-300 cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   Submit Order Request
                 </button>
               </div>
             </div>
-            
+
           </div>
         </div>
       )}
@@ -675,7 +669,7 @@ export default function Procurement() {
                       const itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : [{ productName: 'Procurement Services / Goods', quantity: 1, unitPrice: selectedInvoice.amount }];
                       const totalQtyAcrossAllItems = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
                       const assumedRate = totalQtyAcrossAllItems > 0 ? (selectedInvoice.amount / 1.18) / totalQtyAcrossAllItems : 0;
-                      
+
                       return itemsList.map((item, i) => {
                         const rate = item.rate || item.unitPrice || item.price || assumedRate;
                         const qty = item.quantity || 1;
@@ -743,7 +737,7 @@ export default function Procurement() {
                   </tfoot>
                 </table>
               </div>
-              
+
               {/* Financial Balances */}
               <div className="p-4 border-b border-slate-700 flex justify-between bg-white border border-slate-200 border-b-0 rounded-t-xl">
                 <div className="text-sm flex items-center gap-2">
@@ -793,7 +787,7 @@ export default function Procurement() {
                   <div className="p-4 flex-1 flex flex-col justify-between min-h-[120px] text-right text-sm">
                     <p className="font-bold text-slate-900">for {companySettingsMock.companyName}</p>
                     <div className="mt-auto">
-                      <p className="text-slate-500 whitespace-pre-wrap leading-tight">Verified by & Authorised Signatory<br/>Company Secretary</p>
+                      <p className="text-slate-500 whitespace-pre-wrap leading-tight">Verified by & Authorised Signatory<br />Company Secretary</p>
                     </div>
                   </div>
                 </div>

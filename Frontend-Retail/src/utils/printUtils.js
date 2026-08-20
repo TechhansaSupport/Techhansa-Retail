@@ -52,7 +52,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.setFont('helvetica', 'normal');
   doc.text('Dated', 157, 26);
   doc.setFont('helvetica', 'bold');
-  
+
   let formattedDate = 'N/A';
   if (invoice.date) {
     const d = new Date(invoice.date);
@@ -216,19 +216,19 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   const prodList = (invoice.productDetails && invoice.productDetails.length > 0)
     ? invoice.productDetails
     : (rfp?.products || []).map(p => {
-        const perItemRate = assumedRate;
-        const gst = perItemRate * 0.18;
-        return {
-          productName: p.category || p.name || '-',
-          brand: p.brand || '-',
-          model: p.model || '-',
-          configuration: p.configuration || '-',
-          serialNumber: '',
-          rate: perItemRate,
-          gstAmount: gst,
-          totalAmount: perItemRate + gst
-        };
-      });
+      const perItemRate = assumedRate;
+      const gst = perItemRate * 0.18;
+      return {
+        productName: p.category || p.name || '-',
+        brand: p.brand || '-',
+        model: p.model || '-',
+        configuration: p.configuration || '-',
+        serialNumber: '',
+        rate: perItemRate,
+        gstAmount: gst,
+        totalAmount: perItemRate + gst
+      };
+    });
 
   if (prodList.length > 0) {
     finalY += 4;
@@ -276,11 +276,11 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   const buyer = (invoice.buyerDetails && invoice.buyerDetails.buyerId)
     ? invoice.buyerDetails
     : {
-        buyerId: user?.userId || invoice.userId || '-',
-        productId: rfp?.rfpId || invoice.orderReference?.orderNumber || '-',
-        buyerName: user?.name || user?.companyName || '-',
-        paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
-      };
+      buyerId: user?.userId || invoice.userId || '-',
+      productId: rfp?.rfpId || invoice.orderReference?.orderNumber || '-',
+      buyerName: user?.name || user?.companyName || '-',
+      paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
+    };
 
   finalY += 4;
   doc.setFontSize(10);
