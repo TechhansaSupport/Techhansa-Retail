@@ -81,29 +81,29 @@ export default function Invoices() {
   // Helper to format invoice number specifically for Channel Portal
   const getFormattedInvoiceNumber = (inv) => {
     if (!inv) return '';
-    
+
     // Sequence Number (001 to infinity)
     const index = invoices.findIndex(i => (i._id || i.invoiceId) === (inv._id || inv.invoiceId));
     const seqNum = index >= 0 ? index + 1 : 1;
-    
+
     // Company Name Short
     const compName = companySettings?.companyName || 'TECHHANSA RETAIL';
     const compShort = compName.toLowerCase().includes('techhansa') ? 'THS' : compName.substring(0, 3).toUpperCase();
-    
+
     // State Name Short
     const stateStr = companySettings?.stateName || companySettings?.registeredAddress || 'Uttar Pradesh';
     const stateStrLower = stateStr.toLowerCase();
-    let stateShort = stateStrLower.includes('uttar pradesh') || stateStrLower.includes('up') ? 'UP' : 
-                     stateStrLower.includes('madhya pradesh') || stateStrLower.includes('mp') ? 'MP' : 
-                     stateStrLower.includes('delhi') || stateStrLower.includes('dl') ? 'DL' : 
-                     stateStrLower.includes('maharashtra') || stateStrLower.includes('mh') ? 'MH' :
-                     stateStr.substring(0, 2).toUpperCase();
-                     
+    let stateShort = stateStrLower.includes('uttar pradesh') || stateStrLower.includes('up') ? 'UP' :
+      stateStrLower.includes('madhya pradesh') || stateStrLower.includes('mp') ? 'MP' :
+        stateStrLower.includes('delhi') || stateStrLower.includes('dl') ? 'DL' :
+          stateStrLower.includes('maharashtra') || stateStrLower.includes('mh') ? 'MH' :
+            stateStr.substring(0, 2).toUpperCase();
+
     // Year (Google Calendar current ongoing year)
     const date = inv.createdAt ? new Date(inv.createdAt) : new Date();
     const year = date.getFullYear();
     const fy = `${year.toString().substring(2)}-${(year + 1).toString().substring(2)}`;
-    
+
     return `${compShort}/${stateShort}/${fy}/${seqNum.toString().padStart(3, '0')}`;
   };
 
@@ -347,11 +347,11 @@ export default function Invoices() {
                       const buyer = (selectedInvoice.buyerDetails && selectedInvoice.buyerDetails.buyerId)
                         ? selectedInvoice.buyerDetails
                         : {
-                            buyerId: user?.userId || selectedInvoice.userId || '-',
-                            productId: selectedRfp?.rfpId || selectedInvoice.orderReference?.orderNumber || (typeof selectedInvoice.orderReference === 'string' ? selectedInvoice.orderReference : '-'),
-                            buyerName: user?.name || user?.companyName || '-',
-                            paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
-                          };
+                          buyerId: user?.userId || selectedInvoice.userId || '-',
+                          productId: selectedRfp?.rfpId || selectedInvoice.orderReference?.orderNumber || (typeof selectedInvoice.orderReference === 'string' ? selectedInvoice.orderReference : '-'),
+                          buyerName: user?.name || user?.companyName || '-',
+                          paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
+                        };
                       return (
                         <div className="p-4 border-b border-slate-700 bg-white">
                           <h3 className="font-bold text-slate-900 mb-3 text-sm">Buyer Details</h3>
@@ -570,7 +570,7 @@ export default function Invoices() {
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6">
               <label className="block text-sm font-semibold text-slate-700 mb-2">WhatsApp Mobile Number</label>
               <div className="flex flex-col gap-2">
@@ -587,32 +587,32 @@ export default function Invoices() {
             </div>
 
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setShowWhatsappModal(false)}
                 className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={() => {
                   if (!whatsappNumber) {
                     alert('Please enter a WhatsApp number');
                     return;
                   }
-                  
+
                   const formattedNumber = whatsappNumber.replace(/[^\d+]/g, '');
                   const invoiceItems = selectedInvoice.items || [];
                   const computedTotal = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) : selectedInvoice.amount;
                   const formattedTotal = computedTotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
                   const date = new Date(selectedInvoice.createdAt).toLocaleDateString('en-GB');
-                  
+
                   const message = `Hello,\n\nHere are the details for your recent Techhansa Retail Invoice:\n\n*Invoice No:* ${selectedInvoice.invoiceNumber || 'N/A'}\n*Date:* ${date}\n*Total Amount:* ${formattedTotal}\n*Status:* ${selectedInvoice.paymentStatus || 'Pending'}\n\nPlease check your email or partner portal to download the full PDF.`;
-                  
+
                   const encodedMessage = encodeURIComponent(message);
                   const waUrl = `https://wa.me/${formattedNumber}?text=${encodedMessage}`;
-                  
+
                   window.open(waUrl, '_blank');
-                  
+
                   setShowWhatsappModal(false);
                   setWhatsappNumber('');
                 }}
