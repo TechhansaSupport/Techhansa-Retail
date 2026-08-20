@@ -18,7 +18,8 @@ const RFP = require('../models/RFP');
 // Middleware to check if user is admin (Assuming basic auth or we check token in a real scenario)
 // For simplicity and matching current setup, we might rely on the frontend to protect routes,
 // but it's good practice to add a middleware if we were passing tokens.
-const { verifyAdminToken } = require('../middleware/auth');
+const { verifyAdminToken, requireRoles } = require('../middleware/auth');
+const inventoryAuth = requireRoles(['admin', 'inventory_manager']);
 
 // Apply admin verification middleware to ALL routes in this router
 router.use(verifyAdminToken);
@@ -132,26 +133,57 @@ router.get('/dashboard', async (req, res) => {
 // GET /api/admin/dashboard/chart
 router.get('/dashboard/chart', async (req, res) => {
   try {
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-    sixMonthsAgo.setDate(1);
-    sixMonthsAgo.setHours(0, 0, 0, 0);
+    const timeRange = req.query.timeRange || '6 Months';
+    let startDate = new Date();
+    let isDaily = false;
+    let iterations = 6;
+
+    if (timeRange === '7 Days') {
+      startDate.setDate(startDate.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
+      isDaily = true;
+      iterations = 7;
+    } else if (timeRange === '30 Days') {
+      startDate.setDate(startDate.getDate() - 29);
+      startDate.setHours(0, 0, 0, 0);
+      isDaily = true;
+      iterations = 30;
+    } else if (timeRange === '90 Days') {
+      startDate.setDate(startDate.getDate() - 89);
+      startDate.setHours(0, 0, 0, 0);
+      isDaily = true;
+      iterations = 90;
+    } else if (timeRange === '1 Year') {
+      startDate.setMonth(startDate.getMonth() - 11);
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
+      iterations = 12;
+    } else { // 6 months or All Time
+      startDate.setMonth(startDate.getMonth() - 5);
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
+      iterations = 6;
+    }
 
     const userStats = await User.aggregate([
-      { $match: { createdAt: { $gte: sixMonthsAgo }, role: { $in: ['franchise', 'channel'] } } },
+      { $match: { createdAt: { $gte: startDate }, role: { $in: ['franchise', 'channel'] } } },
       {
         $group: {
-          _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" }, role: "$role" },
+          _id: isDaily ? 
+            { day: { $dayOfMonth: "$createdAt" }, month: { $month: "$createdAt" }, year: { $year: "$createdAt" }, role: "$role" } :
+            { month: { $month: "$createdAt" }, year: { $year: "$createdAt" }, role: "$role" },
           count: { $sum: 1 }
         }
       }
     ]);
 
     const invoiceStats = await Invoice.aggregate([
-      { $match: { createdAt: { $gte: sixMonthsAgo }, paymentStatus: 'Paid' } },
+      { $match: { createdAt: { $gte: startDate }, paymentStatus: 'Paid' } },
       {
         $group: {
-          _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
+          _id: isDaily ?
+            { day: { $dayOfMonth: "$createdAt" }, month: { $month: "$createdAt" }, year: { $year: "$createdAt" } } :
+            { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
           totalRevenue: { $sum: "$amount" }
         }
       }
@@ -160,15 +192,22 @@ router.get('/dashboard/chart', async (req, res) => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const chartData = [];
 
-    for (let i = 5; i >= 0; i--) {
+    for (let i = iterations - 1; i >= 0; i--) {
       const d = new Date();
-      d.setMonth(d.getMonth() - i);
+      if (isDaily) {
+        d.setDate(d.getDate() - i);
+      } else {
+        d.setMonth(d.getMonth() - i);
+      }
+      
+      const day = d.getDate();
       const month = d.getMonth() + 1; // 1-12
       const year = d.getFullYear();
-      const name = monthNames[d.getMonth()];
+      const name = isDaily ? `${day} ${monthNames[d.getMonth()]}` : monthNames[d.getMonth()];
 
       chartData.push({
         name,
+        day,
         month,
         year,
         Franchise: 0,
@@ -178,7 +217,11 @@ router.get('/dashboard/chart', async (req, res) => {
     }
 
     userStats.forEach(stat => {
-      const dataRow = chartData.find(d => d.month === stat._id.month && d.year === stat._id.year);
+      const dataRow = chartData.find(d => 
+        (isDaily ? d.day === stat._id.day : true) && 
+        d.month === stat._id.month && 
+        d.year === stat._id.year
+      );
       if (dataRow) {
         if (stat._id.role === 'franchise') dataRow.Franchise += stat.count;
         if (stat._id.role === 'channel') dataRow.B2B += stat.count;
@@ -186,7 +229,11 @@ router.get('/dashboard/chart', async (req, res) => {
     });
 
     invoiceStats.forEach(stat => {
-      const dataRow = chartData.find(d => d.month === stat._id.month && d.year === stat._id.year);
+      const dataRow = chartData.find(d => 
+        (isDaily ? d.day === stat._id.day : true) && 
+        d.month === stat._id.month && 
+        d.year === stat._id.year
+      );
       if (dataRow) {
         dataRow.Revenue += stat.totalRevenue;
       }
@@ -203,10 +250,44 @@ router.get('/dashboard/chart', async (req, res) => {
 router.get('/orders', async (req, res) => {
   try {
     const orders = await Order.aggregate([
+      { $lookup: { from: 'quotations', localField: 'quotationReference', foreignField: '_id', as: 'quotationDetails' } },
+      { $unwind: { path: '$quotationDetails', preserveNullAndEmptyArrays: true } },
+      { $lookup: { from: 'rfps', localField: 'quotationDetails.rfpReference', foreignField: '_id', as: 'rfpDetails' } },
+      { $unwind: { path: '$rfpDetails', preserveNullAndEmptyArrays: true } },
       { $lookup: { from: 'users', localField: 'userId', foreignField: 'userId', as: 'userDetails' } },
       { $unwind: { path: '$userDetails', preserveNullAndEmptyArrays: true } },
-      { $addFields: { userRole: '$userDetails.role', orderType: 'Enterprise' } },
-      { $project: { userDetails: 0 } }
+      { $addFields: { 
+          userRole: '$userDetails.role', 
+          orderType: 'Enterprise',
+          items: { 
+            $cond: { 
+              if: { $gt: [ { $size: { $ifNull: ["$items", []] } }, 0 ] }, 
+              then: "$items", 
+              else: { 
+                $cond: {
+                  if: { $gt: [ { $size: { $ifNull: ["$quotationDetails.items", []] } }, 0 ] },
+                  then: "$quotationDetails.items",
+                  else: {
+                    $map: {
+                      input: { $ifNull: ["$rfpDetails.products", []] },
+                      as: "prod",
+                      in: {
+                        productName: "$$prod.category",
+                        brand: "$$prod.brand",
+                        model: "$$prod.model",
+                        configuration: "$$prod.configuration",
+                        quantity: "$$prod.quantity",
+                        unitPrice: "$$prod.price",
+                        totalAmount: { $multiply: ["$$prod.price", "$$prod.quantity"] }
+                      }
+                    }
+                  }
+                }
+              } 
+            } 
+          }
+      }},
+      { $project: { userDetails: 0, quotationDetails: 0, rfpDetails: 0 } }
     ]);
 
     const procurements = await ProcurementRequest.aggregate([
@@ -266,7 +347,10 @@ router.patch('/orders/:id/status', async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    ).populate('quotationReference');
+    ).populate({
+      path: 'quotationReference',
+      populate: { path: 'rfpReference' }
+    });
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
@@ -289,14 +373,29 @@ router.patch('/orders/:id/status', async (req, res) => {
         if (order.quotationReference.rfpReference) {
           await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, { status: 'Rejected' });
         }
+      } else if (status === 'Paid') {
+        order.paymentStatus = 'Paid';
+        await order.save();
+        await Quotation.findByIdAndUpdate(order.quotationReference._id, { paymentStatus: 'Paid' });
       }
+    } else if (status === 'Paid') {
+      order.paymentStatus = 'Paid';
+      await order.save();
     }
 
     // Deduct inventory when dispatched
     if (status === 'Dispatched') {
       let itemsToDeduct = order.items && order.items.length > 0 ? order.items : [];
-      if (itemsToDeduct.length === 0 && order.quotationReference && order.quotationReference.items) {
+      if (itemsToDeduct.length === 0 && order.quotationReference && order.quotationReference.items && order.quotationReference.items.length > 0) {
          itemsToDeduct = order.quotationReference.items;
+      }
+      if (itemsToDeduct.length === 0 && order.quotationReference && order.quotationReference.rfpReference && order.quotationReference.rfpReference.products) {
+         itemsToDeduct = order.quotationReference.rfpReference.products.map(p => ({
+            productName: p.category,
+            brand: p.brand,
+            model: p.model,
+            quantity: p.quantity
+         }));
       }
       
       for (const item of itemsToDeduct) {
@@ -499,11 +598,17 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
         if (item.model) {
           product = await GlobalProduct.findOne({ brand: item.brand, model: item.model });
         }
-        if (!product && item.specs && item.specs.model) {
-          product = await GlobalProduct.findOne({ brand: item.brand, model: item.specs.model });
+        if (!product && item.specs) {
+          const modelSpec = item.specs.model || item.specs.Model;
+          if (modelSpec) {
+            product = await GlobalProduct.findOne({ brand: item.brand, model: modelSpec });
+          }
         }
         if (!product) {
-          // Fallback to searching by brand and category/name
+          // Fallback to searching by brand and name/category
+          product = await GlobalProduct.findOne({ brand: item.brand, name: item.hardwareType });
+        }
+        if (!product) {
           product = await GlobalProduct.findOne({ brand: item.brand, category: item.hardwareType });
         }
         
@@ -575,18 +680,38 @@ router.post('/orders/:id/invoice', async (req, res) => {
     // Check if it's already a B2BInvoice (Franchise B2B Invoice from Dashboard)
     const existingB2B = await B2BInvoice.findById(orderId);
     if (existingB2B) {
+      await B2BInvoice.findByIdAndUpdate(orderId, { invoiceSent: true });
       existingB2B.invoiceSent = true;
-      await existingB2B.save();
       return res.json({ message: 'Invoice sent successfully', invoice: existingB2B });
     }
 
     // Check if it's an Order (Channel)
-    const order = await Order.findById(orderId).populate('quotationReference');
+    const order = await Order.findById(orderId).populate({
+      path: 'quotationReference',
+      populate: { path: 'rfpReference' }
+    });
     if (order) {
       if (order.status !== 'Paid' && order.paymentStatus !== 'Paid') {
         return res.status(400).json({ message: 'Only Paid orders can be invoiced.' });
       }
       
+      let itemsToUse = [];
+      if (order.items && order.items.length > 0) {
+        itemsToUse = order.items;
+      } else if (order.quotationReference && order.quotationReference.items && order.quotationReference.items.length > 0) {
+        itemsToUse = order.quotationReference.items;
+      } else if (order.quotationReference && order.quotationReference.rfpReference && order.quotationReference.rfpReference.products) {
+        itemsToUse = order.quotationReference.rfpReference.products.map(p => ({
+          productName: p.category,
+          brand: p.brand,
+          model: p.model,
+          configuration: p.configuration,
+          quantity: p.quantity,
+          unitPrice: p.price,
+          totalAmount: p.price * p.quantity
+        }));
+      }
+
       const invoice = new Invoice({
         invoiceNumber: `INV-${Date.now()}`,
         userId: order.userId,
@@ -594,7 +719,7 @@ router.post('/orders/:id/invoice', async (req, res) => {
         amount: order.totalAmount,
         paymentStatus: 'Paid',
         paymentMethod: order.paymentMethod || 'Credit',
-        items: order.items || (order.quotationReference ? order.quotationReference.items : [])
+        items: itemsToUse
       });
       await invoice.save();
 
@@ -636,7 +761,7 @@ router.post('/orders/:id/invoice', async (req, res) => {
         invoiceData = b2bInvoice;
         orderUpdate = pr;
       } else {
-        return res.status(404).json({ message: 'Order/Request not found' });
+        return res.status(404).json({ message: 'Order/Request not found', debug: { orderId, existingB2B: !!existingB2B } });
       }
     }
 
@@ -896,17 +1021,37 @@ router.put('/entities/:userId/status', async (req, res) => {
 });
 
 // GET /api/admin/catalog
-router.get('/catalog', async (req, res) => {
+router.get('/catalog', inventoryAuth, async (req, res) => {
   try {
-    const catalog = await GlobalProduct.find();
-    res.json(catalog);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    
+    // Add simple text search if needed
+    const query = {};
+    if (req.query.search) {
+      query.$or = [
+        { brand: { $regex: req.query.search, $options: 'i' } },
+        { model: { $regex: req.query.search, $options: 'i' } },
+        { category: { $regex: req.query.search, $options: 'i' } }
+      ];
+    }
+
+    const catalog = await GlobalProduct.find(query).skip(skip).limit(limit);
+    const total = await GlobalProduct.countDocuments(query);
+
+    res.json({
+      products: catalog,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // POST /api/admin/catalog
-router.post('/catalog', async (req, res) => {
+router.post('/catalog', inventoryAuth, async (req, res) => {
   try {
     const payload = { ...req.body };
     if (payload.serialNumber === '' || payload.serialNumber === undefined) {
@@ -925,7 +1070,7 @@ router.post('/catalog', async (req, res) => {
 });
 
 // PUT /api/admin/catalog/:id
-router.put('/catalog/:id', async (req, res) => {
+router.put('/catalog/:id', inventoryAuth, async (req, res) => {
   try {
     const payload = { ...req.body };
     if (payload.serialNumber === '' || payload.serialNumber === undefined) {
@@ -949,7 +1094,7 @@ router.put('/catalog/:id', async (req, res) => {
 });
 
 // DELETE /api/admin/catalog/:id
-router.delete('/catalog/:id', async (req, res) => {
+router.delete('/catalog/:id', inventoryAuth, async (req, res) => {
   try {
     const product = await GlobalProduct.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });

@@ -242,25 +242,25 @@ router.get('/:storeId/b2b-invoices', async (req, res) => {
     // Map quotations to the format expected by the frontend 'approvals' tab
     const mappedQuotations = quotations.map(q => ({
       _id: q._id,
-      invoiceNo: q.quotationNo,
+      documentNo: q.quotationNo, // Changed from invoiceNo to avoid frontend confusion
       requestId: q.procurementReference ? (q.procurementReference.requestId || q.procurementReference._id?.toString() || q.procurementReference.toString()) : 'N/A',
       amount: q.amount,
       status: q.paymentStatus,
       date: new Date(q.createdAt).toLocaleDateString(),
       type: 'Quotation',
-      invoiceFile: `/quotations/${q.quotationNo}.pdf`,
+      documentFile: `/quotations/${q.quotationNo}.pdf`, // Changed from invoiceFile
       items: q.items || []
     }));
 
     const mappedInvoices = invoices.map(inv => ({
       _id: inv._id,
-      invoiceNo: inv.invoiceNo,
+      documentNo: inv.invoiceNo, // Changed from invoiceNo
       requestId: inv.requestId,
       amount: inv.amount,
       status: inv.status,
       date: new Date(inv.createdAt).toLocaleDateString(),
       type: 'Invoice',
-      invoiceFile: inv.invoiceFile || `/invoices/${inv.invoiceNo}.pdf`,
+      documentFile: inv.invoiceFile || `/invoices/${inv.invoiceNo}.pdf`, // Changed from invoiceFile
       items: inv.items || []
     }));
 

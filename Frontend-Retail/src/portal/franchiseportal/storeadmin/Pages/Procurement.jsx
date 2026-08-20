@@ -282,12 +282,13 @@ export default function Procurement() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 text-slate-500 text-xs uppercase">
-                <th className="px-4 py-3">Request ID</th>
-                <th className="px-4 py-3">Invoice No</th>
-                <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3 text-left">Request ID</th>
+                <th className="px-4 py-3 text-left">Document ID</th>
+                <th className="px-4 py-3 text-left">Type</th>
+                <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-right">Amount</th>
                 <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-center">Invoice</th>
+                <th className="px-4 py-3 text-center">Document</th>
                 <th className="px-4 py-3 text-center">Action</th>
               </tr>
             </thead>
@@ -295,7 +296,12 @@ export default function Procurement() {
               {b2bInvoices.map(inv => (
                 <tr key={inv._id || inv.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 text-sm text-slate-600">{inv.requestId || 'N/A'}</td>
-                  <td className="px-4 py-3 font-semibold text-slate-800">{inv.invoiceNo || inv.id}</td>
+                  <td className="px-4 py-3 font-semibold text-slate-800">{inv.documentNo || inv.invoiceNo || inv.id}</td>
+                  <td className="px-4 py-3 text-sm font-medium">
+                    <span className={`px-2 py-1 rounded-full text-[10px] uppercase ${inv.type === 'Quotation' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                      {inv.type || 'Invoice'}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-sm">{inv.date || new Date(inv.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-right font-medium text-rose-600">₹{inv.amount.toLocaleString()}</td>
                   <td className="px-4 py-3 text-center">

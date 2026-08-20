@@ -140,7 +140,9 @@ export default function AdminLayout() {
               <Menu size={24} />
             </button>
             <h2 className="text-lg md:text-xl font-semibold text-slate-800 hidden sm:block">
-              Welcome back, Super Admin
+              Welcome back, {user?.role === 'account_manager' ? 'Account Manager' : 
+                             user?.role === 'inventory_manager' ? 'Inventory Manager' : 
+                             user?.role === 'finance_manager' ? 'Finance Manager' : 'Super Admin'}
             </h2>
             <div className="relative ml-4 hidden md:block">
               <button
@@ -210,7 +212,8 @@ export default function AdminLayout() {
                 <div className="text-sm hidden md:block">
                   <p className="font-semibold text-slate-700">
                     {user?.role === 'account_manager' ? 'Account Manager' : 
-                     user?.role === 'inventory_manager' ? 'Inventory Manager' : 'System Admin'}
+                     user?.role === 'inventory_manager' ? 'Inventory Manager' : 
+                     user?.role === 'finance_manager' ? 'Finance Manager' : 'Super Admin'}
                   </p>
                   <p className="text-slate-500 text-xs">ID: {user?.userId || 'admin123'}</p>
                 </div>
