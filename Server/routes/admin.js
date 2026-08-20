@@ -53,16 +53,44 @@ router.get('/dashboard', async (req, res) => {
     const totalInventoryItems = productStats[0]?.totalInventoryItems || 0;
     const totalInventoryValue = productStats[0]?.totalInventoryValue || 0;
 
-    const invoiceStats = await Invoice.aggregate([
-      { $match: { paymentStatus: 'Paid' } },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$amount" }
-        }
+    // Calculate Total Revenue, COGS, and Net Profit
+    const invoices = await Invoice.find({ paymentStatus: 'Paid' }).populate('items.productId').lean();
+    const b2bInvoices = await require('../models/B2BInvoice').find({ status: { $in: ['Paid', 'DISPATCHED'] } }).lean();
+    const orders = await require('../models/Order').find({ paymentStatus: 'Paid' }).lean();
+    
+    let totalRevenue = 0;
+    let totalCogs = 0;
+
+    // Retail Invoices
+    invoices.forEach(inv => {
+      totalRevenue += inv.amount || 0;
+      if (inv.items && Array.isArray(inv.items)) {
+        inv.items.forEach(item => {
+          let bp = item.productId?.buyingPrice || (item.unitPrice * 0.7) || 0;
+          totalCogs += bp * (item.quantity || 0);
+        });
       }
-    ]);
-    const totalRevenue = invoiceStats[0]?.totalRevenue || 0;
+    });
+
+    // B2B Invoices (Franchise)
+    b2bInvoices.forEach(inv => {
+      let rev = inv.amount || 0;
+      totalRevenue += rev;
+      totalCogs += rev * 0.7; // Approximation for B2B COGS
+    });
+
+    // Channel Orders
+    orders.forEach(ord => {
+      totalRevenue += ord.totalAmount || 0;
+      if (ord.items && Array.isArray(ord.items)) {
+        ord.items.forEach(item => {
+           let bp = (item.unitPrice || 0) * 0.7; // Approximation for Channel B2B COGS
+           totalCogs += bp * (item.quantity || 0);
+        });
+      }
+    });
+
+    const netProfit = totalRevenue - totalCogs;
 
     // Generate real 7-day trailing data for sparklines
     const sevenDaysAgo = new Date();
@@ -119,6 +147,7 @@ router.get('/dashboard', async (req, res) => {
       totalInventoryItems,
       totalInventoryValue,
       totalRevenue,
+      netProfit,
       userSparkline,
       distributedCreditSparkline,
       usedCreditSparkline,
@@ -326,10 +355,10 @@ router.get('/orders', async (req, res) => {
         paymentStatus,
         status: pr.status === 'PENDING' ? 'Pending' :
           pr.status === 'PAYMENT_REJECTED' ? 'Declined' :
-            pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
-              pr.status === 'APPROVED' ? 'Processing' :
-                pr.status === 'DISPATCHED' ? 'Dispatched' :
-                  pr.status === 'DELIVERED' ? 'Delivered' : pr.status
+          pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
+          (pr.status === 'APPROVED' || pr.status === 'Paid') ? 'Processing' :
+              pr.status === 'DISPATCHED' ? 'Dispatched' :
+                pr.status === 'DELIVERED' ? 'Delivered' : pr.status
       };
     });
 
@@ -413,8 +442,30 @@ router.patch('/orders/:id/status', async (req, res) => {
 
         if (product) {
           product.quantity = Math.max(0, product.quantity - item.quantity);
-          product.availableStock = Math.max(0, product.availableStock - item.quantity);
+          product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.quantity);
           await product.save();
+          
+          // Add to Channel Partner's local inventory
+          const localProduct = await Product.findOne({ storeId: order.userId, model: product.model, brand: product.brand });
+          if (localProduct) {
+            localProduct.quantity += item.quantity;
+            localProduct.availableStock += item.quantity;
+            await localProduct.save();
+          } else {
+            const newLocalProduct = new Product({
+              storeId: order.userId,
+              name: product.name,
+              brand: product.brand,
+              category: product.category,
+              model: product.model,
+              specs: product.specs,
+              quantity: item.quantity,
+              availableStock: item.quantity,
+              sellingPrice: product.sellingPrice,
+              buyingPrice: product.sellingPrice
+            });
+            await newLocalProduct.save();
+          }
         }
       }
     }
@@ -534,6 +585,35 @@ router.post('/procurement-requests/:id/approve', async (req, res) => {
     });
     await quotation.save();
 
+    // HARD ALLOCATION: Reserve stock when quotation is sent
+    const GlobalProduct = require('../models/GlobalProduct');
+    for (const item of request.items) {
+      if (!item.hardwareType) continue;
+      const productName = item.hardwareType === 'Others' ? item.otherType : item.hardwareType;
+      
+      let product;
+      if (item.model) {
+        product = await GlobalProduct.findOne({ brand: item.brand, model: item.model });
+      }
+      if (!product && item.specs) {
+        const modelSpec = item.specs.model || item.specs.Model;
+        if (modelSpec) {
+          product = await GlobalProduct.findOne({ brand: item.brand, model: modelSpec });
+        }
+      }
+      if (!product) {
+        product = await GlobalProduct.findOne({ brand: item.brand, name: item.hardwareType });
+      }
+      if (!product) {
+        product = await GlobalProduct.findOne({ brand: item.brand, category: item.hardwareType });
+      }
+      
+      if (product) {
+        product.availableStock = Math.max(0, product.availableStock - item.quantity);
+        product.reservedStock = (product.reservedStock || 0) + item.quantity;
+        await product.save();
+      }
+    }
     res.json({ message: 'Quotation sent successfully', request, quotation });
   } catch (error) {
     console.error('Error approving procurement request:', error);
@@ -616,8 +696,30 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
 
         if (product) {
           product.quantity = Math.max(0, product.quantity - item.quantity);
-          product.availableStock = Math.max(0, product.availableStock - item.quantity);
+          product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.quantity);
           await product.save();
+          
+          // Add to Franchise's local inventory
+          const localProduct = await Product.findOne({ storeId: request.storeId, model: product.model, brand: product.brand });
+          if (localProduct) {
+            localProduct.quantity += item.quantity;
+            localProduct.availableStock += item.quantity;
+            await localProduct.save();
+          } else {
+            const newLocalProduct = new Product({
+              storeId: request.storeId,
+              name: product.name,
+              brand: product.brand,
+              category: product.category,
+              model: product.model,
+              specs: product.specs,
+              quantity: item.quantity,
+              availableStock: item.quantity,
+              sellingPrice: product.sellingPrice,
+              buyingPrice: product.sellingPrice // Buying price is what they bought it for (which was selling price of Global)
+            });
+            await newLocalProduct.save();
+          }
         }
       }
     }
@@ -726,6 +828,7 @@ router.post('/orders/:id/invoice', async (req, res) => {
       await invoice.save();
 
       order.status = 'Processing'; // Move forward
+      order.invoiceSent = true; // Mark invoice as sent
       await order.save();
 
       // Ensure RFP is also 'Approved' or something similar
@@ -1023,7 +1126,7 @@ router.put('/entities/:userId/status', async (req, res) => {
 });
 
 // GET /api/admin/catalog
-router.get('/catalog', inventoryAuth, async (req, res) => {
+router.get('/catalog', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IndianRupee, Clock, Search, X, CheckCircle, XCircle, FileText, Image as ImageIcon, Eye } from 'lucide-react';
+import { IndianRupee, Clock, Search, X, CheckCircle, XCircle, FileText, Image as ImageIcon, Eye, List } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AuthContext } from '../../../context/AuthContext';
 import { useContext } from 'react';
@@ -15,6 +15,8 @@ export default function FinanceDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [storeLedger, setStoreLedger] = useState([]);
+  const [loadingLedger, setLoadingLedger] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -201,9 +203,18 @@ export default function FinanceDashboard() {
                       {payment.status === 'Paid' ? (
                         <>
                           <button 
-                            onClick={() => {
+                            onClick={async () => {
                               setSelectedPayment(payment);
                               setIsModalOpen(true);
+                              setLoadingLedger(true);
+                              try {
+                                const res = await axios.get(`/api/franchise/${payment.storeId}/wallet`);
+                                setStoreLedger(res.data.data || []);
+                              } catch(e) {
+                                setStoreLedger([]);
+                              } finally {
+                                setLoadingLedger(false);
+                              }
                             }}
                             className="p-1.5 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
                             title="View Payment Details"
@@ -257,12 +268,22 @@ export default function FinanceDashboard() {
                             <XCircle className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={() => {
+                            onClick={async () => {
                               setSelectedPayment(payment);
                               setIsModalOpen(true);
+                              setLoadingLedger(true);
+                              try {
+                                const res = await axios.get(`/api/franchise/${payment.storeId}/wallet`);
+                                setStoreLedger(res.data.data || []);
+                              } catch(e) {
+                                setStoreLedger([]);
+                              } finally {
+                                setLoadingLedger(false);
+                              }
                             }}
-                            className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm text-sm ml-2"
+                            className="px-4 py-1.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-all shadow-sm flex items-center gap-2"
                           >
+                            <Eye className="w-4 h-4" />
                             Review
                           </button>
                         </div>
@@ -380,6 +401,38 @@ export default function FinanceDashboard() {
                     </div>
                   )}
                 </div>
+
+                <div className="mt-8 pt-6 border-t border-slate-100">
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <List className="w-4 h-4" />
+                    Store Credit Ledger
+                  </div>
+                  {loadingLedger ? (
+                    <div className="text-center text-slate-400 py-4 text-sm font-medium">Loading ledger...</div>
+                  ) : storeLedger.length === 0 ? (
+                    <div className="text-center text-slate-400 py-4 text-sm font-medium">No ledger history found</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {storeLedger.slice(0, 5).map((txn, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                          <div>
+                            <div className="font-semibold text-sm text-slate-800">{txn.description || txn.txnId}</div>
+                            <div className="text-xs text-slate-500">{new Date(txn.date).toLocaleDateString()} &middot; {txn.type}</div>
+                          </div>
+                          <div className={`font-bold ${txn.type === 'Credit In' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {txn.type === 'Credit In' ? '+' : '-'}{formatCurrency(txn.amount)}
+                          </div>
+                        </div>
+                      ))}
+                      {storeLedger.length > 5 && (
+                         <div className="text-center text-xs text-slate-400 font-medium pt-2">
+                            Showing 5 of {storeLedger.length} transactions
+                         </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
               </div>
 
               {/* Footer */}

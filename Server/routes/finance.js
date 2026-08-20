@@ -28,21 +28,21 @@ router.get('/pending-payments', financeAuth, async (req, res) => {
       _id: o._id,
       transactionId: o.orderNumber,
       orderType: 'Channel Order',
-      date: o.transactionDate || o.createdAt,
+      date: o.transactionDate || o.updatedAt,
       amount: o.totalAmount,
       utrNumber: o.utrNumber,
       receiptUrl: o.receiptUrl,
       paymentMethod: o.paymentMethod,
       status: o.paymentStatus,
       storeId: o.userId || 'N/A',
-      invoiceSent: true // Hide Send Invoice button so Admin handles it in Global Orders
+      invoiceSent: o.invoiceSent || false
     }));
 
     const formattedQuotations = quotations.map(q => ({
       _id: q._id,
       transactionId: q.quotationNo,
       orderType: 'Franchise Quotation Order',
-      date: q.transactionDate || q.createdAt,
+      date: q.transactionDate || q.updatedAt,
       amount: q.amount,
       utrNumber: q.utrNumber,
       receiptUrl: '', // Assuming Quotation doesn't have receiptUrl
@@ -67,10 +67,7 @@ router.get('/pending-payments', financeAuth, async (req, res) => {
     }));
 
     const allPayments = [...formattedOrders, ...formattedQuotations, ...formattedInvoices].sort((a, b) => {
-      const aPending = (a.status === 'Pending Verification' || a.status === 'Payment Verification') ? 2 : (a.status === 'Rejected' ? 1 : 0);
-      const bPending = (b.status === 'Pending Verification' || b.status === 'Payment Verification') ? 2 : (b.status === 'Rejected' ? 1 : 0);
-      if (aPending !== bPending) return bPending - aPending; // Pending Verification first, then Rejected, then Paid
-      return new Date(b.date) - new Date(a.date); // Then sort by date descending
+      return new Date(b.date) - new Date(a.date);
     });
 
     const paginatedPayments = allPayments.slice(skip, skip + limit);

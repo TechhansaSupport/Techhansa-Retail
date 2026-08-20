@@ -489,6 +489,30 @@ router.post('/orders', async (req, res) => {
     });
 
     await newOrder.save();
+
+    // HARD ALLOCATION: Reserve stock when Order is placed
+    const GlobalProduct = require('../models/GlobalProduct');
+    const Quotation = require('../models/Quotation');
+    const quotation = quotationReference ? await Quotation.findById(quotationReference).populate('rfpReference') : null;
+    const rfpProducts = quotation?.rfpReference?.products || [];
+    for (const p of rfpProducts) {
+      if (!p.brand || (!p.model && !p.category)) continue;
+      
+      let product;
+      if (p.model) {
+        product = await GlobalProduct.findOne({ brand: p.brand, model: p.model });
+      }
+      if (!product && p.category) {
+        product = await GlobalProduct.findOne({ name: p.category });
+      }
+      
+      if (product) {
+        product.availableStock = Math.max(0, product.availableStock - p.quantity);
+        product.reservedStock = (product.reservedStock || 0) + p.quantity;
+        await product.save();
+      }
+    }
+
     res.status(201).json(newOrder);
 
   } catch (error) {

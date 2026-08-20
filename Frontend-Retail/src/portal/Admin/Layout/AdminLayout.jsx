@@ -38,7 +38,7 @@ export default function AdminLayout() {
     { name: 'Audit Logs', path: '/admin/audit', icon: <FileText size={20} /> },
   ].filter(item => {
     if (user?.role === 'account_manager') {
-      return item.name === 'Global Orders' || item.name === 'Audit Logs';
+      return item.name === 'Global Orders' || item.name === 'Audit Logs' || item.name === 'Inventory';
     }
     if (user?.role === 'inventory_manager') {
       return item.name === 'Inventory' || item.name === 'Audit Logs';
@@ -140,9 +140,18 @@ export default function AdminLayout() {
               <Menu size={24} />
             </button>
             <h2 className="text-lg md:text-xl font-semibold text-slate-800 hidden sm:block">
-              Welcome back, {user?.role === 'account_manager' ? 'Account Manager' : 
-                             user?.role === 'inventory_manager' ? 'Inventory Manager' : 
-                             user?.role === 'finance_manager' ? 'Finance Manager' : 'Super Admin'}
+              {(() => {
+                if (location.pathname === '/admin' || location.pathname === '/admin/') return 'Super Admin Dashboard';
+                if (location.pathname.includes('/admin/finance')) return 'Finance Dashboard';
+                if (location.pathname.includes('/admin/catalog')) return 'Inventory Dashboard';
+                if (location.pathname.includes('/admin/entities')) return 'Account Management';
+                if (location.pathname.includes('/admin/orders')) return 'Global Orders';
+                if (location.pathname.includes('/admin/audit')) return 'Audit Logs';
+                
+                return `Welcome back, ${user?.role === 'account_manager' ? 'Account Manager' : 
+                                      user?.role === 'inventory_manager' ? 'Inventory Manager' : 
+                                      user?.role === 'finance_manager' ? 'Finance Manager' : 'Super Admin'}`;
+              })()}
             </h2>
             <div className="relative ml-4 hidden md:block">
               <button
