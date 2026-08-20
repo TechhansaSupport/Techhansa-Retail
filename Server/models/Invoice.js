@@ -21,9 +21,15 @@ const InvoiceSchema = new mongoose.Schema({
   items: [{
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
     name: String,
-
+    productName: String,
+    brand: String,
+    model: String,
+    configuration: String,
     quantity: Number,
     sellingPrice: Number,
+    unitPrice: Number,
+    hsn: String,
+    taxRate: { type: Number, default: 18 },
     serialNumbers: [String]
   }],
   taxBreakdown: [{
