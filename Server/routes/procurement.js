@@ -12,7 +12,9 @@ const Invoice = require('../models/Invoice');
 router.get('/invoices', async (req, res) => {
   try {
     if (!req.query.userId) return res.json([]);
-    const invoices = await Invoice.find({ userId: req.query.userId }).sort({ createdAt: -1 });
+    const invoices = await Invoice.find({ userId: req.query.userId })
+      .populate('orderReference')
+      .sort({ createdAt: -1 });
     res.json(invoices);
   } catch (error) {
     console.error('Error fetching invoices:', error);
@@ -77,6 +79,24 @@ router.post('/rfp', async (req, res) => {
 
     if (newRFP.status !== 'Draft') {
       // Create placeholder Quotation
+      // Build items array from RFP products
+      const mappedItems = (newRFP.products || []).map(p => {
+        const rate = p.price || 0; 
+        const gstAmount = rate * 0.18;
+        const totalAmount = rate + gstAmount;
+        return {
+          productName: p.category || '',
+          brand: p.brand || '',
+          model: p.model || '',
+          configuration: p.configuration || '',
+          quantity: p.quantity || 1,
+          unitPrice: rate,
+          totalAmount: totalAmount,
+          hsn: p.hsn || '-',
+          taxRate: p.taxRate || 18
+        };
+      });
+
       const newQuotation = new Quotation({
         quotationNo: `QT-${newRFP.rfpId}`,
         rfpReference: newRFP._id,
@@ -84,7 +104,8 @@ router.post('/rfp', async (req, res) => {
         amount: 0,
         validUntil: newRFP.expectedDeliveryDate,
         status: 'Pending',
-        userId: newRFP.userId
+        userId: newRFP.userId,
+        items: mappedItems
       });
       await newQuotation.save();
 
@@ -95,27 +116,10 @@ router.post('/rfp', async (req, res) => {
         expectedDelivery: newRFP.expectedDeliveryDate,
         status: 'Pending',
         totalAmount: req.body.estimatedTotal || 0,
-        userId: newRFP.userId
+        userId: newRFP.userId,
+        items: mappedItems
       });
       await newOrder.save();
-
-      // Build productDetails from RFP products
-      const productDetails = (newRFP.products || []).map(p => {
-        const rate = 0; // Placeholder — updated when quotation is approved
-        const gstAmount = rate * 0.18;
-        const totalAmount = rate + gstAmount;
-        return {
-          productName: p.category || '',
-          brand: p.brand || '',
-          model: p.model || '',
-          configuration: p.configuration || '',
-          serialNumber: '',
-          rate,
-          gstAmount,
-          totalAmount
-        };
-      });
-
     }
 
     res.status(201).json(newRFP);
