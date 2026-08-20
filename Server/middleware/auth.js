@@ -44,4 +44,28 @@ const verifyAdminToken = (req, res, next) => {
   }
 };
 
-module.exports = { verifyToken, verifyAdminToken };
+const requireRoles = (allowedRoles) => {
+  return (req, res, next) => {
+    try {
+      let token = req.headers.authorization;
+      if (!token) return res.status(401).json({ message: 'Access Denied: No token provided' });
+
+      if (token.startsWith('Bearer ')) {
+        token = token.slice(7, token.length).trimLeft();
+      }
+
+      const verified = jwt.verify(token, JWT_SECRET);
+      req.user = verified;
+
+      if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({ message: 'Access Denied: Insufficient Role Permissions' });
+      }
+
+      next();
+    } catch (error) {
+      res.status(403).json({ message: 'Invalid or Expired Token' });
+    }
+  };
+};
+
+module.exports = { verifyToken, verifyAdminToken, requireRoles };

@@ -16,17 +16,24 @@ export default function FinanceDashboard() {
   
   const [isProcessing, setIsProcessing] = useState(false);
   
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit] = useState(20);
+
   const { user } = useContext(AuthContext) || { user: null };
 
   useEffect(() => {
-    fetchPayments();
-  }, []);
+    fetchPayments(currentPage);
+  }, [currentPage]);
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (page = 1) => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/finance/pending-payments');
-      setPayments(res.data);
+      const res = await axios.get(`/api/finance/pending-payments?page=${page}&limit=${limit}`);
+      setPayments(res.data.payments || res.data);
+      if (res.data.totalPages) {
+        setTotalPages(res.data.totalPages);
+      }
     } catch (error) {
       console.error('Failed to fetch payments', error);
       toast.error('Failed to load pending payments');
@@ -84,48 +91,48 @@ export default function FinanceDashboard() {
     <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen">
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3 mb-2">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3 mb-2">
             <IndianRupee className="w-8 h-8 text-emerald-600" />
             Payment Approvals
           </h1>
-          <p className="text-gray-500 font-medium">Verify UTR and approve pending transactions</p>
+          <p className="text-slate-500 font-medium">Verify UTR and approve pending transactions</p>
         </div>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
             <Clock className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Pending Approvals</div>
-            <div className="text-2xl font-black text-gray-900">{payments.length}</div>
+            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Pending Approvals</div>
+            <div className="text-2xl font-black text-slate-900">{payments.length}</div>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
             <IndianRupee className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Total Value Pending</div>
-            <div className="text-2xl font-black text-gray-900">
+            <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Value Pending</div>
+            <div className="text-2xl font-black text-slate-900">
               {formatCurrency(payments.reduce((acc, p) => acc + p.amount, 0))}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row gap-4 justify-between items-center">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input 
               type="text" 
               placeholder="Search by ID, UTR or Store ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
             />
           </div>
         </div>
@@ -133,7 +140,7 @@ export default function FinanceDashboard() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-bold">
+              <tr className="bg-slate-50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-bold">
                 <th className="p-4 pl-6 whitespace-nowrap">Transaction ID</th>
                 <th className="p-4 whitespace-nowrap">Date</th>
                 <th className="p-4 whitespace-nowrap">Origin</th>
@@ -146,25 +153,25 @@ export default function FinanceDashboard() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-gray-400 font-medium">Loading payments...</td>
+                  <td colSpan="7" className="p-8 text-center text-slate-400 font-medium">Loading payments...</td>
                 </tr>
               ) : filteredPayments.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="p-8 text-center">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <CheckCircle className="w-8 h-8 text-gray-300" />
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <CheckCircle className="w-8 h-8 text-slate-300" />
                     </div>
-                    <p className="text-gray-500 font-medium">No pending payments to review!</p>
+                    <p className="text-slate-500 font-medium">No pending payments to review!</p>
                   </td>
                 </tr>
               ) : (
                 filteredPayments.map((payment) => (
-                  <tr key={payment._id} className="hover:bg-gray-50/50 transition-colors group">
+                  <tr key={payment._id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="p-4 pl-6">
-                      <div className="font-bold text-gray-900">{payment.transactionId}</div>
-                      <div className="text-xs text-gray-500">{payment.storeId}</div>
+                      <div className="font-bold text-slate-900">{payment.transactionId}</div>
+                      <div className="text-xs text-slate-500">{payment.storeId}</div>
                     </td>
-                    <td className="p-4 text-sm text-gray-600">
+                    <td className="p-4 text-sm text-slate-600">
                       {new Date(payment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="p-4">
@@ -177,18 +184,18 @@ export default function FinanceDashboard() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-700">
-                        <FileText className="w-4 h-4 text-gray-400" />
+                      <span className="inline-flex items-center gap-1 text-sm font-medium text-slate-700">
+                        <FileText className="w-4 h-4 text-slate-400" />
                         {payment.paymentMethod}
                       </span>
                     </td>
                     <td className="p-4">
-                      <div className="font-mono text-sm text-gray-800 bg-gray-100 px-2 py-1 rounded inline-block">
+                      <div className="font-mono text-sm text-slate-800 bg-slate-100 px-2 py-1 rounded inline-block">
                         {payment.utrNumber}
                       </div>
                     </td>
                     <td className="p-4 text-right">
-                      <div className="font-bold text-gray-900">{formatCurrency(payment.amount)}</div>
+                      <div className="font-bold text-slate-900">{formatCurrency(payment.amount)}</div>
                     </td>
                     <td className="p-4 pr-6 text-right flex justify-end gap-2 items-center">
                       {payment.status === 'Paid' ? (
@@ -198,7 +205,7 @@ export default function FinanceDashboard() {
                               setSelectedPayment(payment);
                               setIsModalOpen(true);
                             }}
-                            className="p-1.5 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
+                            className="p-1.5 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
                             title="View Payment Details"
                           >
                             <Eye className="w-5 h-5" />
@@ -226,7 +233,7 @@ export default function FinanceDashboard() {
                               setSelectedPayment(payment);
                               setIsModalOpen(true);
                             }}
-                            className="p-1.5 text-gray-500 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors border border-transparent hover:border-rose-100"
+                            className="p-1.5 text-slate-500 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors border border-transparent hover:border-rose-100"
                             title="View Payment Details"
                           >
                             <Eye className="w-5 h-5" />
@@ -234,17 +241,17 @@ export default function FinanceDashboard() {
                           <span className="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full">Rejected</span>
                         </>
                       ) : (
-                        <div className="flex items-center gap-2 justify-end">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button 
                             onClick={() => handleAction('approve', payment)}
-                            className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-100 hover:border-emerald-200"
+                            className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all border border-emerald-100 hover:border-emerald-200 hover:scale-105"
                             title="Quick Approve"
                           >
                             <CheckCircle className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleAction('reject', payment)}
-                            className="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition-colors border border-rose-100 hover:border-rose-200"
+                            className="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition-all border border-rose-100 hover:border-rose-200 hover:scale-105"
                             title="Quick Reject"
                           >
                             <XCircle className="w-4 h-4" />
@@ -254,7 +261,7 @@ export default function FinanceDashboard() {
                               setSelectedPayment(payment);
                               setIsModalOpen(true);
                             }}
-                            className="px-4 py-1.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm text-sm ml-1"
+                            className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm text-sm ml-2"
                           >
                             Review
                           </button>
@@ -267,6 +274,31 @@ export default function FinanceDashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50 rounded-b-2xl">
+            <span className="text-sm text-slate-500 font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Review Modal */}
@@ -277,24 +309,24 @@ export default function FinanceDashboard() {
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
               onClick={() => setIsModalOpen(false)}
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200"
             >
               {/* Header */}
-              <div className="p-6 border-b border-gray-100 flex items-start justify-between bg-gray-50/50">
+              <div className="p-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">Verify Payment</h2>
-                  <p className="text-sm text-gray-500">Review the UTR and receipt to approve or reject this transaction.</p>
+                  <h2 className="text-xl font-bold text-slate-900 mb-1">Verify Payment</h2>
+                  <p className="text-sm text-slate-500">Review the UTR and receipt to approve or reject this transaction.</p>
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-gray-400 hover:bg-gray-200 hover:text-gray-600 rounded-xl transition-colors"
+                  className="p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-600 rounded-xl transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -304,20 +336,20 @@ export default function FinanceDashboard() {
               <div className="p-6 overflow-y-auto">
                 <div className="grid grid-cols-2 gap-6 mb-8">
                   <div>
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Transaction ID</div>
-                    <div className="font-semibold text-gray-900">{selectedPayment.transactionId}</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Transaction ID</div>
+                    <div className="font-semibold text-slate-900">{selectedPayment.transactionId}</div>
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Amount</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Amount</div>
                     <div className="font-bold text-emerald-600 text-lg">{formatCurrency(selectedPayment.amount)}</div>
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Payment Method</div>
-                    <div className="font-semibold text-gray-900">{selectedPayment.paymentMethod}</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Payment Method</div>
+                    <div className="font-semibold text-slate-900">{selectedPayment.paymentMethod}</div>
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Date</div>
-                    <div className="font-semibold text-gray-900">{new Date(selectedPayment.date).toLocaleString()}</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Date</div>
+                    <div className="font-semibold text-slate-900">{new Date(selectedPayment.date).toLocaleString()}</div>
                   </div>
                   <div className="col-span-2 p-4 bg-yellow-50 border border-yellow-100 rounded-xl">
                     <div className="text-xs font-bold text-yellow-800 uppercase tracking-wider mb-1">UTR / Ref Number</div>
@@ -326,24 +358,24 @@ export default function FinanceDashboard() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" />
                     Uploaded Receipt
                   </div>
                   {selectedPayment.receiptUrl ? (
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-2 bg-gray-50 flex items-center justify-center min-h-[200px]">
+                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center min-h-[200px]">
                       <img 
                         src={selectedPayment.receiptUrl.startsWith('http') ? selectedPayment.receiptUrl : `http://localhost:5000${selectedPayment.receiptUrl}`} 
                         alt="Payment Receipt" 
                         className="max-w-full max-h-[400px] object-contain rounded-lg shadow-sm"
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
                       />
-                      <div className="hidden text-gray-400 font-medium p-8 text-center">
+                      <div className="hidden text-slate-400 font-medium p-8 text-center">
                         Image failed to load
                       </div>
                     </div>
                   ) : (
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 bg-gray-50 flex items-center justify-center text-gray-400 font-medium">
+                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 bg-slate-50 flex items-center justify-center text-slate-400 font-medium">
                       No receipt uploaded
                     </div>
                   )}
@@ -351,11 +383,11 @@ export default function FinanceDashboard() {
               </div>
 
               {/* Footer */}
-              <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 justify-end">
+              <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3 justify-end">
                 {selectedPayment.status === 'Paid' ? (
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                    className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
                   >
                     Close
                   </button>

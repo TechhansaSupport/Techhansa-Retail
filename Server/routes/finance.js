@@ -4,17 +4,25 @@ const Order = require('../models/Order');
 const Quotation = require('../models/Quotation');
 const B2BInvoice = require('../models/B2BInvoice');
 const ProcurementRequest = require('../models/ProcurementRequest');
-const { verifyAdminToken } = require('../middleware/auth');
+const { verifyAdminToken, requireRoles } = require('../middleware/auth');
+
+const financeAuth = requireRoles(['admin', 'finance_manager']);
 
 // GET pending payments
-router.get('/pending-payments', verifyAdminToken, async (req, res) => {
+router.get('/pending-payments', financeAuth, async (req, res) => {
   try {
-    const orders = await Order.find({ paymentStatus: { $in: ['Pending Verification', 'Paid', 'Rejected'] } }).limit(100);
-    const b2bInvoices = await B2BInvoice.find({ status: { $in: ['Payment Verification', 'Paid', 'Rejected'] } }).limit(100);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    // Fetch more than limit just in case, but real pagination across multiple collections is complex.
+    // For now, since we have 3 collections, we'll fetch them, merge, sort, and slice for the specific page.
+    const orders = await Order.find({ paymentStatus: { $in: ['Pending Verification', 'Paid', 'Rejected'] } });
+    const b2bInvoices = await B2BInvoice.find({ status: { $in: ['Payment Verification', 'Paid', 'Rejected'] } });
     const quotations = await Quotation.find({ 
       paymentStatus: { $in: ['Pending Verification', 'Paid', 'Rejected'] },
       procurementReference: { $exists: true, $ne: null }
-    }).limit(100);
+    });
 
     const formattedOrders = orders.map(o => ({
       _id: o._id,
@@ -27,7 +35,7 @@ router.get('/pending-payments', verifyAdminToken, async (req, res) => {
       paymentMethod: o.paymentMethod,
       status: o.paymentStatus,
       storeId: o.userId || 'N/A',
-      invoiceSent: ['Processing', 'Dispatched', 'Out for Delivery', 'Delivered'].includes(o.status)
+      invoiceSent: true // Hide Send Invoice button so Admin handles it in Global Orders
     }));
 
     const formattedQuotations = quotations.map(q => ({
@@ -41,7 +49,7 @@ router.get('/pending-payments', verifyAdminToken, async (req, res) => {
       paymentMethod: q.paymentMethod,
       status: q.paymentStatus,
       storeId: q.storeId || q.userId || 'N/A',
-      invoiceSent: false
+      invoiceSent: true // Hide Send Invoice button for Quotations as they are not supported in /orders/:id/invoice
     }));
 
     const formattedInvoices = b2bInvoices.map(inv => ({
@@ -58,12 +66,21 @@ router.get('/pending-payments', verifyAdminToken, async (req, res) => {
       invoiceSent: inv.invoiceSent || false
     }));
 
-    res.json([...formattedOrders, ...formattedQuotations, ...formattedInvoices].sort((a, b) => {
+    const allPayments = [...formattedOrders, ...formattedQuotations, ...formattedInvoices].sort((a, b) => {
       const aPending = (a.status === 'Pending Verification' || a.status === 'Payment Verification') ? 2 : (a.status === 'Rejected' ? 1 : 0);
       const bPending = (b.status === 'Pending Verification' || b.status === 'Payment Verification') ? 2 : (b.status === 'Rejected' ? 1 : 0);
       if (aPending !== bPending) return bPending - aPending; // Pending Verification first, then Rejected, then Paid
       return new Date(b.date) - new Date(a.date); // Then sort by date descending
-    }));
+    });
+
+    const paginatedPayments = allPayments.slice(skip, skip + limit);
+    const totalPages = Math.ceil(allPayments.length / limit);
+
+    res.json({
+      payments: paginatedPayments,
+      totalPages: totalPages,
+      currentPage: page
+    });
   } catch (error) {
     console.error('Error fetching pending payments:', error);
     res.status(500).json({ error: 'Server Error' });
@@ -71,12 +88,15 @@ router.get('/pending-payments', verifyAdminToken, async (req, res) => {
 });
 
 // POST approve payment
-router.post('/approve/:type/:id', verifyAdminToken, async (req, res) => {
+router.post('/approve/:type/:id', financeAuth, async (req, res) => {
   try {
     const { type, id } = req.params;
     
     if (type === 'Channel Order') {
-      await Order.findByIdAndUpdate(id, { paymentStatus: 'Paid', status: 'Paid' });
+      const order = await Order.findByIdAndUpdate(id, { paymentStatus: 'Paid', status: 'Paid' });
+      if (order && order.quotationReference) {
+        await Quotation.findByIdAndUpdate(order.quotationReference, { paymentStatus: 'Paid' });
+      }
     } else if (type === 'Franchise Quotation Order') {
       const quotation = await Quotation.findByIdAndUpdate(id, { paymentStatus: 'Paid' });
       if (quotation && quotation.procurementReference) {
@@ -101,12 +121,15 @@ router.post('/approve/:type/:id', verifyAdminToken, async (req, res) => {
 });
 
 // POST reject payment
-router.post('/reject/:type/:id', verifyAdminToken, async (req, res) => {
+router.post('/reject/:type/:id', financeAuth, async (req, res) => {
   try {
     const { type, id } = req.params;
     
     if (type === 'Channel Order') {
-      await Order.findByIdAndUpdate(id, { paymentStatus: 'Rejected' });
+      const order = await Order.findByIdAndUpdate(id, { paymentStatus: 'Rejected' });
+      if (order && order.quotationReference) {
+        await Quotation.findByIdAndUpdate(order.quotationReference, { paymentStatus: 'Rejected' });
+      }
     } else if (type === 'Franchise Quotation Order') {
       const quotation = await Quotation.findByIdAndUpdate(id, { paymentStatus: 'Rejected' });
       if (quotation && quotation.procurementReference) {

@@ -39,7 +39,7 @@ export default function Dashboard() {
       try {
         const [statsRes, chartRes] = await Promise.all([
           axios.get(`/api/admin/dashboard`),
-          axios.get(`/api/admin/dashboard/chart`)
+          axios.get(`/api/admin/dashboard/chart?timeRange=${encodeURIComponent(activeRevenueRange)}`)
         ]);
         setStats(statsRes.data);
         setChartData(chartRes.data);
@@ -50,7 +50,7 @@ export default function Dashboard() {
       }
     };
     fetchDashboardData();
-  }, []);
+  }, [activeRevenueRange]);
 
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9'];
 
@@ -86,7 +86,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className={`rounded-2xl p-5 shadow-sm border ${stat.bgBox} relative flex flex-col justify-between overflow-hidden group hover:shadow-md transition-shadow`}
+            className={`rounded-3xl p-6 shadow-sm border ${stat.bgBox} relative flex flex-col justify-between overflow-hidden group hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}
           >
             <div className="flex justify-between items-start mb-1 relative z-10">
               <div>
@@ -126,15 +126,25 @@ export default function Dashboard() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
-          className="lg:col-span-2 bg-white rounded-3xl p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100"
+          className="lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow border border-slate-100 flex flex-col"
         >
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
             <div>
               <h2 className="text-xl font-bold text-slate-800">Consolidated Financial Reporting</h2>
               <p className="text-slate-500 text-sm">Revenue segmentation across quarters</p>
             </div>
+            <select
+              value={activeRevenueRange}
+              onChange={(e) => setActiveRevenueRange(e.target.value)}
+              className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer font-medium"
+            >
+              <option value="7 Days">Last 7 Days</option>
+              <option value="30 Days">Last 30 Days</option>
+              <option value="90 Days">Last 90 Days</option>
+              <option value="1 Year">Last 1 Year</option>
+            </select>
           </div>
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
@@ -161,7 +171,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-3xl p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col"
+          className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow border border-slate-100 flex flex-col"
         >
           <div className="mb-6">
             <h2 className="text-xl font-bold text-slate-800">Global Inventory</h2>
