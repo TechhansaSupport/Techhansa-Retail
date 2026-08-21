@@ -335,10 +335,19 @@ export default function CentralCatalog() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex flex-col items-center gap-1.5">
-                        <span className={`font-black text-lg ${isLowStock ? 'text-rose-600' : 'text-slate-700'}`}>
-                          {item.availableStock}
+                        <span className={`font-black text-lg ${isLowStock ? 'text-rose-600' : 'text-slate-700'}`} title={`Total Physical Stock: ${item.quantity}`}>
+                          {item.quantity}
                         </span>
-                        {isLowStock ? (
+                        {item.reservedStock > 0 ? (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">
+                              {item.availableStock} Avail
+                            </span>
+                            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wide bg-amber-50 px-1.5 rounded">
+                              {item.reservedStock} Rsrvd
+                            </span>
+                          </div>
+                        ) : isLowStock ? (
                           <span className="px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-[10px] font-bold uppercase tracking-wide">
                             Low Stock
                           </span>
@@ -429,11 +438,17 @@ export default function CentralCatalog() {
                 <div className="flex justify-between items-center pt-2">
                   <div className="flex gap-4">
                     <div>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Available</p>
-                      <p className={`font-black text-xl ${isLowStock ? 'text-red-500' : 'text-slate-800'}`}>
-                        {item.availableStock}
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Physical Qty</p>
+                      <p className={`font-black text-xl ${isLowStock ? 'text-red-500' : 'text-slate-800'}`} title={`Total Physical Stock: ${item.quantity}`}>
+                        {item.quantity}
                       </p>
                     </div>
+                    {item.reservedStock > 0 && (
+                      <div>
+                        <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mb-0.5">Reserved</p>
+                        <p className="font-bold text-lg text-amber-600">{item.reservedStock}</p>
+                      </div>
+                    )}
                   </div>
                   
                   <div>

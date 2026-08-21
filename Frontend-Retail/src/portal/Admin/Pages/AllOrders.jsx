@@ -421,11 +421,17 @@ export default function AllOrders() {
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {selectedOrder.items?.map((item, index) => {
-                          const catalogMatch = catalog.find(c => 
-                            c.name?.trim() === (item.hardwareType === 'Other' ? item.otherType : item.hardwareType)?.trim() &&
-                            c.brand?.trim() === item.brand?.trim() &&
-                            c.model?.trim() === item.specs?.Model?.trim()
-                          );
+                          const catalogMatch = catalog.find(c => {
+                            if (c.brand?.trim() !== item.brand?.trim()) return false;
+                            if (item.specs && typeof item.specs === 'object') {
+                              const modelSpec = item.specs.model || item.specs.Model;
+                              if (modelSpec && c.model?.trim() === modelSpec?.trim()) return true;
+                            }
+                            const typeStr = (item.hardwareType === 'Other' ? item.otherType : item.hardwareType)?.trim();
+                            if (c.name?.trim() === typeStr) return true;
+                            if (c.category?.trim() === typeStr) return true;
+                            return false;
+                          });
                           const isWarning = catalogMatch && Number(item.quantity) > Number(catalogMatch.availableStock);
                           const isOutOfStock = catalogMatch && Number(catalogMatch.availableStock) <= 0;
 
