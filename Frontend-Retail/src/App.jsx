@@ -65,6 +65,11 @@ import Profile from './portal/chnnelportal/Pages/Profile';
 import Settings from './portal/chnnelportal/Pages/Settings';
 import Invoices from './portal/chnnelportal/Pages/Invoices';
 
+// WAREHOUSE IMPORTS
+import WarehouseLayout from './portal/warehouseportal/Layout/WarehouseLayout';
+import WarehouseDashboard from './portal/warehouseportal/Pages/WarehouseDashboard';
+import InventoryIntake from './portal/warehouseportal/Pages/InventoryIntake';
+
 
 // --- Scroll To Hash / Top Component ---  
 function ScrollToTop() {
@@ -141,6 +146,16 @@ function App() {
             <Route path="settings" element={<AdminSettings />} />
             <Route path="orders" element={<AllOrders />} />
             <Route path="finance" element={<FinanceDashboard />} />
+          </Route>
+
+          {/* Warehouse Portal */}
+          <Route path="/warehouse" element={
+            <ProtectedRoute allowedRoles={['warehouse_manager', 'admin']}>
+              <WarehouseLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<WarehouseDashboard />} />
+            <Route path="inventory" element={<InventoryIntake />} />
           </Route>
 
           {/* Franchise Portal */}

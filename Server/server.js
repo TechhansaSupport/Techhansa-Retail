@@ -32,6 +32,7 @@ const salesRoute = require('./routes/sales');
 const adminRoute = require('./routes/admin');
 const notificationsRoute = require('./routes/notifications');
 const financeRoute = require('./routes/finance');
+const warehouseRoute = require('./routes/warehouse');
 
 const { verifyToken } = require('./middleware/auth');
 

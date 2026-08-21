@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const globalProductSchema = new mongoose.Schema({
-  serialNumber: { type: String, required: false, sparse: true },
+  serialNumbers: [{ type: String }],
   name: { type: String, required: true },
   brand: { type: String, required: false },
   category: { type: String, required: false },
