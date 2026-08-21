@@ -347,8 +347,15 @@ router.get('/orders', async (req, res) => {
     ]);
 
     const mappedProcurements = procurements.map(pr => {
-      let paymentStatus = pr.status === 'PENDING' ? 'Pending' : (pr.status === 'PAYMENT_VERIFICATION' ? 'Pending Verification' : 'Verified');
-      if (pr.status === 'PAYMENT_REJECTED' || (pr.status === 'PENDING' && pr.quotationPaymentStatus === 'Rejected')) {
+      let paymentStatus = pr.quotationPaymentStatus || 'Pending';
+      if (!pr.quotationPaymentStatus) {
+        paymentStatus = (pr.status === 'PENDING' || pr.status === 'Quotation Sent') ? 'Pending' : 
+                        (pr.status === 'PAYMENT_VERIFICATION' ? 'Pending Verification' : 'Verified');
+      } else if (paymentStatus === 'Paid') {
+        paymentStatus = 'Verified';
+      }
+
+      if (pr.status === 'PAYMENT_REJECTED' || pr.quotationPaymentStatus === 'Rejected') {
         paymentStatus = 'Rejected';
       }
       return {

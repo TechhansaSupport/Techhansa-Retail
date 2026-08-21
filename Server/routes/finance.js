@@ -45,7 +45,7 @@ router.get('/pending-payments', financeAuth, async (req, res) => {
       date: q.transactionDate || q.updatedAt,
       amount: q.amount,
       utrNumber: q.utrNumber,
-      receiptUrl: '', // Assuming Quotation doesn't have receiptUrl
+      receiptUrl: q.receiptUrl || '',
       paymentMethod: q.paymentMethod,
       status: q.paymentStatus,
       storeId: q.storeId || q.userId || 'N/A',
@@ -67,6 +67,12 @@ router.get('/pending-payments', financeAuth, async (req, res) => {
     }));
 
     const allPayments = [...formattedOrders, ...formattedQuotations, ...formattedInvoices].sort((a, b) => {
+      const isAPending = a.status === 'Pending Verification' || a.status === 'Payment Verification';
+      const isBPending = b.status === 'Pending Verification' || b.status === 'Payment Verification';
+      
+      if (isAPending && !isBPending) return -1;
+      if (!isAPending && isBPending) return 1;
+      
       return new Date(b.date) - new Date(a.date);
     });
 

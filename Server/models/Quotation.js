@@ -21,6 +21,7 @@ const QuotationSchema = new mongoose.Schema({
   paymentMethod: { type: String },
   utrNumber: { type: String },
   transactionDate: { type: Date },
+  receiptUrl: { type: String },
   invoiceSent: { type: Boolean, default: false },
   items: [{
     productName: String,

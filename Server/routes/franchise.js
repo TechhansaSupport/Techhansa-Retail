@@ -193,6 +193,17 @@ router.get('/:storeId/profile', async (req, res) => {
   }
 });
 
+// Upload generic file
+router.post('/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No file uploaded' });
+  }
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const baseUrl = `${protocol}://${req.get('host')}`;
+  const fileUrl = `${baseUrl}/uploads/franchise/${req.file.filename}`;
+  res.json({ success: true, url: fileUrl });
+});
+
 // Update Store Profile
 router.put('/:storeId/profile', async (req, res) => {
   try {
@@ -378,6 +389,9 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
         itemToApprove.paymentMethod = paymentMethod;
         itemToApprove.utrNumber = utrNumber;
         itemToApprove.transactionDate = transactionDate;
+        if (receiptUrl) {
+          itemToApprove.receiptUrl = receiptUrl;
+        }
       } else {
         itemToApprove.paymentDetails = {
           method: paymentMethod,
