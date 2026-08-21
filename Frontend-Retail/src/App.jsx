@@ -48,6 +48,7 @@ import EmployeeBilling from './portal/franchiseportal/employeeportal/Pages/Billi
 import EmployeeCart from './portal/franchiseportal/employeeportal/Pages/Cart';
 import EmployeeInventory from './portal/franchiseportal/employeeportal/Pages/Inventory';
 import EmployeeOrders from './portal/franchiseportal/employeeportal/Pages/Orders';
+import EmployeeProfile from './portal/franchiseportal/employeeportal/Pages/Profile';
 import { EmployeeProvider } from './portal/franchiseportal/employeeportal/context/EmployeeContext';
 import ChannelLayout from './portal/chnnelportal/Layout';
 import ChannelDashboard from './portal/chnnelportal/Dashboard';
@@ -175,6 +176,7 @@ function App() {
             <Route path="cart" element={<EmployeeCart />} />
             <Route path="inventory" element={<EmployeeInventory />} />
             <Route path="orders" element={<EmployeeOrders />} />
+            <Route path="profile" element={<EmployeeProfile />} />
           </Route>
 
 

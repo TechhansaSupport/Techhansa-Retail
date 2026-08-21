@@ -441,6 +441,35 @@ router.post('/:storeId/employees', async (req, res) => {
   }
 });
 
+// Update Employee Details
+router.put('/:storeId/employees/:id', async (req, res) => {
+  try {
+    const { name, phone, email, password } = req.body;
+    
+    // Use $or to support both _id (MongoDB ObjectId) and userId (string ID like EMP-001)
+    const employee = await User.findOne({ 
+      $or: [{ _id: req.params.id }, { userId: req.params.id }], 
+      storeId: req.params.storeId, 
+      role: 'employee' 
+    });
+
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    if (name) employee.name = name;
+    if (phone) employee.phone = phone;
+    if (email) employee.email = email;
+    if (password) employee.password = password;
+
+    await employee.save();
+    res.json({ success: true, data: employee });
+  } catch (error) {
+    console.error('Error updating employee:', error);
+    res.status(500).json({ success: false, message: 'Server error updating employee' });
+  }
+});
+
 // Toggle Employee Status
 router.put('/:storeId/employees/:id/status', async (req, res) => {
   try {
