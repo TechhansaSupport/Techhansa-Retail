@@ -227,6 +227,20 @@ export function FranchiseProvider({ children }) {
     }
   };
 
+  const updateEmployee = async (id, employeeData) => {
+    try {
+      const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/employees/${id}`, employeeData);
+      if (res.data.success) {
+        setEmployees(prev => prev.map(emp => (emp._id === id || emp.userId === id || emp.id === id) ? res.data.data : emp));
+        return { success: true };
+      }
+      return { success: false, message: 'Failed to update employee' };
+    } catch (error) {
+      console.error("Failed to update employee", error);
+      return { success: false, message: error.response?.data?.message || 'Server error' };
+    }
+  };
+
   const toggleEmployeeStatus = async (id) => {
     try {
       const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/employees/${id}/status`);
@@ -270,6 +284,7 @@ export function FranchiseProvider({ children }) {
       addInventoryItem,
       updateInventoryItem,
       addEmployee,
+      updateEmployee,
       toggleEmployeeStatus
     }}>
       {children}

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, Bell, User, Receipt, Truck, Menu, X, Wallet, Users, ShoppingBag, ChevronDown, Settings } from 'lucide-react';
+import { LayoutDashboard, Store, Package, ShoppingCart, BarChart3, LogOut, User, Receipt, Truck, Menu, X, Wallet, Users, ShoppingBag, ChevronDown, Settings } from 'lucide-react';
 import { AuthContext } from '../../../../context/AuthContext';
 import { FranchiseContext } from '../context/FranchiseContext';
 import { motion } from 'framer-motion';
@@ -128,7 +128,7 @@ export default function FranchiseLayout() {
               <Menu size={24} />
             </button>
             <h2 className="text-lg md:text-xl font-semibold text-slate-800 hidden sm:block">
-              Welcome back, {user?.userId || 'Partner'}
+              Welcome back, {storeProfileData?.manager || user?.name || user?.userId || 'Partner'}
             </h2>
             <div className="ml-4 hidden md:block">
               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium">
@@ -139,43 +139,7 @@ export default function FranchiseLayout() {
           </div>
           
           <div className="flex items-center gap-4 md:gap-6">
-            <div className="relative">
-              <button 
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-slate-50"
-              >
-                <Bell size={20} />
-                {notifications.some(n => n.unread) && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                )}
-              </button>
-              
-              {isNotificationOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsNotificationOpen(false)}></div>
-                  <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
-                    <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center relative z-50">
-                      <h3 className="font-bold text-slate-800">Notifications</h3>
-                      <button onClick={markAllAsRead} className="text-xs text-indigo-600 font-medium hover:text-indigo-700">Mark all as read</button>
-                    </div>
-                    <div className="max-h-80 overflow-y-auto relative z-50">
-                      {notifications.map((note, index) => (
-                        <div key={note._id || note.id || `notification-${index}`} onClick={() => note.unread && markAsRead(note._id || note.id)} className={`px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer ${note.unread ? 'bg-indigo-50/30' : ''}`}>
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className={`text-sm font-semibold ${note.unread ? 'text-slate-800' : 'text-slate-600'}`}>{note.title}</h4>
-                            <span className="text-[10px] text-slate-400">{note.time}</span>
-                          </div>
-                          <p className="text-xs text-slate-500 line-clamp-2">{note.message}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="px-4 py-2 border-t border-slate-100 text-center relative z-50">
-                      <button className="text-xs text-indigo-600 font-bold hover:text-indigo-700">View All Notifications</button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+
             
             <div className="relative border-l border-slate-200 pl-6">
               <button 
@@ -186,7 +150,7 @@ export default function FranchiseLayout() {
                   <User size={18} />
                 </div>
                 <div className="text-sm hidden md:block">
-                  <p className="font-semibold text-slate-700">Admin</p>
+                  <p className="font-semibold text-slate-700">{storeProfileData?.manager || user?.name || 'Admin'}</p>
                   <p className="text-slate-500 text-xs">ID: {user?.userId}</p>
                 </div>
                 <ChevronDown size={14} className="text-slate-400 hidden md:block" />

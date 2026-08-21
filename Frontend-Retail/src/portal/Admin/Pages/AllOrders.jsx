@@ -13,12 +13,23 @@ export default function AllOrders() {
   const [roleFilter, setRoleFilter] = useState('All');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [catalog, setCatalog] = useState([]);
 
   const { user } = useContext(AuthContext) || { user: null };
 
   useEffect(() => {
     fetchOrders();
+    fetchCatalog();
   }, []);
+
+  const fetchCatalog = async () => {
+    try {
+      const res = await axios.get('/api/admin/catalog?limit=1000');
+      setCatalog(res.data.products || res.data || []);
+    } catch (error) {
+      console.error('Failed to fetch catalog:', error);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -35,6 +46,8 @@ export default function AllOrders() {
 
   const handleViewOrder = async (orderId, orderType) => {
     try {
+      fetchCatalog(); // Ensure catalog is fresh for stock warnings
+      
       if (orderType === 'Franchise Procurement') {
         const res = await axios.get(`/api/admin/procurement-requests/${orderId}`);
         setSelectedOrder({ ...res.data, orderType });
@@ -93,7 +106,12 @@ export default function AllOrders() {
 
   const handleSendToInventory = async (orderId) => {
     try {
-      await axios.post(`/api/admin/orders/${orderId}/invoice`);
+      const targetOrder = orders.find(o => o._id === orderId);
+      if (targetOrder && targetOrder.orderType === 'Franchise Procurement') {
+          await axios.patch(`/api/admin/procurement-requests/${orderId}/status`, { status: 'Processing' });
+      } else {
+          await axios.patch(`/api/admin/orders/${orderId}/status`, { status: 'Processing' });
+      }
       toast.success('Order sent to Inventory Manager successfully');
       fetchOrders();
     } catch (error) {
@@ -254,7 +272,7 @@ export default function AllOrders() {
                     <td className="p-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-slate-700">{order.paymentMethod || 'N/A'}</span>
-                        <span className="text-xs text-slate-500">{order.paymentStatus}</span>
+                        <span className="text-xs text-slate-500">{order.paymentStatus === 'Paid' ? 'Verified' : order.paymentStatus}</span>
                       </div>
                     </td>
                     <td className="p-4">
@@ -290,7 +308,7 @@ export default function AllOrders() {
                           <Eye size={18} />
                         </button>
 
-                        {order.status === 'Paid' && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') && (
+                        {order.status === 'Paid' && (order.orderType === 'Enterprise' || order.orderType === 'Franchise Procurement') && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') && (
                           <button
                             onClick={() => handleSendToInventory(order._id)}
                             className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
@@ -326,14 +344,14 @@ export default function AllOrders() {
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">
                     {getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'Verification Pending'
-                      ? 'Verify Payment'
+                      ? 'Payment Verification Pending'
                       : getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'New Order'
                         ? 'Send Quotation'
                         : 'Order Details'}
                   </h3>
                   <p className="text-sm text-slate-500 mt-1">
                     {getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'Verification Pending'
-                      ? 'Review the payment details and confirm.'
+                      ? 'This order is currently awaiting payment verification by the Finance Department.'
                       : getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'New Order'
                         ? 'Review the order and confirm the final quotation amount.'
                         : 'View the complete details of this order.'}
@@ -372,7 +390,7 @@ export default function AllOrders() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 text-sm font-medium">Payment Status</span>
-                      <span className="text-slate-700 text-sm font-bold">{selectedOrder.paymentStatus}</span>
+                      <span className="text-slate-700 text-sm font-bold">{selectedOrder.paymentStatus === 'Paid' ? 'Verified' : selectedOrder.paymentStatus}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 text-sm font-medium">Payment Method</span>
@@ -402,7 +420,22 @@ export default function AllOrders() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {selectedOrder.items?.map((item, index) => (
+                        {selectedOrder.items?.map((item, index) => {
+                          const catalogMatch = catalog.find(c => {
+                            if (c.brand?.trim() !== item.brand?.trim()) return false;
+                            if (item.specs && typeof item.specs === 'object') {
+                              const modelSpec = item.specs.model || item.specs.Model;
+                              if (modelSpec && c.model?.trim() === modelSpec?.trim()) return true;
+                            }
+                            const typeStr = (item.hardwareType === 'Other' ? item.otherType : item.hardwareType)?.trim();
+                            if (c.name?.trim() === typeStr) return true;
+                            if (c.category?.trim() === typeStr) return true;
+                            return false;
+                          });
+                          const isWarning = catalogMatch && Number(item.quantity) > Number(catalogMatch.availableStock);
+                          const isOutOfStock = catalogMatch && Number(catalogMatch.availableStock) <= 0;
+
+                          return (
                           <tr key={index} className="hover:bg-slate-50/50">
                             <td className="px-4 py-3 font-semibold text-slate-700 text-sm">
                               {item.hardwareType === 'Other' ? item.otherType : item.hardwareType}
@@ -421,10 +454,15 @@ export default function AllOrders() {
                               {item.comments && (
                                 <p className="text-xs text-amber-600 mt-1 line-clamp-1 italic">"{item.comments}"</p>
                               )}
+                              {catalogMatch && isWarning && (
+                                <p className="text-xs text-red-600 mt-1 font-semibold flex items-center gap-1">
+                                  ⚠️ {isOutOfStock ? 'Out of stock' : `Only ${catalogMatch.availableStock} in stock`}
+                                </p>
+                              )}
                             </td>
                             <td className="px-4 py-3 text-sm font-bold text-slate-700 text-right">{item.quantity}</td>
                           </tr>
-                        ))}
+                        )})}
                       </tbody>
                     </table>
                   </div>
@@ -442,16 +480,29 @@ export default function AllOrders() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {selectedOrder.quotationReference.rfpReference.products.map((item, index) => (
+                        {selectedOrder.quotationReference.rfpReference.products.map((item, index) => {
+                          const catalogMatch = catalog.find(c => 
+                            c.brand?.trim() === item.brand &&
+                            c.model?.trim() === item.model
+                          );
+                          const isWarning = catalogMatch && item.quantity > catalogMatch.availableStock;
+                          const isOutOfStock = catalogMatch && catalogMatch.availableStock <= 0;
+
+                          return (
                           <tr key={index} className="hover:bg-slate-50/50">
                             <td className="px-4 py-3">
                               <p className="font-semibold text-slate-700 text-sm">{item.brand} {item.model}</p>
                               <p className="text-xs text-slate-500 line-clamp-1">{item.configuration}</p>
+                              {catalogMatch && isWarning && (
+                                <p className="text-xs text-red-600 mt-1 font-semibold flex items-center gap-1">
+                                  ⚠️ {isOutOfStock ? 'Out of stock' : `Only ${catalogMatch.availableStock} in stock`}
+                                </p>
+                              )}
                             </td>
                             <td className="px-4 py-3 text-sm text-slate-600">{item.category}</td>
                             <td className="px-4 py-3 text-sm font-bold text-slate-700 text-right">{item.quantity} {item.unit}</td>
                           </tr>
-                        ))}
+                        )})}
                       </tbody>
                     </table>
                   </div>
@@ -471,22 +522,7 @@ export default function AllOrders() {
                   >
                     Confirm & Send Quotation
                   </button>
-                ) : getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'Verification Pending' ? (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleUpdateStatus(selectedOrder._id, 'Declined')}
-                      className="px-6 py-2 bg-rose-50 text-rose-600 font-medium rounded-lg hover:bg-rose-100 transition-colors whitespace-nowrap"
-                    >
-                      Decline
-                    </button>
-                    <button
-                      onClick={() => handleConfirmPayment(selectedOrder._id)}
-                      className="px-6 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors whitespace-nowrap"
-                    >
-                      Verify Payment
-                    </button>
-                  </div>
-                ) : selectedOrder.status === 'Paid' && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') ? (
+                ) : selectedOrder.status === 'Paid' && (selectedOrder.orderType === 'Enterprise' || selectedOrder.orderType === 'Franchise Procurement') && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') ? (
                   <button
                     onClick={() => handleSendToInventory(selectedOrder._id)}
                     className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap"

@@ -59,6 +59,7 @@ export default function Dashboard() {
     { title: "Distributed Credit", value: `₹${(stats.totalCreditDistributed || 0).toLocaleString()}`, subText: "Overall credit line", icon: <Wallet size={24} />, color: "text-emerald-600", bgBox: "bg-emerald-50/50 border-emerald-100 shadow-emerald-100/50", iconBg: "bg-emerald-100/50", stroke: "#10b981", fill: "#a7f3d0", id: "colorAdminEmerald", data: stats.distributedCreditSparkline || [] },
     { title: "Used Credit", value: `₹${(stats.totalUsedCredit || 0).toLocaleString()}`, subText: "Outstanding B2B", icon: <Activity size={24} />, color: "text-amber-600", bgBox: "bg-amber-50/50 border-amber-100 shadow-amber-100/50", iconBg: "bg-amber-100/50", stroke: "#f59e0b", fill: "#fde68a", id: "colorAdminAmber", data: stats.usedCreditSparkline || [] },
     { title: "Total Revenue", value: `₹${(stats.totalRevenue || 0).toLocaleString()}`, subText: "Gross platform sales", icon: <TrendingUp size={24} />, color: "text-blue-600", bgBox: "bg-blue-50/50 border-blue-100 shadow-blue-100/50", iconBg: "bg-blue-100/50", stroke: "#2563eb", fill: "#bfdbfe", id: "colorAdminBlue", data: stats.revenueSparkline || [] },
+    { title: "Net Profit", value: `₹${(stats.netProfit || 0).toLocaleString()}`, subText: "After COGS margins", icon: <Activity size={24} />, color: "text-purple-600", bgBox: "bg-purple-50/50 border-purple-100 shadow-purple-100/50", iconBg: "bg-purple-100/50", stroke: "#9333ea", fill: "#e9d5ff", id: "colorAdminPurple", data: stats.revenueSparkline || [] },
   ];
 
   if (loading) {
@@ -79,7 +80,7 @@ export default function Dashboard() {
       </div>
 
       {/* Hero Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {statCards.map((stat, idx) => (
           <motion.div
             key={stat.title}

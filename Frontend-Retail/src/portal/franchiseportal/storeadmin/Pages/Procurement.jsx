@@ -49,17 +49,17 @@ export default function Procurement() {
 
   // handleDownloadPDF removed as we now show a modal instead
 
-  const categories = [...new Set(techhansaCatalog.map(item => item.category).filter(Boolean))];
-  const brands = [...new Set(techhansaCatalog.filter(item => !selectedCategory || item.category === selectedCategory).map(item => item.brand).filter(Boolean))];
-  const models = [...new Set(techhansaCatalog.filter(item =>
-    (!selectedCategory || item.category === selectedCategory) &&
-    (!selectedBrand || item.brand === selectedBrand)
-  ).map(item => item.model).filter(Boolean))];
-
-  const specifications = techhansaCatalog.filter(item =>
-    (!selectedCategory || item.category === selectedCategory) &&
-    (!selectedBrand || item.brand === selectedBrand) &&
-    (!selectedModel || item.model === selectedModel)
+  const categories = [...new Set(techhansaCatalog.map(item => item.category?.trim()).filter(Boolean))];
+  const brands = [...new Set(techhansaCatalog.filter(item => !selectedCategory || item.category?.trim() === selectedCategory).map(item => item.brand?.trim()).filter(Boolean))];
+  const models = [...new Set(techhansaCatalog.filter(item => 
+    (!selectedCategory || item.category?.trim() === selectedCategory) && 
+    (!selectedBrand || item.brand?.trim() === selectedBrand)
+  ).map(item => item.model?.trim()).filter(Boolean))];
+  
+  const specifications = techhansaCatalog.filter(item => 
+    (!selectedCategory || item.category?.trim() === selectedCategory) && 
+    (!selectedBrand || item.brand?.trim() === selectedBrand) &&
+    (!selectedModel || item.model?.trim() === selectedModel)
   );
 
   const handleInputChange = (e) => {
@@ -380,14 +380,11 @@ export default function Procurement() {
                             setFormData(prev => ({
                               ...prev,
                               catalogItemId: item._id,
-                              hardwareType: item.category || prev.hardwareType,
-                              category: item.category || prev.category,
-                              brand: item.brand || prev.brand,
-                              model: item.model || prev.model,
-                              productName: item.name || item.productName || item.model || '',
-                              price: itemPrice,
-                              amount: itemPrice * prev.quantity,
-                              specs: item.specs || item.specifications || {}
+                              hardwareType: item.name?.trim(),
+                              brand: item.brand?.trim() || 'N/A',
+                              specs: { Category: item.category?.trim(), Model: item.model?.trim(), Specs: item.specs },
+                              price: item.sellingPrice || 0,
+                              amount: (item.sellingPrice || 0) * formData.quantity
                             }));
                           } else {
                             setFormData(prev => ({ ...prev, catalogItemId: '', price: 0, amount: 0, specs: {} }));

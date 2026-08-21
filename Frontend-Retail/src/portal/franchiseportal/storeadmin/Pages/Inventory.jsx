@@ -33,10 +33,14 @@ export default function Inventory() {
 
   const categories = ['All', ...new Set(inventory.map(i => i.category))];
 
+  const searchLower = searchTerm.toLowerCase();
   const filteredData = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.serialNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.name?.toLowerCase().includes(searchLower) || 
+                          item.serialNumber?.toLowerCase().includes(searchLower) ||
+                          item.category?.toLowerCase().includes(searchLower) ||
+                          item.specs?.toLowerCase().includes(searchLower) ||
+                          item.brand?.toLowerCase().includes(searchLower) ||
+                          item.model?.toLowerCase().includes(searchLower);
     const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
     const isLowStock = item.availableStock <= item.lowStockAlert;
     const matchesStatus = statusFilter === 'All' || 
@@ -121,7 +125,7 @@ export default function Inventory() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search SN, Name, Category..."
+              placeholder="Search SN, Name, Category, Specs, Brand..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64 shadow-sm"

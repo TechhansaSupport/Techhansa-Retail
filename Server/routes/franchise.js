@@ -193,6 +193,17 @@ router.get('/:storeId/profile', async (req, res) => {
   }
 });
 
+// Upload generic file
+router.post('/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No file uploaded' });
+  }
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const baseUrl = `${protocol}://${req.get('host')}`;
+  const fileUrl = `${baseUrl}/uploads/franchise/${req.file.filename}`;
+  res.json({ success: true, url: fileUrl });
+});
+
 // Update Store Profile
 router.put('/:storeId/profile', async (req, res) => {
   try {
@@ -348,6 +359,20 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
           description: `Payment for ${isQuotation ? 'Quotation' : 'Invoice'} ${isQuotation ? itemToApprove.quotationNo : itemToApprove.invoiceNo}`
         });
         await walletTxn.save();
+      } else {
+        // Log Wallet Transaction for Transaction Ledger even for advance payments
+        const newBalance = (profile.totalCredit || 0) - (profile.usedCredit || 0);
+        const walletTxn = new WalletTransaction({
+          storeId: storeId,
+          txnId: `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          date: new Date(),
+          type: `Advance Payment (${paymentMethod})`,
+          amount: itemToApprove.amount,
+          status: 'Pending',
+          closingBalance: newBalance,
+          description: `Advance Payment for ${isQuotation ? 'Quotation' : 'Invoice'} ${isQuotation ? itemToApprove.quotationNo : itemToApprove.invoiceNo} (UTR: ${utrNumber})`
+        });
+        await walletTxn.save();
       }
     }
     
@@ -364,6 +389,9 @@ router.put('/:storeId/b2b-invoices/:id/approve', async (req, res) => {
         itemToApprove.paymentMethod = paymentMethod;
         itemToApprove.utrNumber = utrNumber;
         itemToApprove.transactionDate = transactionDate;
+        if (receiptUrl) {
+          itemToApprove.receiptUrl = receiptUrl;
+        }
       } else {
         itemToApprove.paymentDetails = {
           method: paymentMethod,
@@ -424,6 +452,35 @@ router.post('/:storeId/employees', async (req, res) => {
   } catch (error) {
     console.error('Error creating employee:', error);
     res.status(500).json({ success: false, message: 'Server error creating employee' });
+  }
+});
+
+// Update Employee Details
+router.put('/:storeId/employees/:id', async (req, res) => {
+  try {
+    const { name, phone, email, password } = req.body;
+    
+    // Use $or to support both _id (MongoDB ObjectId) and userId (string ID like EMP-001)
+    const employee = await User.findOne({ 
+      $or: [{ _id: req.params.id }, { userId: req.params.id }], 
+      storeId: req.params.storeId, 
+      role: 'employee' 
+    });
+
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    if (name) employee.name = name;
+    if (phone) employee.phone = phone;
+    if (email) employee.email = email;
+    if (password) employee.password = password;
+
+    await employee.save();
+    res.json({ success: true, data: employee });
+  } catch (error) {
+    console.error('Error updating employee:', error);
+    res.status(500).json({ success: false, message: 'Server error updating employee' });
   }
 });
 

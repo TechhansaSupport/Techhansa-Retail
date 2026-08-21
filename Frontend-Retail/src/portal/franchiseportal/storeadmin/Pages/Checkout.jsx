@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { IndianRupee, ShieldCheck, ArrowRight, Wallet, Banknote, Building2 } from 'lucide-react';
 import { useFranchise } from '../context/FranchiseContext';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function Checkout() {
   const location = useLocation();
@@ -11,12 +12,11 @@ export default function Checkout() {
   const { metrics, approveB2BInvoice } = useFranchise();
   const invoice = location.state?.invoice;
 
-  const [paymentMethod, setPaymentMethod] = useState(''); // 'Credit' | 'Advance Payment'
-  const [advanceSubMethod, setAdvanceSubMethod] = useState(''); // 'NEFT' | 'UPI'
-  
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [advanceSubMethod, setAdvanceSubMethod] = useState('');
   const [utrNumber, setUtrNumber] = useState('');
-  const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]);
-  const [receiptUrl, setReceiptUrl] = useState('');
+  const [transactionDate, setTransactionDate] = useState('');
+  const [receiptFile, setReceiptFile] = useState(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -66,11 +66,26 @@ export default function Checkout() {
 
     setIsSubmitting(true);
     try {
+      let finalReceiptUrl = undefined;
+      
+      if (paymentMethod === 'Advance Payment' && receiptFile) {
+        const formData = new FormData();
+        formData.append('file', receiptFile);
+        
+        const uploadRes = await axios.post('http://localhost:5000/api/franchise/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        if (uploadRes.data.success) {
+          finalReceiptUrl = uploadRes.data.url;
+        }
+      }
+      
       const paymentDetails = {
         paymentMethod: paymentMethod === 'Credit' ? 'Credit' : advanceSubMethod,
         utrNumber: paymentMethod === 'Advance Payment' ? utrNumber : undefined,
         transactionDate: paymentMethod === 'Advance Payment' ? transactionDate : undefined,
-        receiptUrl: paymentMethod === 'Advance Payment' ? receiptUrl : undefined
+        receiptUrl: finalReceiptUrl
       };
 
       await approveB2BInvoice(invoice._id || invoice.id, paymentDetails);
@@ -200,7 +215,7 @@ export default function Checkout() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Upload Receipt (Optional)</label>
-                      <input type="file" onChange={e => setReceiptUrl(e.target.value)} className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg text-sm text-slate-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700" />
+                      <input type="file" onChange={e => setReceiptFile(e.target.files[0])} className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg text-sm text-slate-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700" />
                     </div>
                   </div>
                 )}
