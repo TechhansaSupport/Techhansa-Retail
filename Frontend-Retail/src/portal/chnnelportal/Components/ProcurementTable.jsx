@@ -290,7 +290,15 @@ export default function ProcurementTables() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Total Amount</p>
-                  <p className="font-bold text-emerald-600">₹{(selectedQuotation.amount || selectedQuotation.totalAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                  <p className="font-bold text-emerald-600">
+                    ₹{(() => {
+                      const fallbackAmount = selectedQuotation.amount || selectedQuotation.totalAmount || 0;
+                      if (selectedQuotation.items && selectedQuotation.items.length > 0) {
+                        return selectedQuotation.items.reduce((sum, item) => sum + (item.totalAmount || (item.unitPrice * (item.quantity || 1) * 1.18) || 0), 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                      }
+                      return (fallbackAmount * 1.18).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                    })()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Valid Until</p>

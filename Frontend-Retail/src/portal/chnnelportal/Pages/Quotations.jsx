@@ -99,7 +99,7 @@ export default function Quotations() {
     return qtId.toLowerCase().includes(searchQuery.toLowerCase()) || vendor.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const displayTotalAmount = selectedQuotation?.amount || selectedQuotation?.rfpReference?.estimatedTotal || selectedQuotation?.totalAmount || 0;
+  const fallbackTotalAmount = selectedQuotation?.amount || selectedQuotation?.rfpReference?.estimatedTotal || selectedQuotation?.totalAmount || 0;
 
   const selectedRfp = selectedQuotation?.rfpReference || rfps.find(r => r.rfpId === selectedQuotation?.quotationNo?.replace('QT-', ''));
   const rawItems = (selectedQuotation?.items?.length > 0) ? selectedQuotation.items : (selectedRfp?.products || []);
@@ -109,16 +109,23 @@ export default function Quotations() {
     let totalAmount = p.totalAmount;
     
     if (unitPrice === undefined || unitPrice === 0 || unitPrice == null) {
-      if (rawItems.length === 1 && displayTotalAmount > 0) {
-        totalAmount = displayTotalAmount;
-        unitPrice = totalAmount / (p.quantity || 1);
+      if (rawItems.length === 1 && fallbackTotalAmount > 0) {
+        // If we only have the fallback total, assume it's the base price and add 18% GST for the final item total
+        totalAmount = fallbackTotalAmount * 1.18;
+        unitPrice = fallbackTotalAmount / (p.quantity || 1);
       }
     } else if (totalAmount === undefined || totalAmount == null) {
-      totalAmount = unitPrice * (p.quantity || 1);
+      // If we have unit price but no total, compute total with GST
+      const taxRate = p.taxRate || 18;
+      totalAmount = unitPrice * (p.quantity || 1) * (1 + taxRate / 100);
     }
     
     return { ...p, unitPrice, totalAmount };
   });
+
+  const displayTotalAmount = quotationItems.length > 0 
+    ? quotationItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0)
+    : fallbackTotalAmount * 1.18;
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
@@ -328,63 +335,78 @@ export default function Quotations() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col"
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col"
           >
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50">
+            <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50 shrink-0">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Make Payment</h2>
-                <p className="text-sm text-slate-500 mt-1">Amount to pay: <strong className="text-emerald-600">₹{displayTotalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</strong></p>
+                <h2 className="text-lg font-bold text-slate-900">Make Payment</h2>
+                <p className="text-xs text-slate-500 mt-0.5">Amount to pay: <strong className="text-emerald-600">₹{displayTotalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</strong></p>
               </div>
-              <button onClick={() => setIsPaymentModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors">
-                <XCircle className="w-6 h-6" />
+              <button onClick={() => setIsPaymentModalOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors">
+                <XCircle className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-5">
+            <div className="p-4 overflow-y-auto space-y-4 flex-1">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-3">Select Payment Method</label>
-                <div className="grid grid-cols-1 gap-3">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Select Payment Method</label>
+                <div className="grid grid-cols-1 gap-2">
                   <button 
                     onClick={() => setPaymentMethod('Credit Lines')}
-                    className={`p-3 border rounded-xl text-left transition-all ${paymentMethod === 'Credit Lines' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+                    className={`p-2.5 border rounded-xl text-left transition-all flex items-center justify-between ${paymentMethod === 'Credit Lines' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
                   >
-                    <span className="font-semibold text-slate-800 block">Credit Lines</span>
-                    <span className="text-xs text-slate-500">Pay using your approved Techhansa credit limits</span>
+                    <div>
+                      <span className="font-semibold text-slate-800 text-sm block">Credit Lines</span>
+                      <span className="text-[11px] text-slate-500">Pay using approved limits</span>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'Credit Lines' ? 'border-blue-500' : 'border-slate-300'}`}>
+                      {paymentMethod === 'Credit Lines' && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                    </div>
                   </button>
                   <button 
                     onClick={() => setPaymentMethod('NEFT')}
-                    className={`p-3 border rounded-xl text-left transition-all ${paymentMethod === 'NEFT' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+                    className={`p-2.5 border rounded-xl text-left transition-all flex items-center justify-between ${paymentMethod === 'NEFT' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
                   >
-                    <span className="font-semibold text-slate-800 block">NEFT / RTGS</span>
-                    <span className="text-xs text-slate-500">Direct bank transfer to Techhansa</span>
+                    <div>
+                      <span className="font-semibold text-slate-800 text-sm block">NEFT / RTGS</span>
+                      <span className="text-[11px] text-slate-500">Direct bank transfer</span>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'NEFT' ? 'border-blue-500' : 'border-slate-300'}`}>
+                      {paymentMethod === 'NEFT' && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                    </div>
                   </button>
                   <button 
                     onClick={() => setPaymentMethod('UPI')}
-                    className={`p-3 border rounded-xl text-left transition-all ${paymentMethod === 'UPI' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
+                    className={`p-2.5 border rounded-xl text-left transition-all flex items-center justify-between ${paymentMethod === 'UPI' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}
                   >
-                    <span className="font-semibold text-slate-800 block">UPI</span>
-                    <span className="text-xs text-slate-500">Scan QR Code or enter UPI ID</span>
+                    <div>
+                      <span className="font-semibold text-slate-800 text-sm block">UPI</span>
+                      <span className="text-[11px] text-slate-500">Scan QR or enter ID</span>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'UPI' ? 'border-blue-500' : 'border-slate-300'}`}>
+                      {paymentMethod === 'UPI' && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                    </div>
                   </button>
                 </div>
               </div>
 
               {paymentMethod === 'UPI' && (
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
-                  <p className="text-sm font-medium text-slate-700 mb-2">Scan this QR Code</p>
-                  <div className="w-32 h-32 bg-white border border-slate-200 rounded-lg mx-auto flex items-center justify-center p-2 mb-2">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=Techhansa@bank&pn=Techhansa&am=${displayTotalAmount}`} alt="UPI QR" className="w-full h-full object-contain" />
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                  <p className="text-xs font-medium text-slate-700 mb-1.5">Scan QR Code</p>
+                  <div className="w-24 h-24 bg-white border border-slate-200 rounded-lg mx-auto flex items-center justify-center p-1.5 mb-1.5">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=Techhansa@bank&pn=Techhansa&am=${displayTotalAmount}`} alt="UPI QR" className="w-full h-full object-contain" />
                   </div>
-                  <p className="text-xs text-slate-500 font-mono">Techhansa@bank</p>
+                  <p className="text-[10px] text-slate-500 font-mono">Techhansa@bank</p>
                 </div>
               )}
 
               {paymentMethod === 'NEFT' && (
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm">
-                  <p className="text-slate-700 font-medium mb-2 border-b border-slate-200 pb-2">Techhansa Bank Details</p>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                  <p className="text-slate-700 font-medium mb-1.5 border-b border-slate-200 pb-1.5">Bank Details</p>
+                  <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 mt-1.5">
                     <span className="text-slate-500">Bank:</span><span className="font-semibold text-slate-900">HDFC Bank</span>
                     <span className="text-slate-500">A/C Name:</span><span className="font-semibold text-slate-900">Techhansa Retail</span>
-                    <span className="text-slate-500">A/C No:</span><span className="font-semibold text-slate-900 font-mono text-xs">50200012345678</span>
+                    <span className="text-slate-500">A/C No:</span><span className="font-semibold text-slate-900 font-mono">50200012345678</span>
                     <span className="text-slate-500">IFSC:</span><span className="font-semibold text-slate-900 font-mono">HDFC0001234</span>
                   </div>
                 </div>
@@ -392,27 +414,26 @@ export default function Quotations() {
 
               {(paymentMethod === 'NEFT' || paymentMethod === 'UPI') && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">UTR / Reference Number *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">UTR / Reference Number *</label>
                   <input
                     type="text"
                     value={utrNumber}
                     onChange={(e) => setUtrNumber(e.target.value)}
-                    placeholder="Enter the 12-digit UTR number"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 uppercase"
+                    placeholder="12-digit UTR number"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 uppercase"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Required to verify your {paymentMethod} payment.</p>
                 </div>
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-              <button onClick={() => setIsPaymentModalOpen(false)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-colors">
+            <div className="p-4 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
+              <button onClick={() => setIsPaymentModalOpen(false)} className="px-5 py-2 text-sm bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors">
                 Cancel
               </button>
               <button 
-                onClick={submitPayment} 
+                onClick={submitPayment}
                 disabled={isPaying || !paymentMethod}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="px-5 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
               >
                 {isPaying ? 'Processing...' : 'Submit Payment'}
               </button>

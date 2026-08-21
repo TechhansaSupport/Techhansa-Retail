@@ -22,7 +22,13 @@ export const fetchWithAuth = async (url, options = {}) => {
     headers
   };
   
-  console.log(`[fetchWithAuth] URL: ${url}, Token present: ${!!token}`);
+  const response = await fetch(url, newOptions);
   
-  return fetch(url, newOptions);
+  if (response.status === 401 || response.status === 403) {
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    window.location.href = '/login';
+  }
+  
+  return response;
 };
