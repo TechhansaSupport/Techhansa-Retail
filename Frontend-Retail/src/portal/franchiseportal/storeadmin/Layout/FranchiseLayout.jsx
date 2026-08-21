@@ -23,7 +23,7 @@ export default function FranchiseLayout() {
 
   useEffect(() => {
     if (user?.userId) {
-      axios.get(`http://localhost:5000/api/notifications/${user.userId}`)
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/${user.userId}`)
         .then(res => setNotifications(res.data))
         .catch(err => console.error("Failed to fetch notifications", err));
     }
@@ -32,7 +32,7 @@ export default function FranchiseLayout() {
   const markAllAsRead = async () => {
     if (!user?.userId) return;
     try {
-      await axios.patch(`http://localhost:5000/api/notifications/${user.userId}/read-all`);
+      await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/${user.userId}/read-all`);
       setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
     } catch (err) {
       console.error("Failed to mark notifications as read", err);
@@ -42,7 +42,7 @@ export default function FranchiseLayout() {
   const markAsRead = async (id) => {
     if (!user?.userId) return;
     try {
-      await axios.patch(`http://localhost:5000/api/notifications/${user.userId}/${id}/read`);
+      await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/${user.userId}/${id}/read`);
       setNotifications(prev => prev.map(n => (n._id === id || n.id === id) ? { ...n, unread: false } : n));
     } catch (err) {
       console.error("Failed to mark notification as read", err);

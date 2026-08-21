@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { IndianRupee, Target, TrendingUp, PlusCircle, ShoppingBag, Clock, ArrowUpRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../../../../context/AuthContext';
+import { fetchWithAuth } from '../../../../utils/api.js';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
   PieChart, Pie, Cell 
@@ -25,7 +26,7 @@ export default function EmployeeDashboard() {
 
   useEffect(() => {
     if (user?.userId) {
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales/dashboard/${user.userId}`)
+      fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/sales/dashboard/${user.userId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {

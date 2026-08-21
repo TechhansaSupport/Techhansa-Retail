@@ -365,7 +365,7 @@ export default function FinanceDashboard() {
                   {selectedPayment.receiptUrl ? (
                     <div className="border-2 border-dashed border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center min-h-[200px]">
                       <img 
-                        src={selectedPayment.receiptUrl.startsWith('http') ? selectedPayment.receiptUrl : `http://localhost:5000${selectedPayment.receiptUrl}`} 
+                        src={selectedPayment.receiptUrl.startsWith('http') ? selectedPayment.receiptUrl : `${selectedPayment.receiptUrl}`} 
                         alt="Payment Receipt" 
                         className="max-w-full max-h-[400px] object-contain rounded-lg shadow-sm"
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}

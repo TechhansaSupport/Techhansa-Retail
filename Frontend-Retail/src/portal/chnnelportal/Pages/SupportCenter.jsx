@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare, PhoneCall, Mail, Send, Loader2 } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 export default function SupportCenter() {
   const { user } = useContext(AuthContext) || { user: null };
@@ -14,7 +15,7 @@ export default function SupportCenter() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/contact`, {
+      const response = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

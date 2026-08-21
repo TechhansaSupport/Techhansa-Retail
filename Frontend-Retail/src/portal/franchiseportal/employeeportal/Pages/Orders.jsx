@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { AuthContext } from '../../../../context/AuthContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { fetchWithAuth } from '../../../../utils/api.js';
 
 export default function EmployeeOrders() {
   const { user } = useContext(AuthContext);
@@ -12,7 +13,7 @@ export default function EmployeeOrders() {
 
   useEffect(() => {
     if (user?.userId) {
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales/orders/${user.userId}`)
+      fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/sales/orders/${user.userId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {

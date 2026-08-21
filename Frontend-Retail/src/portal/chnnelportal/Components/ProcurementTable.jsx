@@ -24,6 +24,7 @@ const getStatusStyles = (status) => {
 };
 
 import { AuthContext } from '../../../context/AuthContext';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 export default function ProcurementTables() {
   const { user } = useContext(AuthContext) || { user: null };
@@ -55,8 +56,8 @@ export default function ProcurementTables() {
       if (!user?.userId) return;
       try {
         const [rfpRes, qtRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`),
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/quotations?userId=${user.userId}`)
+          fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`),
+          fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/quotations?userId=${user.userId}`)
         ]);
         if (rfpRes.ok) {
           const rfpData = await rfpRes.json();

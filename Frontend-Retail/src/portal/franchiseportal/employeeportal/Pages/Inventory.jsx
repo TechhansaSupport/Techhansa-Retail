@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Search, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../../../../context/AuthContext';
+import { fetchWithAuth } from '../../../../utils/api.js';
 
 export default function EmployeeInventory() {
   const { user } = useContext(AuthContext);
@@ -10,7 +11,7 @@ export default function EmployeeInventory() {
 
   useEffect(() => {
     if (user?.storeId) {
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`)
+      fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
