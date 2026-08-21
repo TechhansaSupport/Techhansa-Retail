@@ -48,6 +48,7 @@ app.use('/api/sales', verifyToken, salesRoute);
 app.use('/api/admin', verifyToken, adminRoute);
 app.use('/api/notifications', verifyToken, notificationsRoute);
 app.use('/api/finance', verifyToken, financeRoute);
+app.use('/api/warehouse', verifyToken, warehouseRoute);
 
 // =========================================
 // FRONTEND SERVING (Techhansa Retail)

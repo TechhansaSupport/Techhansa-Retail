@@ -169,6 +169,30 @@ export default function AllOrders() {
     return matchesSearch && matchesRole;
   });
 
+  const getCatalogMatch = (item) => {
+    if (!catalog || catalog.length === 0) return null;
+    return catalog.find(c => {
+      if (c.name?.trim().toLowerCase() === item.hardwareType?.trim().toLowerCase()) return true;
+      if (item.specs && typeof item.specs === 'object') {
+        const model = item.specs.model || item.specs.Model;
+        if (model && c.model?.trim().toLowerCase() === model?.trim().toLowerCase()) return true;
+      }
+      return false;
+    });
+  };
+
+  const hasStockWarning = selectedOrder ? (
+    selectedOrder.orderType === 'Franchise Procurement' 
+      ? (selectedOrder.items || []).some(item => {
+          const match = getCatalogMatch(item);
+          return match ? Number(item.quantity) > Number(match.availableStock) : false;
+        })
+      : (selectedOrder.quotationReference?.rfpReference?.products || []).some(item => {
+          const match = getCatalogMatch(item);
+          return match ? Number(item.quantity) > Number(match.availableStock) : false;
+        })
+  ) : false;
+
   return (
     <div className="space-y-6 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -421,17 +445,7 @@ export default function AllOrders() {
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {selectedOrder.items?.map((item, index) => {
-                          const catalogMatch = catalog.find(c => {
-                            if (c.brand?.trim() !== item.brand?.trim()) return false;
-                            if (item.specs && typeof item.specs === 'object') {
-                              const modelSpec = item.specs.model || item.specs.Model;
-                              if (modelSpec && c.model?.trim() === modelSpec?.trim()) return true;
-                            }
-                            const typeStr = (item.hardwareType === 'Other' ? item.otherType : item.hardwareType)?.trim();
-                            if (c.name?.trim() === typeStr) return true;
-                            if (c.category?.trim() === typeStr) return true;
-                            return false;
-                          });
+                          const catalogMatch = getCatalogMatch(item);
                           const isWarning = catalogMatch && Number(item.quantity) > Number(catalogMatch.availableStock);
                           const isOutOfStock = catalogMatch && Number(catalogMatch.availableStock) <= 0;
 
@@ -481,10 +495,7 @@ export default function AllOrders() {
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {selectedOrder.quotationReference.rfpReference.products.map((item, index) => {
-                          const catalogMatch = catalog.find(c => 
-                            c.brand?.trim() === item.brand &&
-                            c.model?.trim() === item.model
-                          );
+                          const catalogMatch = getCatalogMatch(item);
                           const isWarning = catalogMatch && item.quantity > catalogMatch.availableStock;
                           const isOutOfStock = catalogMatch && catalogMatch.availableStock <= 0;
 
@@ -516,12 +527,29 @@ export default function AllOrders() {
                   <span className="text-2xl font-black text-indigo-900">₹{selectedOrder.totalAmount?.toLocaleString() || 0}</span>
                 </div>
                 {getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'New Order' ? (
-                  <button
-                    onClick={() => handleApproveProcurement(selectedOrder._id)}
-                    className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap"
-                  >
-                    Confirm & Send Quotation
-                  </button>
+                  <div className="flex flex-col items-end">
+                    {/* Fallback debug display */}
+                    {!hasStockWarning && catalog.length === 0 && (
+                      <p className="text-orange-500 text-xs mb-2">Loading catalog...</p>
+                    )}
+                    <button
+                      onClick={() => handleApproveProcurement(selectedOrder._id)}
+                      disabled={hasStockWarning || catalog.length === 0}
+                      className={`px-6 py-2 font-medium rounded-lg transition-colors whitespace-nowrap ${hasStockWarning || catalog.length === 0 ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                    >
+                      {catalog.length > 0 ? (
+                        (() => {
+                           const item = selectedOrder.items?.[0] || selectedOrder.quotationReference?.rfpReference?.products?.[0];
+                           const match = getCatalogMatch(item);
+                           if (!match) return `Confirm (No Match found for ${item?.hardwareType})`;
+                           return `Confirm (Qty: ${item?.quantity}, Stock: ${match.availableStock})`;
+                        })()
+                      ) : 'Confirm & Send Quotation'}
+                    </button>
+                    {hasStockWarning && (
+                      <p className="text-red-500 text-xs mt-2 max-w-xs text-right font-bold">Cannot send quotation. One or more requested items exceed available inventory.</p>
+                    )}
+                  </div>
                 ) : selectedOrder.status === 'Paid' && (selectedOrder.orderType === 'Enterprise' || selectedOrder.orderType === 'Franchise Procurement') && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') ? (
                   <button
                     onClick={() => handleSendToInventory(selectedOrder._id)}
