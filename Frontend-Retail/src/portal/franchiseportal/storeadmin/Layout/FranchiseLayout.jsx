@@ -5,7 +5,7 @@ import { AuthContext } from '../../../../context/AuthContext';
 import { FranchiseContext } from '../context/FranchiseContext';
 import { motion } from 'framer-motion';
 import logo from '../../../../assets/logo.png';
-import axios from 'axios';
+import axios from '../../../../api/axios';
 
 export default function FranchiseLayout() {
   const { logout, user } = useContext(AuthContext);

@@ -154,6 +154,18 @@ export default function Procurement() {
         >
           Pending Approvals
         </button>
+        <button
+          className={`py-3 px-6 font-semibold text-sm ${activeTab === 'quotations' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500'}`}
+          onClick={() => setActiveTab('quotations')}
+        >
+          Quotations
+        </button>
+        <button
+          className={`py-3 px-6 font-semibold text-sm ${activeTab === 'invoices' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-500'}`}
+          onClick={() => setActiveTab('invoices')}
+        >
+          Invoices
+        </button>
       </div>
 
       {activeTab === 'catalog' && (
@@ -169,39 +181,48 @@ export default function Procurement() {
             </button>
           </div>
 
-          {/* Submitted Orders Section */}
-          {orders.length > 0 ? (
-            <div className="space-y-6">
-              {orders.map(order => (
+          {orders && orders.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6">
+              {orders.slice().reverse().map(order => (
                 <div key={order._id || order.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                  <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                  <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
                     <div>
-                      <span className="font-bold text-slate-800 mr-4">Request {order.requestId || order.id}</span>
-                      <span className="text-sm text-slate-500">Submitted on: {order.date}</span>
+                      <p className="text-sm text-slate-500 font-medium">Request ID</p>
+                      <p className="font-bold text-slate-800">{order.requestId || order._id?.slice(-8).toUpperCase()}</p>
                     </div>
-                    <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
-                      {order.status}
-                    </span>
+                    <div className="text-right">
+                      <p className="text-sm text-slate-500 font-medium">Status</p>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mt-1 ${
+                        order.status === 'DELIVERED' ? 'bg-emerald-100 text-emerald-700' :
+                        order.status === 'DISPATCHED' ? 'bg-blue-100 text-blue-700' :
+                        order.status === 'CANCELLED' ? 'bg-rose-100 text-rose-700' :
+                        order.status === 'APPROVED' ? 'bg-amber-100 text-amber-700' :
+                        'bg-slate-100 text-slate-700'
+                      }`}>
+                        {order.status || 'PENDING'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-6">
+                  <div className="p-0 overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="text-slate-400 text-xs uppercase border-b border-slate-100">
-                          <th className="pb-3 font-semibold">Hardware</th>
-                          <th className="pb-3 font-semibold">Brand</th>
-                          <th className="pb-3 font-semibold">Specifications</th>
-                          <th className="pb-3 font-semibold text-center">Qty</th>
+                        <tr className="bg-white text-slate-400 text-xs uppercase border-b border-slate-100">
+                          <th className="px-6 py-3 font-semibold">Category</th>
+                          <th className="px-6 py-3 font-semibold">Hardware</th>
+                          <th className="px-6 py-3 font-semibold">Brand / Specs</th>
+                          <th className="px-6 py-3 font-semibold text-center">Qty</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {Array.isArray(order.items) ? order.items.map((item, idx) => {
+                        {order.items && order.items.length > 0 ? order.items.map((item, idx) => {
                           return (
-                            <tr key={item._id || item.id || idx}>
-                              <td className="py-3 font-medium text-slate-800">
+                            <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="px-6 py-4 font-medium text-slate-600">{item.category}</td>
+                              <td className="px-6 py-4 font-medium text-slate-800">
                                 {item.hardwareType === 'Others' ? item.otherType : item.hardwareType}
                               </td>
-                              <td className="py-3 text-slate-600">{item.brand}</td>
-                              <td className="py-3 text-sm text-slate-500">
+                              <td className="px-6 py-4 text-slate-600">{item.brand}</td>
+                              <td className="px-6 py-4 text-sm text-slate-500">
                                 {typeof item.specs === 'string' && item.specs ? (
                                   <span className="block">{item.specs}</span>
                                 ) : (item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0) ? (
@@ -217,12 +238,12 @@ export default function Procurement() {
                                 )}
                                 {item.comments && <span className="block mt-1 italic">"{item.comments}"</span>}
                               </td>
-                              <td className="py-3 text-center font-bold text-indigo-600">{item.quantity}</td>
+                              <td className="px-6 py-4 text-center font-bold text-indigo-600">{item.quantity}</td>
                             </tr>
                           );
                         }) : (
                           <tr>
-                            <td colSpan="4" className="py-3 text-center text-slate-500 italic">
+                            <td colSpan="4" className="px-6 py-4 text-center text-slate-500 italic">
                               Legacy order items not structured for detailed view.
                             </td>
                           </tr>
@@ -251,7 +272,7 @@ export default function Procurement() {
         </div>
       )}
 
-      {activeTab === 'approvals' && (
+      {(activeTab === 'approvals' || activeTab === 'quotations' || activeTab === 'invoices') && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -267,7 +288,12 @@ export default function Procurement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {b2bInvoices.map(inv => (
+              {b2bInvoices.filter(inv => {
+                if (activeTab === 'approvals') return inv.status === 'Pending';
+                if (activeTab === 'quotations') return inv.status !== 'Pending' && inv.type === 'Quotation';
+                if (activeTab === 'invoices') return inv.status !== 'Pending' && inv.type === 'Invoice';
+                return false;
+              }).map(inv => (
                 <tr key={inv._id || inv.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 text-sm text-slate-600">{inv.requestId || 'N/A'}</td>
                   <td className="px-4 py-3 font-semibold text-slate-800">{inv.documentNo || inv.invoiceNo || inv.id}</td>
@@ -300,6 +326,18 @@ export default function Procurement() {
                   </td>
                 </tr>
               ))}
+              {b2bInvoices.filter(inv => {
+                if (activeTab === 'approvals') return inv.status === 'Pending';
+                if (activeTab === 'quotations') return inv.status !== 'Pending' && inv.type === 'Quotation';
+                if (activeTab === 'invoices') return inv.status !== 'Pending' && inv.type === 'Invoice';
+                return false;
+              }).length === 0 && (
+                <tr>
+                  <td colSpan="8" className="px-4 py-6 text-center text-slate-500 italic">
+                    No {activeTab === 'approvals' ? 'pending approvals' : activeTab === 'quotations' ? 'quotations' : 'invoices'} found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

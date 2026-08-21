@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { IndianRupee, ShieldCheck, ArrowRight, Wallet, Banknote, Building2 } from 'lucide-react';
 import { useFranchise } from '../context/FranchiseContext';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import axios from '../../../../api/axios';
 
 export default function Checkout() {
   const location = useLocation();
