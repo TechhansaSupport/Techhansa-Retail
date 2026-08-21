@@ -335,7 +335,8 @@ router.get('/orders', async (req, res) => {
           userId: '$storeId',
           totalAmount: '$total',
           orderType: 'Franchise Procurement',
-          quotationPaymentStatus: { $arrayElemAt: ['$quotations.paymentStatus', 0] }
+          quotationPaymentStatus: { $arrayElemAt: ['$quotations.paymentStatus', 0] },
+          paymentMethod: { $arrayElemAt: ['$quotations.paymentMethod', 0] }
         }
       },
       {
@@ -354,9 +355,10 @@ router.get('/orders', async (req, res) => {
         status: pr.status === 'PENDING' ? 'Pending' :
           pr.status === 'PAYMENT_REJECTED' ? 'Declined' :
           pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
-          (pr.status === 'APPROVED' || pr.status === 'Paid') ? 'Processing' :
-              pr.status === 'DISPATCHED' ? 'Dispatched' :
-                pr.status === 'DELIVERED' ? 'Delivered' : pr.status
+          pr.status === 'APPROVED' ? 'Processing' :
+          pr.status === 'Paid' ? 'Paid' :
+          pr.status === 'DISPATCHED' ? 'Dispatched' :
+          pr.status === 'DELIVERED' ? 'Delivered' : pr.status
       };
     });
 
@@ -825,7 +827,7 @@ router.post('/orders/:id/invoice', async (req, res) => {
       });
       await invoice.save();
 
-      order.status = 'Processing'; // Move forward
+      // Do not change status to Processing here; Account Manager does it.
       order.invoiceSent = true; // Mark invoice as sent
       await order.save();
 
@@ -858,13 +860,44 @@ router.post('/orders/:id/invoice', async (req, res) => {
         });
         await b2bInvoice.save();
 
-        pr.status = 'Processing';
-        await pr.save();
+
 
         invoiceData = b2bInvoice;
         orderUpdate = pr;
       } else {
-        return res.status(404).json({ message: 'Order/Request not found', debug: { orderId, existingB2B: !!existingB2B } });
+        // Check if it's a Quotation (Franchise Quotation Order)
+        const quotation = await Quotation.findById(orderId);
+        if (quotation) {
+          if (quotation.paymentStatus !== 'Paid') {
+            return res.status(400).json({ message: 'Only Paid quotations can be invoiced.' });
+          }
+
+          let pr = null;
+          if (quotation.procurementReference) {
+            pr = await ProcurementRequest.findById(quotation.procurementReference);
+          }
+
+          if (pr) {
+            const b2bInvoice = new B2BInvoice({
+              storeId: pr.storeId,
+              invoiceNo: `INV-${Date.now()}`,
+              requestId: pr.requestId,
+              amount: pr.total || quotation.amount,
+              status: 'Paid',
+              invoiceFile: `/invoices/${pr.requestId}-invoice.pdf`
+            });
+            await b2bInvoice.save();
+
+
+            invoiceData = b2bInvoice;
+          }
+
+          quotation.invoiceSent = true;
+          await quotation.save();
+          orderUpdate = quotation;
+        } else {
+          return res.status(404).json({ message: 'Order/Request not found', debug: { orderId, existingB2B: !!existingB2B } });
+        }
       }
     }
 

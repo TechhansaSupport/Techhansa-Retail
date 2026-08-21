@@ -49,7 +49,7 @@ router.get('/pending-payments', financeAuth, async (req, res) => {
       paymentMethod: q.paymentMethod,
       status: q.paymentStatus,
       storeId: q.storeId || q.userId || 'N/A',
-      invoiceSent: true // Hide Send Invoice button for Quotations as they are not supported in /orders/:id/invoice
+      invoiceSent: q.invoiceSent || false
     }));
 
     const formattedInvoices = b2bInvoices.map(inv => ({
@@ -106,7 +106,7 @@ router.post('/approve/:type/:id', financeAuth, async (req, res) => {
     } else { // Franchise B2B Invoice
       const inv = await B2BInvoice.findByIdAndUpdate(id, { status: 'Paid' });
       if (inv && inv.requestId) {
-        await ProcurementRequest.findOneAndUpdate({ requestId: inv.requestId }, { status: 'DISPATCHED' });
+        await ProcurementRequest.findOneAndUpdate({ requestId: inv.requestId }, { status: 'Paid' });
       }
     }
     

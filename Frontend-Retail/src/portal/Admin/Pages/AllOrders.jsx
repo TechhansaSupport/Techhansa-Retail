@@ -106,7 +106,12 @@ export default function AllOrders() {
 
   const handleSendToInventory = async (orderId) => {
     try {
-      await axios.post(`/api/admin/orders/${orderId}/invoice`);
+      const targetOrder = orders.find(o => o._id === orderId);
+      if (targetOrder && targetOrder.orderType === 'Franchise Procurement') {
+          await axios.patch(`/api/admin/procurement-requests/${orderId}/status`, { status: 'Processing' });
+      } else {
+          await axios.patch(`/api/admin/orders/${orderId}/status`, { status: 'Processing' });
+      }
       toast.success('Order sent to Inventory Manager successfully');
       fetchOrders();
     } catch (error) {
@@ -267,7 +272,7 @@ export default function AllOrders() {
                     <td className="p-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-slate-700">{order.paymentMethod || 'N/A'}</span>
-                        <span className="text-xs text-slate-500">{order.paymentStatus}</span>
+                        <span className="text-xs text-slate-500">{order.paymentStatus === 'Paid' ? 'Verified' : order.paymentStatus}</span>
                       </div>
                     </td>
                     <td className="p-4">
@@ -303,7 +308,7 @@ export default function AllOrders() {
                           <Eye size={18} />
                         </button>
 
-                        {order.status === 'Paid' && order.orderType === 'Enterprise' && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') && (
+                        {order.status === 'Paid' && (order.orderType === 'Enterprise' || order.orderType === 'Franchise Procurement') && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') && (
                           <button
                             onClick={() => handleSendToInventory(order._id)}
                             className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
@@ -385,7 +390,7 @@ export default function AllOrders() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 text-sm font-medium">Payment Status</span>
-                      <span className="text-slate-700 text-sm font-bold">{selectedOrder.paymentStatus}</span>
+                      <span className="text-slate-700 text-sm font-bold">{selectedOrder.paymentStatus === 'Paid' ? 'Verified' : selectedOrder.paymentStatus}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 text-sm font-medium">Payment Method</span>
@@ -507,7 +512,7 @@ export default function AllOrders() {
                   >
                     Confirm & Send Quotation
                   </button>
-                ) : selectedOrder.status === 'Paid' && selectedOrder.orderType === 'Enterprise' && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') ? (
+                ) : selectedOrder.status === 'Paid' && (selectedOrder.orderType === 'Enterprise' || selectedOrder.orderType === 'Franchise Procurement') && (user?.role === 'account_manager' || user?.role === 'finance_manager' || user?.role === 'admin') ? (
                   <button
                     onClick={() => handleSendToInventory(selectedOrder._id)}
                     className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap"
