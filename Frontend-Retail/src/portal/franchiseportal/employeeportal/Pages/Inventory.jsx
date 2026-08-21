@@ -1,27 +1,11 @@
 import React, { useState } from 'react';
 import { Search, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { AuthContext } from '../../../../context/AuthContext';
-import { fetchWithAuth } from '../../../../utils/api.js';
-
+import { useEmployee } from '../context/EmployeeContext';
 
 export default function EmployeeInventory() {
   const { inventory } = useEmployee();
   const [searchQuery, setSearchQuery] = useState('');
-  const [inventory, setInventory] = useState([]);
-
-  useEffect(() => {
-    if (user?.storeId) {
-      fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setInventory(data.data);
-          }
-        })
-        .catch(err => console.error("Failed to fetch inventory", err));
-    }
-  }, [user]);
 
   const searchLower = searchQuery.toLowerCase();
   const filteredInventory = inventory.filter(item => 

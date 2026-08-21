@@ -453,28 +453,6 @@ router.patch('/orders/:id/status', async (req, res) => {
           product.quantity = Math.max(0, product.quantity - item.quantity);
           product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.quantity);
           await product.save();
-          
-          // Add to Channel Partner's local inventory
-          const localProduct = await Product.findOne({ storeId: order.userId, model: product.model, brand: product.brand });
-          if (localProduct) {
-            localProduct.quantity += item.quantity;
-            localProduct.availableStock += item.quantity;
-            await localProduct.save();
-          } else {
-            const newLocalProduct = new Product({
-              storeId: order.userId,
-              name: product.name,
-              brand: product.brand,
-              category: product.category,
-              model: product.model,
-              specs: product.specs,
-              quantity: item.quantity,
-              availableStock: item.quantity,
-              sellingPrice: product.sellingPrice,
-              buyingPrice: product.sellingPrice
-            });
-            await newLocalProduct.save();
-          }
         }
       }
     }
@@ -707,28 +685,6 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
           product.quantity = Math.max(0, product.quantity - item.quantity);
           product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.quantity);
           await product.save();
-          
-          // Add to Franchise's local inventory
-          const localProduct = await Product.findOne({ storeId: request.storeId, model: product.model, brand: product.brand });
-          if (localProduct) {
-            localProduct.quantity += item.quantity;
-            localProduct.availableStock += item.quantity;
-            await localProduct.save();
-          } else {
-            const newLocalProduct = new Product({
-              storeId: request.storeId,
-              name: product.name,
-              brand: product.brand,
-              category: product.category,
-              model: product.model,
-              specs: product.specs,
-              quantity: item.quantity,
-              availableStock: item.quantity,
-              sellingPrice: product.sellingPrice,
-              buyingPrice: product.sellingPrice // Buying price is what they bought it for (which was selling price of Global)
-            });
-            await newLocalProduct.save();
-          }
         }
       }
     }

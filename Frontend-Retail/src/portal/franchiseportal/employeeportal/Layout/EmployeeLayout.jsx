@@ -4,7 +4,7 @@ import { LayoutDashboard, Store, Package, LogOut, User, Receipt, Menu, X, Chevro
 import { AuthContext } from '../../../../context/AuthContext';
 import { motion } from 'framer-motion';
 import logo from '../../../../assets/logo.png';
-import axios from 'axios';
+import axios from '../../../../api/axios';
 
 export default function EmployeeLayout() {
   const { logout, user } = useContext(AuthContext);

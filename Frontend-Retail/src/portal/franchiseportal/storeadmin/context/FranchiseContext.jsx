@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../../../api/axios';
 import { AuthContext } from '../../../../context/AuthContext';
 
 export const FranchiseContext = createContext();
@@ -37,16 +37,47 @@ export function FranchiseProvider({ children }) {
 
       const [profileRes, inventoryRes, walletRes, invoicesRes, employeesRes, catalogRes, requestsRes, salesRes] = results;
 
+      let dynTodaysSales = 0;
+      let dynMonthlySales = 0;
+      let dynCompletedOrders = 0;
+      let dynPendingOrders = 0;
+
+      if (salesRes.status === 'fulfilled' && salesRes.value.data.success) {
+        const sales = salesRes.value.data.data;
+        setInvoices(sales);
+        const now = new Date();
+        const todayStr = now.toLocaleDateString();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+
+        sales.forEach(inv => {
+          const d = new Date(inv.createdAt);
+          if (d.toLocaleDateString() === todayStr) {
+            dynTodaysSales += inv.amount;
+          }
+          if (d.getMonth() === thisMonth && d.getFullYear() === thisYear) {
+            dynMonthlySales += inv.amount;
+          }
+        });
+      }
+
+      if (requestsRes.status === 'fulfilled' && requestsRes.value.data.success) {
+        const requests = requestsRes.value.data.data;
+        setOrders(requests);
+        dynCompletedOrders = requests.filter(r => r.status === 'DELIVERED').length;
+        dynPendingOrders = requests.filter(r => ['PENDING', 'VERIFIED', 'APPROVED', 'DISPATCHED'].includes(r.status)).length;
+      }
+
       if (profileRes.status === 'fulfilled' && profileRes.value.data.success) {
          setStoreProfileData(profileRes.value.data.data);
          setMetrics({
-           todaysSales: profileRes.value.data.data.todaysSales || 0,
-           monthlySales: profileRes.value.data.data.monthlySales || 0,
+           todaysSales: dynTodaysSales,
+           monthlySales: dynMonthlySales,
            walletBalance: profileRes.value.data.data.walletBalance || 0,
            totalCredit: profileRes.value.data.data.totalCredit || 0,
            usedCredit: profileRes.value.data.data.usedCredit || 0,
-           completedOrders: profileRes.value.data.data.completedOrders || 0,
-           pendingOrders: profileRes.value.data.data.pendingOrders || 0,
+           completedOrders: dynCompletedOrders,
+           pendingOrders: dynPendingOrders,
          });
       }
       if (inventoryRes.status === 'fulfilled' && inventoryRes.value.data.success) setInventory(inventoryRes.value.data.data);
@@ -54,8 +85,6 @@ export function FranchiseProvider({ children }) {
       if (invoicesRes.status === 'fulfilled' && invoicesRes.value.data.success) setB2bInvoices(invoicesRes.value.data.data);
       if (employeesRes.status === 'fulfilled' && employeesRes.value.data.success) setEmployees(employeesRes.value.data.data);
       if (catalogRes.status === 'fulfilled' && catalogRes.value.data.success) setTechhansaCatalog(catalogRes.value.data.data);
-      if (requestsRes.status === 'fulfilled' && requestsRes.value.data.success) setOrders(requestsRes.value.data.data);
-      if (salesRes.status === 'fulfilled' && salesRes.value.data.success) setInvoices(salesRes.value.data.data); // Set Sales Invoices
 
     } catch (error) {
       console.error("Failed to fetch franchise data", error);
