@@ -4,6 +4,7 @@ import { Search, Download, ArrowUpRight, ArrowDownRight, RefreshCcw, CreditCard,
 import { exportToCSV } from '../../../utils/exportUtils';
 import { AuthContext } from '../../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -33,7 +34,7 @@ export default function CreditHistory() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/credit-transactions?userId=${user.userId}`);
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/credit-transactions?userId=${user.userId}`);
       const data = await res.json();
       setTransactions(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -76,7 +77,7 @@ export default function CreditHistory() {
     setIsModalOpen(true);
     
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders/${tx.referenceId}`);
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders/${tx.referenceId}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedOrder(data);

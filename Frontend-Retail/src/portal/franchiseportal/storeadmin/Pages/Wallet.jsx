@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useFranchise } from '../context/FranchiseContext';
 import { AuthContext } from '../../../../context/AuthContext';
 import { IndianRupee, ArrowUpRight, ArrowDownRight, History, RefreshCcw, Receipt } from 'lucide-react';
+import { fetchWithAuth } from '../../../../utils/api.js';
 
 export default function Wallet() {
   const { metrics, walletTransactions, refreshData } = useFranchise();
@@ -14,7 +15,7 @@ export default function Wallet() {
     if (!user?.userId) return;
     setHistoryLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/procurement/credit-transactions?userId=${user.userId}`);
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL || `${import.meta.env.VITE_API_BASE_URL}`}/api/procurement/credit-transactions?userId=${user.userId}`);
       const data = await res.json();
       setCreditHistory(Array.isArray(data) ? data : []);
     } catch (err) {

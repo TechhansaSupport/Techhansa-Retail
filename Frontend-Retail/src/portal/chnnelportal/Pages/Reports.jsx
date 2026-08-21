@@ -6,6 +6,7 @@ import { exportToCSV } from '../../../utils/exportUtils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line
 } from 'recharts';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 export default function Reports() {
   const { user } = useContext(AuthContext) || { user: null };
@@ -16,7 +17,7 @@ export default function Reports() {
     const fetchReports = async () => {
       if (!user?.userId) return;
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/reports?userId=${user.userId}`);
+        const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/reports?userId=${user.userId}`);
         const data = await res.json();
         setReportData(data);
       } catch (error) {

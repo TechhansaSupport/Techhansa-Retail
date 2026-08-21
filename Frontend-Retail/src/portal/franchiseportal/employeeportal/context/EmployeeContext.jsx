@@ -24,13 +24,13 @@ export function EmployeeProvider({ children }) {
   const refreshData = async () => {
     if (!user?.storeId) return;
     try {
-      const inventoryRes = await axios.get(`http://localhost:5000/api/inventory/${user.storeId}`);
+      const inventoryRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${user.storeId}`);
       if (inventoryRes.data.success) {
         setInventory(inventoryRes.data.data);
       }
       
       // Fetch store profile data so the employee has access to store details (for invoices, etc.)
-      const profileRes = await axios.get(`http://localhost:5000/api/franchise/${user.storeId}/profile`);
+      const profileRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${user.storeId}/profile`);
       if (profileRes.data.success) {
         setStoreProfileData(profileRes.data.data);
       }
@@ -85,7 +85,7 @@ export function EmployeeProvider({ children }) {
     }
     
     try {
-      const response = await axios.post('http://localhost:5000/api/sales/checkout', {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/sales/checkout`, {
         cart: cartItems,
         customer: customerDetails,
         employeeId: user.userId, 

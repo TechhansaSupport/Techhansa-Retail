@@ -1,5 +1,6 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
+import { fetchWithAuth } from '../utils/api.js';
 
 export const AuthContext = createContext();
 
@@ -19,7 +20,7 @@ export const AuthProvider = ({ children }) => {
         setUser(parsedUser);
         
         try {
-          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me?userId=${parsedUser.userId}`);
+          const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me?userId=${parsedUser.userId}`);
           if (res.ok) {
             const freshUser = await res.json();
             setUser(freshUser);
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     if (user && user.userId) {
       try {
-        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/logout`, {
+        await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/auth/logout`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -68,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     sessionStorage.setItem('user', JSON.stringify(newUserData));
     
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/profile`, {
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUserData)

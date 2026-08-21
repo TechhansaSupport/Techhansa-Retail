@@ -1,13 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 
 export default function Header() {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMobilePartnersOpen, setIsMobilePartnersOpen] = useState(false); 
-
-  const searchContainerRef = useRef(null);
+  const [isMobilePartnersOpen, setIsMobilePartnersOpen] = useState(false);
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -40,16 +37,7 @@ export default function Header() {
     { name: 'Contact Us', path: '/contact' },
   ];
 
-  // Click outside to close the search bar
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
-        setIsSearchOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm px-4 lg:px-10 py-3 w-full overflow-x-clip">
@@ -135,46 +123,32 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* 3. Action & Search Section */}
+        {/* 3. Action Section */}
         <div className="flex items-center gap-3 lg:gap-6 z-20">
           
-          <div ref={searchContainerRef} className="relative flex items-center justify-end h-10 w-auto lg:w-[320px]">
+          <div className="relative flex items-center justify-end h-10 w-auto">
             
-            {/* === SEARCH BAR === */}
-            <div 
-              className={`absolute right-0 flex items-center transition-all duration-500 ease-in-out origin-right ${
-                isSearchOpen ? 'w-[200px] lg:w-full opacity-100 visible' : 'w-0 opacity-0 invisible'
-              }`}
-            >
-              <input 
-                type="text" 
-                placeholder="Search products..." 
-                autoFocus={isSearchOpen}
-                className="w-full border-2 border-[var(--tech-blue)] rounded-full px-4 py-2 outline-none focus:shadow-md text-[15px] pr-10 bg-white"
-              />
-              <button 
-                onClick={() => setIsSearchOpen(false)}
-                className="absolute right-3 text-gray-400 hover:text-red-500 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
             {/* === DEFAULT ACTIONS === */}
-            <div 
-              className={`flex items-center gap-3 lg:gap-4 xl:gap-6 transition-all duration-400 ease-in-out ${
-                isSearchOpen ? 'opacity-0 invisible absolute right-0 scale-90' : 'opacity-100 visible relative scale-100'
-              }`}
-            >
-              {/* Search Icon */}
-              <button 
-                onClick={() => setIsSearchOpen(true)}
-                className="p-1.5 lg:p-2 rounded-full hover:bg-[var(--soft-bg)] text-[var(--text-dark)] hover:text-[var(--tech-blue)] transition-colors duration-300"
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 xl:gap-6 transition-all duration-400 ease-in-out">
+              
+              {/* Mobile Phone Icon (visible only when full number is hidden) */}
+              <a 
+                href="tel:+919711888951"
+                className="lg:hidden p-1.5 sm:p-2 rounded-full hover:bg-[var(--soft-bg)] text-[var(--text-dark)] hover:text-[var(--tech-blue)] transition-colors duration-300"
+                title="Call Techhansa"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-              </button>
+              </a>
+
+              {/* Mobile Login Button */}
+              <Link 
+                to="/login"
+                className="lg:hidden bg-[var(--tech-blue)] text-white px-3 sm:px-4 py-1.5 rounded-md text-[13px] font-semibold hover:bg-[#0a294b] transition-colors shadow-sm whitespace-nowrap"
+              >
+                Login
+              </Link>
 
               {/* Contact & Login Section */}
               <div className="hidden lg:flex flex-col -mt-8 items-end gap-0.5">
@@ -195,7 +169,7 @@ export default function Header() {
 
           {/* Mobile Hamburger Menu Icon */}
           <button 
-            className="lg:hidden p-1 text-[var(--text-dark)]"
+            className="lg:hidden p-1 ml-1 text-[var(--text-dark)]"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -253,7 +227,7 @@ export default function Header() {
             <Link 
               to="/login"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="bg-[var(--tech-blue)] text-white px-4 py-2 rounded-md font-semibold text-center w-full sm:hidden hover:bg-[#0a294b]"
+              className="bg-[var(--tech-blue)] text-white px-4 py-2 rounded-md font-semibold text-center w-full lg:hidden hover:bg-[#0a294b]"
             >
               Login
             </Link>

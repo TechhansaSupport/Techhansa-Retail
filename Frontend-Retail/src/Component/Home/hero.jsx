@@ -27,7 +27,7 @@ export default function Hero() {
   return (
     <section 
       ref={heroRef}
-      className="relative w-full h-[80vh] min-h-[500px] flex items-center justify-center overflow-hidden"
+      className="relative w-full h-[100svh] lg:h-[80vh] min-h-[550px] flex items-center justify-center overflow-hidden"
     >
       <video
         className="absolute inset-0 w-full h-full object-cover -z-10"
@@ -44,19 +44,19 @@ export default function Hero() {
       <div className="absolute inset-0 bg-[#07162c]/50 z-0"></div>
 
       {/* ================= CENTERED CONTENT ================= */}
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-5xl mx-auto w-full mt-[-3rem]">
+      <div className="relative z-10 flex flex-col items-center text-center px-4 sm:px-6 max-w-5xl mx-auto w-full mt-[-2rem] sm:mt-[-3rem]">
         
         {/* 1. Top Subheading (Uppercase, Spaced out) */}
-        <p className="text-white/90 tracking-[0.25em] md:tracking-[0.3em] font-semibold text-sm md:text-base uppercase mb-4 md:mb-6" data-aos="fade-up">
+        <p className="text-white/90 tracking-[0.2em] md:tracking-[0.3em] font-semibold text-xs sm:text-sm md:text-base uppercase mb-3 md:mb-6" data-aos="fade-up">
           Trusted by Businesses Across India
         </p>
 
         {/* 2. Massive Main Heading */}
-        <h1 className="text-white text-6xl md:text-7xl lg:text-[6rem] xl:text-[7rem] font-extrabold tracking-tight mb-2 md:mb-4 leading-none drop-shadow-lg" data-aos="fade-up" data-aos-delay="100">
+        <h1 className="text-white text-5xl sm:text-6xl md:text-7xl lg:text-[6rem] xl:text-[7rem] font-extrabold tracking-tight mb-2 md:mb-4 leading-none drop-shadow-lg" data-aos="fade-up" data-aos-delay="100">
           Your Growth
         </h1>
 
-        <p className="text-white text-2xl md:text-4xl lg:text-[2rem] xl:text-[2.5rem] font-light mb-12 drop-shadow-md" data-aos="fade-up" data-aos-delay="200">
+        <p className="text-white text-xl sm:text-2xl md:text-4xl lg:text-[2rem] xl:text-[2.5rem] font-light mb-8 md:mb-12 drop-shadow-md" data-aos="fade-up" data-aos-delay="200">
           powered by our <span className="text-[var(--premium-gold)] font-serif font-medium italic">IT Hardware</span> ecosystem
         </p>
 

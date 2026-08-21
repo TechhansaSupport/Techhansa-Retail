@@ -2,6 +2,9 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Search, Download, Printer, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../../../../context/AuthContext';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { fetchWithAuth } from '../../../../utils/api.js';
 import InvoiceTemplate from '../../../../Component/InvoiceTemplate';
 import InvoiceActions from '../../../../Component/InvoiceActions';
 
@@ -15,7 +18,7 @@ export default function EmployeeOrders() {
 
   useEffect(() => {
     if (user?.userId) {
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/sales/orders/${user.userId}`)
+      fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/sales/orders/${user.userId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {

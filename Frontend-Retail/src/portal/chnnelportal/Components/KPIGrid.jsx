@@ -34,6 +34,7 @@ const NumberCounter = ({ value }) => {
 };
 
 import { AuthContext } from '../../../context/AuthContext';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 export default function KPIGrid() {
   const { user } = useContext(AuthContext) || { user: null };
@@ -46,7 +47,7 @@ export default function KPIGrid() {
       if (!user?.userId) return;
       setIsLoading(true);
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/dashboard-stats?userId=${user.userId}`);
+        const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/dashboard-stats?userId=${user.userId}`);
         const data = await res.json();
         setStats(data);
       } catch (err) {

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 import { AuthContext } from '../../../context/AuthContext';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 const STATUS_CONFIG = {
   'Draft': { bg: 'bg-slate-100', text: 'text-slate-700', icon: FileText },
@@ -65,7 +66,7 @@ export default function RfpManagement() {
   const fetchRfps = async () => {
     if (!user?.userId) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`);
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`);
       const data = await res.json();
       setRfps(data);
     } catch (err) {

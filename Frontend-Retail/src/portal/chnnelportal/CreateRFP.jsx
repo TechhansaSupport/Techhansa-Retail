@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Plus, Trash2, FileUp, Save, Send, Calendar, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import { fetchWithAuth } from '../../utils/api.js';
 
 export default function CreateRFP() {
   const { user } = useContext(AuthContext) || { user: null };
@@ -39,7 +40,7 @@ export default function CreateRFP() {
   useEffect(() => {
     const fetchCatalog = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/channel/catalog/all`);
+        const response = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/channel/catalog/all`);
         if (response.ok) {
           const resData = await response.json();
           if (resData.success) {
@@ -138,7 +139,7 @@ export default function CreateRFP() {
       const url = isEdit ? `${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp/${rfp.rfpId}` : `${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp`;
       const method = isEdit ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -189,7 +190,7 @@ export default function CreateRFP() {
       const url = isEdit ? `${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp/${rfp.rfpId}` : `${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp`;
       const method = isEdit ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

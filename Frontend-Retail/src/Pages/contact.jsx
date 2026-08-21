@@ -14,6 +14,7 @@ import nationwideServiceImg from '../assets/nationwideservice.avif';
 import genuineProductImg from '../assets/genuineproduct.jpg';
 import customizedSolutionsImg from '../assets/customisesolutions.jpg';
 import longTermPartnershipImg from '../assets/longtermpartnership.avif';
+import { fetchWithAuth } from '../utils/api.js';
 
 // --- DATA ARRAYS ---
 const whyContactUs = [
@@ -115,7 +116,7 @@ export default function ContactPage() {
     setFormStatus({ loading: true, message: '', isError: false });
 
     try {
-      const response = await fetch('https://techhansaretail.com/api/contact', {
+      const response = await fetchWithAuth('https://techhansaretail.com/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
