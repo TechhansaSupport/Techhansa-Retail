@@ -196,8 +196,12 @@ export default function Checkout() {
                 {advanceSubMethod === 'UPI' && (
                   <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200 flex flex-col items-center">
                     <h4 className="font-semibold text-slate-900 mb-2">Scan to Pay</h4>
-                    <div className="w-40 h-40 bg-white border border-slate-300 rounded-xl flex items-center justify-center mb-2">
-                      <span className="text-slate-400 text-sm">QR Code Placeholder</span>
+                    <div className="w-40 h-40 bg-white border border-slate-300 rounded-xl flex items-center justify-center mb-2 overflow-hidden">
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=techhansa@hdfcbank&pn=Techhansa Retail&am=${totalAmount}&cu=INR`)}`} 
+                        alt="UPI QR Code" 
+                        className="w-full h-full object-cover p-2"
+                      />
                     </div>
                     <p className="text-sm font-medium text-slate-900">techhansa@hdfcbank</p>
                   </div>
@@ -213,10 +217,7 @@ export default function Checkout() {
                       <label className="block text-sm font-medium text-slate-700 mb-1">Transaction Date *</label>
                       <input type="date" value={transactionDate} onChange={e => setTransactionDate(e.target.value)} className="w-full px-4 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg text-sm bg-slate-50" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Upload Receipt (Optional)</label>
-                      <input type="file" onChange={e => setReceiptFile(e.target.files[0])} className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg text-sm text-slate-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700" />
-                    </div>
+
                   </div>
                 )}
               </motion.div>

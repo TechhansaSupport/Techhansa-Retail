@@ -93,10 +93,10 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.setFont('helvetica', 'normal');
   doc.text('Buyer (Bill to)', 15, 65);
   doc.setFont('helvetica', 'bold');
-  const buyerName = user?.companyName || user?.name || 'Techhansa Franchise';
+  const buyerName = user?.companyName || 'Techhansa Retail Pvt Ltd';
   doc.text(buyerName, 15, 70);
   doc.setFont('helvetica', 'normal');
-  const userAddr = user?.address || 'Franchise Address';
+  const userAddr = user?.address || '123 Business Avenue, Tech Park, Bangalore 560001';
   // basic address wrapping
   const splitAddr = doc.splitTextToSize(userAddr, 90);
   doc.text(splitAddr, 15, 74);
@@ -114,12 +114,13 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / 1.18) / totalQtyAcrossAllItems : 0;
 
   const tableData = invoiceItems.map((item, index) => {
-    const rate = item.rate || item.unitPrice || assumedRate;
+    const inclusiveRate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
+    const totalAmount = inclusiveRate * qty;
     const gstRate = item.taxRate || 18;
-    const taxableValue = rate * qty;
-    const gstAmount = taxableValue * (gstRate / 100);
-    const totalAmount = taxableValue + gstAmount;
+    const taxableValue = totalAmount / (1 + (gstRate / 100));
+    const gstAmount = totalAmount - taxableValue;
+    const rate = taxableValue / (qty || 1);
 
     const purchaseDate = item.purchaseDate || invoice.date || invoice.createdAt || Date.now();
 
@@ -155,12 +156,12 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   let finalAmt = 0;
 
   invoiceItems.forEach(item => {
-    const rate = item.rate || item.unitPrice || assumedRate;
+    const inclusiveRate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
+    const totalAmount = inclusiveRate * qty;
     const gstRate = item.taxRate || 18;
-    const taxableValue = rate * qty;
-    const gstAmount = taxableValue * (gstRate / 100);
-    const totalAmount = taxableValue + gstAmount;
+    const taxableValue = totalAmount / (1 + (gstRate / 100));
+    const gstAmount = totalAmount - taxableValue;
 
     totalQty += qty;
     totalGstAmt += gstAmount;
@@ -183,7 +184,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   autoTable(doc, {
     startY: 85,
     margin: { left: 14, right: 14 },
-    head: [['Sl No.', 'Item / Category', 'Brand', 'Model', 'Configuration', 'Purchase Date', 'Qty', 'Rate', 'GST Amount', 'Total Amount']],
+    head: [['Sl No.', 'Item / Category', 'Brand', 'Model', 'Configuration', 'Purchase Date', 'Qty', 'Base Price', 'GST Amount', 'Total Amount']],
     body: tableData,
     theme: 'grid',
     styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.2 },
@@ -237,9 +238,9 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
     doc.text('Product Details', 15, finalY + 4);
 
     const prodTableData = prodList.map(p => {
-      const r = p.rate || 0;
-      const g = p.gstAmount || (r * 0.18);
-      const t = p.totalAmount || (r + g);
+      const t = p.totalAmount || (p.rate || 0);
+      const g = p.gstAmount || (t - (t / 1.18));
+      const r = t - g;
       return [
         p.productName || p.category || '-',
         p.brand || '-',
@@ -255,7 +256,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
     autoTable(doc, {
       startY: finalY + 7,
       margin: { left: 14, right: 14 },
-      head: [['Product Name', 'Brand', 'Model', 'Configuration', 'Serial Number', 'Rate', 'GST Amount', 'Total Amount']],
+      head: [['Product Name', 'Brand', 'Model', 'Configuration', 'Serial Number', 'Base Price', 'GST Amount', 'Total Amount']],
       body: prodTableData,
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.2 },
@@ -278,7 +279,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
     : {
       buyerId: user?.userId || invoice.userId || '-',
       productId: rfp?.rfpId || invoice.orderReference?.orderNumber || '-',
-      buyerName: user?.name || user?.companyName || '-',
+      buyerName: user?.companyName || 'Techhansa Retail Pvt Ltd',
       paymentDetails: (user?.totalCredit > 0) ? 'Credit Limit' : 'Advance Payment'
     };
 

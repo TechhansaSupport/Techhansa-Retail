@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
   status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
   totalCredit: { type: Number, default: 0 },
   usedCredit: { type: Number, default: 0 },
+  dailyTarget: { type: Number, default: 100000 },
   deletedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });

@@ -294,9 +294,9 @@ export default function ProcurementTables() {
                     ₹{(() => {
                       const fallbackAmount = selectedQuotation.amount || selectedQuotation.totalAmount || 0;
                       if (selectedQuotation.items && selectedQuotation.items.length > 0) {
-                        return selectedQuotation.items.reduce((sum, item) => sum + (item.totalAmount || (item.unitPrice * (item.quantity || 1) * 1.18) || 0), 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                        return selectedQuotation.items.reduce((sum, item) => sum + (item.totalAmount || (item.unitPrice * (item.quantity || 1)) || 0), 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
                       }
-                      return (fallbackAmount * 1.18).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                      return (fallbackAmount).toLocaleString('en-IN', { maximumFractionDigits: 2 });
                     })()}
                   </p>
                 </div>
@@ -321,19 +321,29 @@ export default function ProcurementTables() {
                         <tr className="bg-slate-50 border-b border-slate-200">
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700">Item</th>
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center">Qty</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Unit Price</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Base Price</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">GST Amount</th>
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Total</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {selectedQuotation.items.map((item, i) => (
+                        {selectedQuotation.items.map((item, i) => {
+                          const unitPrice = item.unitPrice || 0;
+                          const qty = item.quantity || 1;
+                          const total = unitPrice * qty;
+                          const base = total / 1.18;
+                          const gst = total - base;
+
+                          return (
                           <tr key={i} className="hover:bg-slate-50 transition-colors">
                             <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || item.brand}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{item.quantity}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{item.unitPrice?.toLocaleString('en-IN') || 0}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{item.totalAmount?.toLocaleString('en-IN') || 0}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{qty}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{base?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) || 0}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{gst.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">₹{total.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

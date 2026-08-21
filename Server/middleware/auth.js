@@ -16,7 +16,7 @@ const verifyToken = (req, res, next) => {
     const verified = jwt.verify(token, JWT_SECRET);
     req.user = verified;
 
-    const requestedUserId = req.query?.userId || req.body?.userId || req.params?.userId;
+    const requestedUserId = req.query?.userId || req.params?.userId;
     if (requestedUserId && req.user.role !== 'admin' && req.user.userId !== requestedUserId) {
       return res.status(403).json({ message: 'Access Denied: You can only access your own data' });
     }

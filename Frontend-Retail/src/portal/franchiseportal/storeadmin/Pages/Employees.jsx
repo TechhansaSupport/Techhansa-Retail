@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useFranchise } from '../context/FranchiseContext';
-import { Plus, UserX, CheckCircle, Edit, X } from 'lucide-react';
+import { Plus, UserX, CheckCircle, Edit, X, Eye, EyeOff } from 'lucide-react';
 
 export default function Employees() {
   const { employees, addEmployee, updateEmployee, toggleEmployeeStatus, invoices } = useFranchise();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({ userId: '', name: '', phone: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ userId: '', name: '', phone: '', email: '', password: '', dailyTarget: 100000 });
+  const [showAddPassword, setShowAddPassword] = useState(false);
   
   const [editingEmployee, setEditingEmployee] = useState(null);
-  const [editFormData, setEditFormData] = useState({ name: '', phone: '', email: '', password: '' });
+  const [editFormData, setEditFormData] = useState({ name: '', phone: '', email: '', password: '', dailyTarget: 100000 });
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   const employeeSalesMap = React.useMemo(() => {
     if (!invoices) return {};
@@ -41,13 +43,14 @@ export default function Employees() {
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
-      password: formData.password
+      password: formData.password,
+      dailyTarget: formData.dailyTarget
     };
     
     const res = await addEmployee(newEmp);
     if (res.success) {
       setShowAddForm(false);
-      setFormData({ userId: '', name: '', phone: '', email: '', password: '' });
+      setFormData({ userId: '', name: '', phone: '', email: '', password: '', dailyTarget: 100000 });
     } else {
       alert(res.message || 'Failed to add employee');
     }
@@ -59,7 +62,8 @@ export default function Employees() {
       name: emp.name || '',
       phone: emp.phone || '',
       email: emp.email || '',
-      password: ''
+      password: '',
+      dailyTarget: emp.dailyTarget || 100000
     });
   };
 
@@ -70,7 +74,8 @@ export default function Employees() {
       name: editFormData.name,
       phone: editFormData.phone,
       email: editFormData.email,
-      password: editFormData.password || undefined // Only send if not empty
+      password: editFormData.password || undefined, // Only send if not empty
+      dailyTarget: editFormData.dailyTarget
     });
 
     if (res.success) {
@@ -117,7 +122,16 @@ export default function Employees() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-600 mb-1">Password</label>
-              <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              <div className="relative">
+                <input required type={showAddPassword ? "text" : "password"} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-10" />
+                <button type="button" onClick={() => setShowAddPassword(!showAddPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  {showAddPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 mb-1">Daily Target (₹)</label>
+              <input required type="number" min="0" value={formData.dailyTarget} onChange={e => setFormData({...formData, dailyTarget: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
             </div>
             <div className="md:col-span-2 flex justify-end gap-3 mt-2">
               <button type="button" onClick={() => setShowAddForm(false)} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-xl">Cancel</button>
@@ -199,7 +213,16 @@ export default function Employees() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-600 mb-1">New Password (leave blank to keep current)</label>
-                <input type="password" value={editFormData.password} onChange={e => setEditFormData({...editFormData, password: e.target.value})} placeholder="••••••••" className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                <div className="relative">
+                  <input type={showEditPassword ? "text" : "password"} value={editFormData.password} onChange={e => setEditFormData({...editFormData, password: e.target.value})} placeholder="••••••••" className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-10" />
+                  <button type="button" onClick={() => setShowEditPassword(!showEditPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    {showEditPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-600 mb-1">Daily Target (₹)</label>
+                <input required type="number" min="0" value={editFormData.dailyTarget} onChange={e => setEditFormData({...editFormData, dailyTarget: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
               </div>
               <div className="flex justify-end gap-3 mt-4">
                 <button type="button" onClick={() => setEditingEmployee(null)} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-xl transition-colors">Cancel</button>

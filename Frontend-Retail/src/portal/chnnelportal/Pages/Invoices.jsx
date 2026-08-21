@@ -205,7 +205,7 @@ export default function Invoices() {
                 <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-slate-700">
                   {/* Company Details */}
                   <div className="p-4 border-b border-slate-700">
-                    <h3 className="font-bold text-slate-900 uppercase">TECHHANSA RETAIL PVT LTD</h3>
+                    <h3 className="font-bold text-slate-900 uppercase">{companySettings?.companyName || 'TECHHANSA RETAIL PVT LTD'}</h3>
                     <p className="text-sm text-slate-700 whitespace-pre-wrap">{companySettings?.registeredAddress || 'Address'}</p>
                     <div className="mt-2 text-sm text-slate-700 space-y-0.5">
                       <p><strong>GSTIN/UIN:</strong> {companySettings?.gstin || 'N/A'}</p>
@@ -287,13 +287,36 @@ export default function Invoices() {
                           const gstAmount = taxableValue * (gstRate / 100);
                           const totalAmount = taxableValue + gstAmount;
 
+                          const configStr = (() => {
+                            if (typeof item.configuration === 'string' && item.configuration) {
+                              try {
+                                const parsed = JSON.parse(item.configuration);
+                                if (typeof parsed === 'object' && parsed !== null) {
+                                  return Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join('\n');
+                                }
+                              } catch (e) {
+                                return item.configuration;
+                              }
+                              return item.configuration;
+                            }
+                            if (item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0) {
+                              return Object.entries(item.specs)
+                                .map(([k, v]) => `${k}: ${v}`)
+                                .join('\n');
+                            }
+                            if (item.configuration && typeof item.configuration === 'object') {
+                              return Object.entries(item.configuration).map(([k, v]) => `${k}: ${v}`).join('\n');
+                            }
+                            return item.details || '-';
+                          })();
+
                           return (
                             <tr key={i} className="hover:bg-slate-50 transition-colors">
                               <td className="px-4 py-3 text-sm text-slate-900 font-medium text-center">{i + 1}</td>
                               <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || item.category || '-'}</td>
                               <td className="px-4 py-3 text-sm text-slate-900">{item.brand || '-'}</td>
                               <td className="px-4 py-3 text-sm text-slate-900">{item.model || '-'}</td>
-                              <td className="px-4 py-3 text-sm text-slate-500 whitespace-pre-wrap">{item.configuration || item.specs || item.details || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-slate-500 whitespace-pre-wrap break-words min-w-[200px]">{configStr}</td>
                               <td className="px-4 py-3 text-sm text-slate-500">{new Date(selectedRfp?.createdAt || selectedInvoice.createdAt).toLocaleDateString()}</td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{qty}</td>
                               <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium"> {rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

@@ -97,6 +97,10 @@ router.post('/checkout', async (req, res) => {
 router.get('/dashboard/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
+    const User = require('../models/User');
+
+    const user = await User.findOne({ userId: userId });
+    const targetToday = user?.dailyTarget || 100000;
     
     // Calculate today's start and end dates
     const startOfDay = new Date();
@@ -176,7 +180,7 @@ router.get('/dashboard/:userId', async (req, res) => {
     const performanceHistory = orderedDays.map(day => ({
       day,
       sales: performanceHistoryMap[day],
-      target: 100000 // Mock daily target
+      target: targetToday
     }));
 
     const totalCategories = Object.values(categoryCountMap).reduce((a, b) => a + b, 0);
@@ -191,7 +195,7 @@ router.get('/dashboard/:userId', async (req, res) => {
     res.json({ 
       success: true, 
       salesToday, 
-      targetToday: 100000,
+      targetToday: targetToday,
       ordersProcessed,
       aov,
       recentBills,

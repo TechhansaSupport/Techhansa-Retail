@@ -106,26 +106,28 @@ export default function Quotations() {
 
   const quotationItems = rawItems.map(p => {
     let unitPrice = p.unitPrice ?? p.price;
-    let totalAmount = p.totalAmount;
     
     if (unitPrice === undefined || unitPrice === 0 || unitPrice == null) {
       if (rawItems.length === 1 && fallbackTotalAmount > 0) {
-        // If we only have the fallback total, assume it's the base price and add 18% GST for the final item total
-        totalAmount = fallbackTotalAmount * 1.18;
+        // If we only have the fallback total, assume it is GST inclusive
         unitPrice = fallbackTotalAmount / (p.quantity || 1);
+      } else {
+        unitPrice = 0;
       }
-    } else if (totalAmount === undefined || totalAmount == null) {
-      // If we have unit price but no total, compute total with GST
-      const taxRate = p.taxRate || 18;
-      totalAmount = unitPrice * (p.quantity || 1) * (1 + taxRate / 100);
     }
     
-    return { ...p, unitPrice, totalAmount };
+    const qty = p.quantity || 1;
+    // Force recalculation to fix old DB data that had * 1.18 stored as totalAmount
+    const totalAmount = unitPrice * qty;
+    const baseAmt = totalAmount / 1.18;
+    const gstAmt = totalAmount - baseAmt;
+
+    return { ...p, unitPrice, totalAmount, gstAmt, baseAmt };
   });
 
   const displayTotalAmount = quotationItems.length > 0 
     ? quotationItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0)
-    : fallbackTotalAmount * 1.18;
+    : fallbackTotalAmount;
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
@@ -270,7 +272,8 @@ export default function Quotations() {
                         <tr className="bg-slate-50 border-b border-slate-200">
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700">Item</th>
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-center">Qty</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Unit Price</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Base Price</th>
+                          <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">GST Amount</th>
                           <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">Total</th>
                         </tr>
                       </thead>
@@ -279,8 +282,9 @@ export default function Quotations() {
                           <tr key={i} className="hover:bg-slate-50 transition-colors">
                             <td className="px-4 py-3 text-sm text-slate-900">{item.name || item.productName || `${item.brand} ${item.category} (${item.model})`}</td>
                             <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{item.quantity}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">{item.unitPrice !== undefined ? `₹${item.unitPrice?.toLocaleString('en-IN')}` : 'N/A'}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">{item.totalAmount !== undefined ? `₹${item.totalAmount?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : 'N/A'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">{item.baseAmt !== undefined ? `₹${item.baseAmt?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : 'N/A'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">{item.gstAmt !== undefined ? `₹${item.gstAmt?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : 'N/A'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-bold text-emerald-600">{item.totalAmount !== undefined ? `₹${item.totalAmount?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : 'N/A'}</td>
                           </tr>
                         ))}
                       </tbody>

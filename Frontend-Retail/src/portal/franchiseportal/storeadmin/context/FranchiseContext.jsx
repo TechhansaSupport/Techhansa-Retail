@@ -20,6 +20,7 @@ export function FranchiseProvider({ children }) {
   const [b2bInvoices, setB2bInvoices] = useState([]);
   const [walletTransactions, setWalletTransactions] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [companySettings, setCompanySettings] = useState(null);
 
   const refreshData = async () => {
     if (!storeId) return;
@@ -32,10 +33,21 @@ export function FranchiseProvider({ children }) {
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/employees`),
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/catalog/all`),
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/requests`),
-        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/sales/store/${storeId}`) // Fetch Store Sales
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/sales/store/${storeId}`), // Fetch Store Sales
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/settings/company`) // Fetch Company Settings
       ]);
 
-      const [profileRes, inventoryRes, walletRes, invoicesRes, employeesRes, catalogRes, requestsRes, salesRes] = results;
+      const [
+        profileRes,
+        inventoryRes,
+        walletRes,
+        invoicesRes,
+        employeesRes,
+        catalogRes,
+        requestsRes,
+        salesRes,
+        settingsRes
+      ] = results;
 
       let dynTodaysSales = 0;
       let dynMonthlySales = 0;
@@ -85,6 +97,7 @@ export function FranchiseProvider({ children }) {
       if (invoicesRes.status === 'fulfilled' && invoicesRes.value.data.success) setB2bInvoices(invoicesRes.value.data.data);
       if (employeesRes.status === 'fulfilled' && employeesRes.value.data.success) setEmployees(employeesRes.value.data.data);
       if (catalogRes.status === 'fulfilled' && catalogRes.value.data.success) setTechhansaCatalog(catalogRes.value.data.data);
+      if (settingsRes.status === 'fulfilled' && settingsRes.value.data) setCompanySettings(settingsRes.value.data);
 
     } catch (error) {
       console.error("Failed to fetch franchise data", error);
@@ -296,6 +309,7 @@ export function FranchiseProvider({ children }) {
       techhansaCatalog,
       b2bInvoices,
       setB2bInvoices,
+      companySettings,
       walletTransactions,
       setWalletTransactions,
       employees,

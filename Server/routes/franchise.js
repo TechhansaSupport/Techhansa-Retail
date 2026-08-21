@@ -425,7 +425,7 @@ router.get('/:storeId/employees', async (req, res) => {
 // Create Employee
 router.post('/:storeId/employees', async (req, res) => {
   try {
-    const { userId, password, name, phone, email } = req.body;
+    const { userId, password, name, phone, email, dailyTarget } = req.body;
     
     // Check if user already exists
     const existingUser = await User.findOne({ userId });
@@ -444,7 +444,8 @@ router.post('/:storeId/employees', async (req, res) => {
       email,
       role: 'employee',
       storeId: req.params.storeId,
-      status: 'Active'
+      status: 'Active',
+      dailyTarget: dailyTarget !== undefined ? Number(dailyTarget) : 100000
     });
 
     await newEmployee.save();
@@ -458,14 +459,19 @@ router.post('/:storeId/employees', async (req, res) => {
 // Update Employee Details
 router.put('/:storeId/employees/:id', async (req, res) => {
   try {
-    const { name, phone, email, password } = req.body;
+    const { name, phone, email, password, dailyTarget } = req.body;
     
-    // Use $or to support both _id (MongoDB ObjectId) and userId (string ID like EMP-001)
-    const employee = await User.findOne({ 
-      $or: [{ _id: req.params.id }, { userId: req.params.id }], 
-      storeId: req.params.storeId, 
-      role: 'employee' 
-    });
+    const mongoose = require('mongoose');
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+    const query = { storeId: req.params.storeId, role: 'employee' };
+    
+    if (isValidObjectId) {
+      query.$or = [{ _id: req.params.id }, { userId: req.params.id }];
+    } else {
+      query.userId = req.params.id;
+    }
+
+    const employee = await User.findOne(query);
 
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee not found' });
@@ -475,6 +481,7 @@ router.put('/:storeId/employees/:id', async (req, res) => {
     if (phone) employee.phone = phone;
     if (email) employee.email = email;
     if (password) employee.password = password;
+    if (dailyTarget !== undefined) employee.dailyTarget = Number(dailyTarget);
 
     await employee.save();
     res.json({ success: true, data: employee });

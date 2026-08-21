@@ -16,6 +16,16 @@ export default function Settings() {
     newPassword: '',
     confirmPassword: ''
   });
+  const [companySettings, setCompanySettings] = useState({
+    companyName: '',
+    registeredAddress: '',
+    gstin: '',
+    stateName: '',
+    contactNumber: '',
+    email: '',
+    declaration: '',
+    authorizedSignatoryText: ''
+  });
 
   useEffect(() => {
     if (user) {
@@ -25,6 +35,27 @@ export default function Settings() {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchCompanySettings = async () => {
+      try {
+        const res = await axios.get('/api/settings/company');
+        setCompanySettings({
+          companyName: res.data.companyName || '',
+          registeredAddress: res.data.registeredAddress || '',
+          gstin: res.data.gstin || '',
+          stateName: res.data.stateName || '',
+          contactNumber: res.data.contactNumber || '',
+          email: res.data.email || '',
+          declaration: res.data.declaration || '',
+          authorizedSignatoryText: res.data.authorizedSignatoryText || ''
+        });
+      } catch (error) {
+        console.error('Failed to fetch company settings', error);
+      }
+    };
+    fetchCompanySettings();
+  }, []);
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -67,6 +98,19 @@ export default function Settings() {
       setSecurityData({ newPassword: '', confirmPassword: '' });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompanySettingsSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.put('/api/settings/company', companySettings);
+      toast.success('Company settings updated successfully!');
+    } catch (error) {
+      toast.error('Failed to update company settings');
     } finally {
       setLoading(false);
     }
@@ -185,6 +229,95 @@ export default function Settings() {
           </form>
         </motion.div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+      >
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+          <Shield size={18} className="text-indigo-500" />
+          <h2 className="text-lg font-bold text-slate-800">Company Settings (Global)</h2>
+        </div>
+        <form onSubmit={handleCompanySettingsSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+              <input
+                type="text"
+                value={companySettings.companyName}
+                onChange={(e) => setCompanySettings({ ...companySettings, companyName: e.target.value })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">GSTIN/UIN</label>
+              <input
+                type="text"
+                value={companySettings.gstin}
+                onChange={(e) => setCompanySettings({ ...companySettings, gstin: e.target.value })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">State Name</label>
+              <input
+                type="text"
+                value={companySettings.stateName}
+                onChange={(e) => setCompanySettings({ ...companySettings, stateName: e.target.value })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Contact Number</label>
+              <input
+                type="text"
+                value={companySettings.contactNumber}
+                onChange={(e) => setCompanySettings({ ...companySettings, contactNumber: e.target.value })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input
+                type="text"
+                value={companySettings.email}
+                onChange={(e) => setCompanySettings({ ...companySettings, email: e.target.value })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">Registered Address</label>
+              <textarea
+                rows={2}
+                value={companySettings.registeredAddress}
+                onChange={(e) => setCompanySettings({ ...companySettings, registeredAddress: e.target.value })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">Declaration (Invoice)</label>
+              <textarea
+                rows={2}
+                value={companySettings.declaration}
+                onChange={(e) => setCompanySettings({ ...companySettings, declaration: e.target.value })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+          </div>
+          <div className="pt-4 flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-70"
+            >
+              <Save size={18} />
+              Save Company Settings
+            </button>
+          </div>
+        </form>
+      </motion.div>
     </div>
   );
 }
