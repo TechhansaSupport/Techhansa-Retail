@@ -1,14 +1,17 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Search, Download, Printer, FileText } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../../../../context/AuthContext';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import InvoiceTemplate from '../../../../Component/InvoiceTemplate';
+import InvoiceActions from '../../../../Component/InvoiceActions';
 
 export default function EmployeeOrders() {
   const { user } = useContext(AuthContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState([]);
+
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const invoiceRef = useRef(null);
 
   useEffect(() => {
     if (user?.userId) {
@@ -27,64 +30,6 @@ export default function EmployeeOrders() {
     (order.invoiceNumber && order.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase())) || 
     (order.customerName && order.customerName.toLowerCase().includes(searchQuery.toLowerCase()))
   );
-
-  const generatePDF = (order, autoPrint = false) => {
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(20);
-    doc.text("Techhansa Retail", 14, 22);
-    doc.setFontSize(12);
-    doc.text("Customer Invoice", 14, 32);
-    
-    // Invoice details
-    doc.setFontSize(10);
-    doc.text(`Invoice No: ${order.invoiceNumber}`, 14, 45);
-    doc.text(`Date: ${new Date(order.createdAt).toLocaleString()}`, 14, 52);
-    doc.text(`Customer Name: ${order.customerName || 'Walk-in'}`, 14, 59);
-    doc.text(`Phone: ${order.customerPhone || 'N/A'}`, 14, 66);
-    
-    const tableBody = (order.items || []).map(item => {
-      const itemName = item.serialNumbers && item.serialNumbers.length > 0
-        ? `${item.name}\n(SN: ${item.serialNumbers.join(', ')})`
-        : item.name;
-      return [
-        itemName,
-        item.quantity,
-        `Rs. ${(item.sellingPrice || 0).toLocaleString()}`,
-        `Rs. ${(item.quantity * (item.sellingPrice || 0)).toLocaleString()}`
-      ];
-    });
-    
-    autoTable(doc, {
-      startY: 75,
-      head: [['Item Name', 'Qty', 'Price', 'Total']],
-      body: tableBody,
-      theme: 'grid',
-      headStyles: { fillColor: [79, 70, 229] }
-    });
-    
-    const finalY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 75) + 10;
-    
-    autoTable(doc, {
-      startY: finalY,
-      body: [
-        ['Subtotal', `Rs. ${(order.subtotalAmount || 0).toLocaleString()}`],
-        ['Tax (18% GST)', `Rs. (((order.amount || 0) - (order.subtotalAmount || 0))).toLocaleString()`],
-        ['Grand Total', `Rs. ${(order.amount || 0).toLocaleString()}`]
-      ],
-      theme: 'plain',
-      styles: { halign: 'right' },
-      columnStyles: { 0: { fontStyle: 'bold' } }
-    });
-
-    if (autoPrint) {
-      doc.autoPrint();
-      window.open(doc.output('bloburl'), '_blank');
-    } else {
-      doc.save(`${order.invoiceNumber}.pdf`);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -152,16 +97,10 @@ export default function EmployeeOrders() {
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <button 
-                          onClick={() => generatePDF(order)}
+                          onClick={() => setSelectedInvoice(order)}
                           className="flex items-center gap-1 text-slate-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors border border-transparent hover:border-indigo-100 text-xs font-medium"
                         >
-                          <Download size={14} /> Download
-                        </button>
-                        <button 
-                          onClick={() => generatePDF(order, true)}
-                          className="flex items-center gap-1 text-slate-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors border border-transparent hover:border-indigo-100 text-xs font-medium"
-                        >
-                          <Printer size={14} /> Print Bill
+                          <FileText size={14} /> View Invoice
                         </button>
                       </div>
                     </td>
@@ -178,6 +117,45 @@ export default function EmployeeOrders() {
           </table>
         </div>
       </motion.div>
+
+      {/* Invoice Modal */}
+      <AnimatePresence>
+        {selectedInvoice && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-indigo-50" data-no-print>
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 bg-indigo-500 text-white rounded-full flex items-center justify-center shrink-0">
+                    <FileText size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-indigo-900">Invoice {selectedInvoice.invoiceNumber}</h3>
+                    <p className="text-indigo-700 text-sm">Past Order Record</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedInvoice(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+              </div>
+
+              <div className="p-8 flex-1 overflow-y-auto bg-white flex justify-center w-full">
+                <div className="w-full" ref={invoiceRef}>
+                  <InvoiceTemplate invoice={selectedInvoice} storeData={{ storeName: 'Techhansa Retail' }} />
+                </div>
+              </div>
+              
+              {/* Action Buttons: Close + Download + WhatsApp + Print */}
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-3" data-no-print>
+                <button onClick={() => setSelectedInvoice(null)} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-xl transition-colors">Close</button>
+                <div className="flex gap-3">
+                  <InvoiceActions invoice={selectedInvoice} storeData={{ storeName: 'Techhansa Retail' }} invoiceRef={invoiceRef} />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

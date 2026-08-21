@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFranchise } from '../context/FranchiseContext';
 import { Minus, Plus, Trash2, Printer, CheckCircle2, User, Phone, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import InvoiceTemplate from '../../../../Component/InvoiceTemplate';
+import InvoiceActions from '../../../../Component/InvoiceActions';
 
 export default function Cart() {
   const { globalCart, updateGlobalCartQuantity, removeGlobalCartItem, clearGlobalCart, processSale, storeProfileData } = useFranchise();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
   const [generatedInvoice, setGeneratedInvoice] = useState(null);
+  const invoiceRef = useRef(null);
   
   const [showSerialModal, setShowSerialModal] = useState(false);
   const [serialNumbers, setSerialNumbers] = useState({});
@@ -168,7 +170,7 @@ export default function Cart() {
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-emerald-50">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-emerald-50" data-no-print>
                 <div className="flex gap-3">
                   <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center shrink-0">
                     <CheckCircle2 size={24} />
@@ -182,16 +184,17 @@ export default function Cart() {
               </div>
 
               <div className="p-8 flex-1 overflow-y-auto bg-white flex justify-center w-full">
-                <div className="w-full">
+                <div className="w-full" ref={invoiceRef}>
                   <InvoiceTemplate invoice={generatedInvoice} storeData={storeProfileData} />
                 </div>
               </div>
               
-              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              {/* Action Buttons: Close + Download + WhatsApp + Print */}
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-3" data-no-print>
                 <button onClick={() => setGeneratedInvoice(null)} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-xl transition-colors">Close</button>
-                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200">
-                  <Printer size={18} /> Print Invoice
-                </button>
+                <div className="flex gap-3">
+                  <InvoiceActions invoice={generatedInvoice} storeData={storeProfileData} invoiceRef={invoiceRef} />
+                </div>
               </div>
             </motion.div>
           </div>

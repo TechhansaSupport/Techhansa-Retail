@@ -3,9 +3,29 @@ import { useFranchise } from '../context/FranchiseContext';
 import { Plus, UserX, CheckCircle } from 'lucide-react';
 
 export default function Employees() {
-  const { employees, addEmployee, toggleEmployeeStatus } = useFranchise();
+  const { employees, addEmployee, toggleEmployeeStatus, invoices } = useFranchise();
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({ userId: '', name: '', phone: '', email: '', password: '' });
+
+  const employeeSalesMap = React.useMemo(() => {
+    if (!invoices) return {};
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    const salesMap = {};
+    invoices.forEach(inv => {
+      const invDate = new Date(inv.createdAt);
+      if (invDate >= startOfMonth && inv.employeeId) {
+        salesMap[inv.employeeId] = (salesMap[inv.employeeId] || 0) + inv.amount;
+      }
+    });
+    return salesMap;
+  }, [invoices]);
+
+  const getEmployeeSales = (emp) => {
+    const empId = emp.userId || emp.id;
+    return employeeSalesMap[empId] || 0;
+  };
 
   const handleToggleStatus = async (id) => {
     await toggleEmployeeStatus(id);
@@ -96,7 +116,7 @@ export default function Employees() {
                   <div className="text-xs text-slate-500">{emp.email} • {emp.phone}</div>
                 </td>
                 <td className="px-6 py-4 font-mono text-sm text-slate-800">{emp.userId || emp.id}</td>
-                <td className="px-6 py-4 text-right font-medium text-indigo-600">₹{(emp.totalSales || 0).toLocaleString()}</td>
+                <td className="px-6 py-4 text-right font-medium text-indigo-600">₹{getEmployeeSales(emp).toLocaleString()}</td>
                 <td className="px-6 py-4 text-center">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${(emp.status || 'Active') === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                     {emp.status || 'Active'}

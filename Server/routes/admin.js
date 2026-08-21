@@ -198,7 +198,7 @@ router.get('/dashboard/chart', async (req, res) => {
       { $match: { createdAt: { $gte: startDate }, role: { $in: ['franchise', 'channel'] } } },
       {
         $group: {
-          _id: isDaily ? 
+          _id: isDaily ?
             { day: { $dayOfMonth: "$createdAt" }, month: { $month: "$createdAt" }, year: { $year: "$createdAt" }, role: "$role" } :
             { month: { $month: "$createdAt" }, year: { $year: "$createdAt" }, role: "$role" },
           count: { $sum: 1 }
@@ -228,7 +228,7 @@ router.get('/dashboard/chart', async (req, res) => {
       } else {
         d.setMonth(d.getMonth() - i);
       }
-      
+
       const day = d.getDate();
       const month = d.getMonth() + 1; // 1-12
       const year = d.getFullYear();
@@ -246,9 +246,9 @@ router.get('/dashboard/chart', async (req, res) => {
     }
 
     userStats.forEach(stat => {
-      const dataRow = chartData.find(d => 
-        (isDaily ? d.day === stat._id.day : true) && 
-        d.month === stat._id.month && 
+      const dataRow = chartData.find(d =>
+        (isDaily ? d.day === stat._id.day : true) &&
+        d.month === stat._id.month &&
         d.year === stat._id.year
       );
       if (dataRow) {
@@ -258,9 +258,9 @@ router.get('/dashboard/chart', async (req, res) => {
     });
 
     invoiceStats.forEach(stat => {
-      const dataRow = chartData.find(d => 
-        (isDaily ? d.day === stat._id.day : true) && 
-        d.month === stat._id.month && 
+      const dataRow = chartData.find(d =>
+        (isDaily ? d.day === stat._id.day : true) &&
+        d.month === stat._id.month &&
         d.year === stat._id.year
       );
       if (dataRow) {
@@ -285,16 +285,17 @@ router.get('/orders', async (req, res) => {
       { $unwind: { path: '$rfpDetails', preserveNullAndEmptyArrays: true } },
       { $lookup: { from: 'users', localField: 'userId', foreignField: 'userId', as: 'userDetails' } },
       { $unwind: { path: '$userDetails', preserveNullAndEmptyArrays: true } },
-      { $addFields: { 
-          userRole: '$userDetails.role', 
+      {
+        $addFields: {
+          userRole: '$userDetails.role',
           orderType: 'Enterprise',
-          items: { 
-            $cond: { 
-              if: { $gt: [ { $size: { $ifNull: ["$items", []] } }, 0 ] }, 
-              then: "$items", 
-              else: { 
+          items: {
+            $cond: {
+              if: { $gt: [{ $size: { $ifNull: ["$items", []] } }, 0] },
+              then: "$items",
+              else: {
                 $cond: {
-                  if: { $gt: [ { $size: { $ifNull: ["$quotationDetails.items", []] } }, 0 ] },
+                  if: { $gt: [{ $size: { $ifNull: ["$quotationDetails.items", []] } }, 0] },
                   then: "$quotationDetails.items",
                   else: {
                     $map: {
@@ -312,10 +313,11 @@ router.get('/orders', async (req, res) => {
                     }
                   }
                 }
-              } 
-            } 
+              }
+            }
           }
-      }},
+        }
+      },
       { $project: { userDetails: 0, quotationDetails: 0, rfpDetails: 0 } }
     ]);
 
@@ -389,14 +391,14 @@ router.patch('/orders/:id/status', async (req, res) => {
 
     if (order.quotationReference) {
       if (status === 'Quotation Sent' || status === 'Confirmed') {
-        await Quotation.findByIdAndUpdate(order.quotationReference._id, { 
+        await Quotation.findByIdAndUpdate(order.quotationReference._id, {
           status: 'Approved',
           amount: amount || order.totalAmount || 0,
           paymentStatus: 'Pending'
         });
         if (order.quotationReference.rfpReference) {
-          await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, { 
-            status: status === 'Quotation Sent' ? 'Quotation Received' : 'Approved' 
+          await RFP.findByIdAndUpdate(order.quotationReference.rfpReference, {
+            status: status === 'Quotation Sent' ? 'Quotation Received' : 'Approved'
           });
         }
       } else if (status === 'Declined') {
@@ -418,20 +420,20 @@ router.patch('/orders/:id/status', async (req, res) => {
     if (status === 'Dispatched') {
       let itemsToDeduct = order.items && order.items.length > 0 ? order.items : [];
       if (itemsToDeduct.length === 0 && order.quotationReference && order.quotationReference.items && order.quotationReference.items.length > 0) {
-         itemsToDeduct = order.quotationReference.items;
+        itemsToDeduct = order.quotationReference.items;
       }
       if (itemsToDeduct.length === 0 && order.quotationReference && order.quotationReference.rfpReference && order.quotationReference.rfpReference.products) {
-         itemsToDeduct = order.quotationReference.rfpReference.products.map(p => ({
-            productName: p.category,
-            brand: p.brand,
-            model: p.model,
-            quantity: p.quantity
-         }));
+        itemsToDeduct = order.quotationReference.rfpReference.products.map(p => ({
+          productName: p.category,
+          brand: p.brand,
+          model: p.model,
+          quantity: p.quantity
+        }));
       }
-      
+
       for (const item of itemsToDeduct) {
         if (!item.brand || (!item.model && !item.productName)) continue;
-        
+
         let product;
         if (item.model) {
           product = await GlobalProduct.findOne({ brand: item.brand, model: item.model });
@@ -439,7 +441,7 @@ router.patch('/orders/:id/status', async (req, res) => {
         if (!product && item.productName) {
           product = await GlobalProduct.findOne({ name: item.productName });
         }
-        
+
         if (product) {
           product.quantity = Math.max(0, product.quantity - item.quantity);
           product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.quantity);
@@ -632,7 +634,7 @@ router.post('/procurement-requests/:id/confirm-payment', async (req, res) => {
 
     const quotation = await require('../models/Quotation').findOne({ procurementReference: request._id });
     const invoice = await B2BInvoice.findOne({ requestId: request.requestId });
-    
+
     if (!quotation && !invoice) return res.status(404).json({ message: 'Quotation or B2B Invoice not found' });
 
     // Update statuses
@@ -675,7 +677,7 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
         if (!item.hardwareType) continue;
         // Franchise requests use hardwareType/otherType as name, and brand as brand.
         const productName = item.hardwareType === 'Others' ? item.otherType : item.hardwareType;
-        
+
         let product;
         if (item.model) {
           product = await GlobalProduct.findOne({ brand: item.brand, model: item.model });
@@ -693,7 +695,7 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
         if (!product) {
           product = await GlobalProduct.findOne({ brand: item.brand, category: item.hardwareType });
         }
-        
+
         if (product) {
           product.quantity = Math.max(0, product.quantity - item.quantity);
           product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.quantity);
@@ -798,7 +800,7 @@ router.post('/orders/:id/invoice', async (req, res) => {
       if (order.status !== 'Paid' && order.paymentStatus !== 'Paid') {
         return res.status(400).json({ message: 'Only Paid orders can be invoiced.' });
       }
-      
+
       let itemsToUse = [];
       if (order.items && order.items.length > 0) {
         itemsToUse = order.items;
@@ -1071,7 +1073,7 @@ router.put('/entities/:userId/credit', async (req, res) => {
         type: diff > 0 ? 'Assigned' : 'Decreased',
         amount: Math.abs(diff),
         referenceId: 'ADMIN_UPDATE',
-        description: diff > 0 
+        description: diff > 0
           ? `Credit assingned by super admin  ${oldCredit} to ${user.totalCredit}`
           : `Credit removed by admin from ${oldCredit} to ${user.totalCredit}`
       });
@@ -1162,7 +1164,7 @@ router.get('/catalog', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
-    
+
     // Add simple text search if needed
     const query = {};
     if (req.query.search) {
