@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Search, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../../../../context/AuthContext';
@@ -6,7 +6,7 @@ import { fetchWithAuth } from '../../../../utils/api.js';
 
 
 export default function EmployeeInventory() {
-  const { inventory } = useEmployee();
+  const { user } = useContext(AuthContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [inventory, setInventory] = useState([]);
 
