@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../../../context/AuthContext';
 import { IndianRupee, ShieldCheck, ArrowRight, Wallet, Banknote, Building2 } from 'lucide-react';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 export default function Checkout() {
   const location = useLocation();
@@ -74,7 +75,7 @@ export default function Checkout() {
         userId: user.userId
       };
 
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders`, {
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

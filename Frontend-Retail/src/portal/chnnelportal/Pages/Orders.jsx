@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Filter, Truck, CheckCircle, Package, Download } from 'lucide-react';
 import { exportToCSV } from '../../../utils/exportUtils';
 import { AuthContext } from '../../../context/AuthContext';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -30,7 +31,7 @@ export default function Orders() {
   const fetchOrders = async () => {
     if (!user?.userId) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders?userId=${user.userId}`);
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders?userId=${user.userId}`);
       const data = await res.json();
       setOrders(data);
     } catch (err) {

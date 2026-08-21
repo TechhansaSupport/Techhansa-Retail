@@ -17,6 +17,7 @@ const itemVariants = {
 };
 
 import { AuthContext } from '../../../context/AuthContext';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 export default function RecentActivity() {
   const { user } = useContext(AuthContext) || { user: null };
@@ -28,7 +29,7 @@ export default function RecentActivity() {
       if (!user?.userId) return;
       setIsLoading(true);
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`);
+        const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`);
         if (res.ok) {
           const data = await res.json();
           if (data.length > 0) {

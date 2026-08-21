@@ -24,6 +24,7 @@ const getStatusStyles = (status) => {
 };
 
 import { AuthContext } from '../../../context/AuthContext';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 export default function ProcurementTables() {
   const { user } = useContext(AuthContext) || { user: null };
@@ -55,8 +56,8 @@ export default function ProcurementTables() {
       if (!user?.userId) return;
       try {
         const [rfpRes, qtRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`),
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/quotations?userId=${user.userId}`)
+          fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`),
+          fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/quotations?userId=${user.userId}`)
         ]);
         if (rfpRes.ok) {
           const rfpData = await rfpRes.json();
@@ -289,7 +290,15 @@ export default function ProcurementTables() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Total Amount</p>
-                  <p className="font-bold text-emerald-600">₹{(selectedQuotation.amount || selectedQuotation.totalAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                  <p className="font-bold text-emerald-600">
+                    ₹{(() => {
+                      const fallbackAmount = selectedQuotation.amount || selectedQuotation.totalAmount || 0;
+                      if (selectedQuotation.items && selectedQuotation.items.length > 0) {
+                        return selectedQuotation.items.reduce((sum, item) => sum + (item.totalAmount || (item.unitPrice * (item.quantity || 1) * 1.18) || 0), 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                      }
+                      return (fallbackAmount * 1.18).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                    })()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Valid Until</p>

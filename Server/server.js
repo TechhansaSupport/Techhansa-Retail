@@ -33,18 +33,20 @@ const adminRoute = require('./routes/admin');
 const notificationsRoute = require('./routes/notifications');
 const financeRoute = require('./routes/finance');
 
+const { verifyToken } = require('./middleware/auth');
+
 app.use('/api/contact', contactRoute);
-app.use('/api/franchise', franchiseRoute);
-app.use('/api/channel', channelRoute);
+app.use('/api/franchise', verifyToken, franchiseRoute);
+app.use('/api/channel', verifyToken, channelRoute);
 app.use('/api/submissions', submissionsRoute);
 app.use('/api/auth', authRoute);
-app.use('/api/procurement', procurementRoute);
-app.use('/api/settings', settingsRoute);
-app.use('/api/inventory', inventoryRoute);
-app.use('/api/sales', salesRoute);
-app.use('/api/admin', adminRoute);
-app.use('/api/notifications', notificationsRoute);
-app.use('/api/finance', financeRoute);
+app.use('/api/procurement', verifyToken, procurementRoute);
+app.use('/api/settings', verifyToken, settingsRoute);
+app.use('/api/inventory', verifyToken, inventoryRoute);
+app.use('/api/sales', verifyToken, salesRoute);
+app.use('/api/admin', verifyToken, adminRoute);
+app.use('/api/notifications', verifyToken, notificationsRoute);
+app.use('/api/finance', verifyToken, financeRoute);
 
 // =========================================
 // FRONTEND SERVING (Techhansa Retail)

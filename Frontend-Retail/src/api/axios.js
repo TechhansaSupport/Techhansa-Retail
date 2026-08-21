@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_BASE_URL || `${import.meta.env.VITE_API_BASE_URL}`,
 });
 
 // Request interceptor to attach JWT token
@@ -18,12 +18,11 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle 401s
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Clear session storage completely on 401
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Clear session storage completely on 401/403
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
       window.location.href = '/login';

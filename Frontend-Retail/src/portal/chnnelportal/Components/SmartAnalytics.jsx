@@ -6,6 +6,8 @@ import {
   PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area
 } from 'recharts';
 
+import { fetchWithAuth } from '../../../utils/api.js';
+
 const STATUS_COLORS = ['#94a3b8', '#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'];
 const ORDER_COLORS = ['#f59e0b', '#3b82f6', '#8b5cf6', '#06b6d4', '#10b981'];
 
@@ -41,8 +43,8 @@ export default function SmartAnalytics() {
       setIsLoading(true);
       try {
         const [rfpRes, reportsRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`),
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/reports?userId=${user.userId}`)
+          fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`),
+          fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/reports?userId=${user.userId}`)
         ]);
 
         if (rfpRes.ok) {

@@ -4,6 +4,7 @@ import './LoginPage.css';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import logo from '../assets/logo.png';
+import { fetchWithAuth } from '../utils/api.js';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -67,7 +68,7 @@ export default function LoginPage() {
 
     try {
       // Connect to your Node.js backend
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
+      const response = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

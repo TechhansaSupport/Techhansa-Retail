@@ -12,6 +12,7 @@ import CreditCard from './Components/CreditCard';
 
 import RecentActivity from './components/RecentActivity';
 import ProcurementTables from './components/ProcurementTable';
+import { fetchWithAuth } from '../../utils/api.js';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -33,7 +34,7 @@ export default function Dashboard() {
 
   const handleExport = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/dashboard-stats`);
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/dashboard-stats`);
       const data = await res.json();
       const exportData = [
         {

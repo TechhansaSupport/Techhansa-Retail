@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { fetchWithAuth } from '../utils/api.js';
 
 export default function FormSubmission() {
   const [formData, setFormData] = useState({
@@ -41,7 +42,7 @@ export default function FormSubmission() {
 
       // 4. Send via Fetch (DO NOT set Content-Type header manually!)
       // Ensure the endpoint matches your backend route
-      const response = await fetch('https://techhansaretail.com/api/submissions', {
+      const response = await fetchWithAuth('https://techhansaretail.com/api/submissions', {
         method: 'POST',
         body: payload,
       });

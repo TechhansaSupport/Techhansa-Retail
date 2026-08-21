@@ -4,6 +4,7 @@ import { Search, Receipt, Download, ExternalLink, Eye, XCircle, Printer, Message
 import { printInvoice } from '../../../utils/printUtils';
 import { AuthContext } from '../../../context/AuthContext';
 import { numberToWords } from '../../../utils/numberToWords';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -35,7 +36,7 @@ export default function Invoices() {
 
   const fetchCompanySettings = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/settings/company`);
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/settings/company`);
       const data = await res.json();
       setCompanySettings(data);
     } catch (err) {
@@ -46,7 +47,7 @@ export default function Invoices() {
   const fetchInvoices = async () => {
     if (!user?.userId) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/procurement/invoices?userId=${user.userId}`);
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/invoices?userId=${user.userId}`);
       let data = [];
 
       try {
@@ -70,7 +71,7 @@ export default function Invoices() {
   const fetchRfps = async () => {
     if (!user?.userId) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/procurement/rfp?userId=${user.userId}`);
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`);
       const data = await res.json();
       setRfps(data);
     } catch (err) {

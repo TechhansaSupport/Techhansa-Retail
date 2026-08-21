@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { Truck, CheckCircle, Package, MapPin, Search, Calendar, PackageOpen, FileCheck, ArrowRight, Check, XCircle } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
+import { fetchWithAuth } from '../../../utils/api.js';
 
 export default function DeliveryTracking() {
   const { user } = useContext(AuthContext) || { user: null };
@@ -25,7 +26,7 @@ export default function DeliveryTracking() {
 
     try {
       const url = user?.userId ? `${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders?userId=${user.userId}` : `${import.meta.env.VITE_API_BASE_URL}/api/procurement/orders`;
-      const res = await fetch(url);
+      const res = await fetchWithAuth(url);
       const data = await res.json();
       const found = data.find(o => (o.orderNumber === trackingId.trim() || o.orderId === trackingId.trim()));
       

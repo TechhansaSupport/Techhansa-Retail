@@ -25,14 +25,14 @@ export function FranchiseProvider({ children }) {
     if (!storeId) return;
     try {
       const results = await Promise.allSettled([
-        axios.get(`http://localhost:5000/api/franchise/${storeId}/profile`),
-        axios.get(`http://localhost:5000/api/inventory/${storeId}`),
-        axios.get(`http://localhost:5000/api/franchise/${storeId}/wallet`),
-        axios.get(`http://localhost:5000/api/franchise/${storeId}/b2b-invoices`),
-        axios.get(`http://localhost:5000/api/franchise/${storeId}/employees`),
-        axios.get(`http://localhost:5000/api/franchise/catalog/all`),
-        axios.get(`http://localhost:5000/api/franchise/${storeId}/requests`),
-        axios.get(`http://localhost:5000/api/sales/store/${storeId}`) // Fetch Store Sales
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/profile`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${storeId}`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/wallet`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/b2b-invoices`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/employees`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/catalog/all`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/requests`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/sales/store/${storeId}`) // Fetch Store Sales
       ]);
 
       const [profileRes, inventoryRes, walletRes, invoicesRes, employeesRes, catalogRes, requestsRes, salesRes] = results;
@@ -105,7 +105,7 @@ export function FranchiseProvider({ children }) {
       // Optimistic UI update
       setStoreProfileData(newProfile);
       
-      const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/profile`, newProfile);
+      const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/profile`, newProfile);
       if (res.data.success) {
         setStoreProfileData(res.data.data);
         return true;
@@ -121,7 +121,7 @@ export function FranchiseProvider({ children }) {
 
   const approveB2BInvoice = async (invoiceId, paymentDetails = {}) => {
     try {
-      const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/b2b-invoices/${invoiceId}/approve`, paymentDetails);
+      const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/b2b-invoices/${invoiceId}/approve`, paymentDetails);
       if (res.data.success) {
         await refreshData();
         return true;
@@ -151,7 +151,7 @@ export function FranchiseProvider({ children }) {
         items: orderItems,
         totalAmount: orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)
       };
-      const res = await axios.post(`http://localhost:5000/api/franchise/${storeId}/requests`, payload);
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/requests`, payload);
       if (res.data.success) {
         setOrders(prev => [res.data.data, ...prev]);
         return { success: true };
@@ -165,7 +165,7 @@ export function FranchiseProvider({ children }) {
 
   const processSale = async (cartItems, customerDetails, totalAmount) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/sales/checkout', {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/sales/checkout`, {
         cart: cartItems,
         customer: customerDetails,
         employeeId: storeId,
@@ -188,7 +188,7 @@ export function FranchiseProvider({ children }) {
   const addInventoryItem = async (newItem) => {
     try {
       const payload = { ...newItem, storeId: storeId };
-      const res = await axios.post(`http://localhost:5000/api/inventory/${storeId}`, payload);
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${storeId}`, payload);
       if (res.data.success) {
         setInventory(prev => [res.data.data, ...prev]);
         return true;
@@ -201,7 +201,7 @@ export function FranchiseProvider({ children }) {
 
   const updateInventoryItem = async (id, updatedFields) => {
     try {
-      const res = await axios.put(`http://localhost:5000/api/inventory/${storeId}/${id}`, updatedFields);
+      const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/inventory/${storeId}/${id}`, updatedFields);
       if (res.data.success) {
         // Use the server response to update state so we have the true data
         setInventory(prev => prev.map(item => (item._id === id || item.id === id) ? res.data.data : item));
@@ -215,7 +215,7 @@ export function FranchiseProvider({ children }) {
 
   const addEmployee = async (employeeData) => {
     try {
-      const res = await axios.post(`http://localhost:5000/api/franchise/${storeId}/employees`, employeeData);
+      const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/employees`, employeeData);
       if (res.data.success) {
         setEmployees(prev => [res.data.data, ...prev]);
         return { success: true };
@@ -243,7 +243,7 @@ export function FranchiseProvider({ children }) {
 
   const toggleEmployeeStatus = async (id) => {
     try {
-      const res = await axios.put(`http://localhost:5000/api/franchise/${storeId}/employees/${id}/status`);
+      const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/franchise/${storeId}/employees/${id}/status`);
       if (res.data.success) {
         setEmployees(prev => prev.map(emp => (emp._id === id || emp.id === id) ? { ...emp, status: res.data.data.status } : emp));
         return true;

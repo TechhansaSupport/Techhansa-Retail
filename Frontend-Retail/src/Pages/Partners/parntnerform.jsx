@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Building2, Users, UserCheck, UploadCloud, Phone, FileText, ArrowRight, Trash2, ChevronDown, Target, ShieldCheck } from 'lucide-react';
+import { fetchWithAuth } from '../../utils/api.js';
 
 export default function PartnerForm({ showToast }) {
   const emptyDirector = { name: '', email: '', contact: '', incomeAmount: '', incomeUnit: 'Lakhs', aadhar: '', pan: '', address: '' };
@@ -142,7 +143,7 @@ export default function PartnerForm({ showToast }) {
       
       data.append('directors', JSON.stringify(directors));
 
-      const response = await fetch('http://techhansaretail.com/api/channel/apply', {
+      const response = await fetchWithAuth('http://techhansaretail.com/api/channel/apply', {
         method: 'POST',
         body: data,
       });

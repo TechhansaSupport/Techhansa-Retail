@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, Briefcase, Building2, Landmark, UploadCloud, FileText, ArrowRight, Phone, CreditCard, MapPin, Calendar, MessageSquare, ShieldCheck, ChevronDown } from 'lucide-react';
+import { fetchWithAuth } from '../../utils/api.js';
 
 // Reusable input field component moved outside to prevent remounting/losing focus
 const InputField = ({ label, name, type = 'text', placeholder, icon: Icon, required = true, colSpan = false, formData, handleInputChange, errors }) => (
@@ -138,7 +139,7 @@ export default function FranchiseForm({ showToast }) {
         data.append('documents', formData.documents);
       }
 
-      const response = await fetch('http://techhansaretail.com/api/franchise/apply', {
+      const response = await fetchWithAuth('http://techhansaretail.com/api/franchise/apply', {
         method: 'POST',
         body: data,
       });
