@@ -9,7 +9,7 @@ import { AuthContext } from '../../../../context/AuthContext';
 import { numberToWords } from '../../../../utils/numberToWords';
 
 export default function Procurement() {
-  const { techhansaCatalog, b2bInvoices, approveB2BInvoice, orders, submitOrderRequest, metrics, storeProfileData } = useFranchise();
+  const { techhansaCatalog, b2bInvoices, approveB2BInvoice, orders, submitOrderRequest, metrics, storeProfileData, companySettings } = useFranchise();
   const { user } = useContext(AuthContext) || { user: null };
   const [activeTab, setActiveTab] = useState('catalog');
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function Procurement() {
   const [orderItems, setOrderItems] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
-  const companySettingsMock = {
+  const resolvedCompanySettings = companySettings || {
     companyName: 'TECHHANSA RETAIL PVT LTD',
     registeredAddress: 'REGD. OFF-SHI 8/27A-K-3 GILAT BAZAR BYPASS\nSHIVPURKOT, VARANASI, UP-221002',
     gstin: 'N/A',
@@ -632,20 +632,20 @@ export default function Procurement() {
               <div className="flex flex-col md:flex-row border border-slate-700 mb-6">
                 <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-slate-700">
                   <div className="p-4 border-b border-slate-700">
-                    <h3 className="font-bold text-slate-900 uppercase">{companySettingsMock.companyName}</h3>
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{companySettingsMock.registeredAddress}</p>
+                    <h3 className="font-bold text-slate-900 uppercase">{resolvedCompanySettings.companyName}</h3>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{resolvedCompanySettings.registeredAddress}</p>
                     <div className="mt-2 text-sm text-slate-700 space-y-0.5">
-                      <p><strong>GSTIN/UIN:</strong> {companySettingsMock.gstin}</p>
-                      <p><strong>State Name:</strong> {companySettingsMock.stateName}</p>
-                      <p><strong>Contact:</strong> {companySettingsMock.contactNumber}</p>
-                      <p><strong>E-Mail:</strong> {companySettingsMock.email}</p>
+                      <p><strong>GSTIN/UIN:</strong> {resolvedCompanySettings.gstin}</p>
+                      <p><strong>State Name:</strong> {resolvedCompanySettings.stateName}</p>
+                      <p><strong>Contact:</strong> {resolvedCompanySettings.contactNumber}</p>
+                      <p><strong>E-Mail:</strong> {resolvedCompanySettings.email}</p>
                     </div>
                   </div>
                   <div className="p-4 flex-1">
                     <h4 className="text-sm text-slate-500 mb-1">Buyer (Bill to)</h4>
-                    <p className="font-bold text-slate-900 uppercase">{storeProfileData?.companyName || storeProfileData?.storeName || storeProfileData?.franchiseName || user?.companyName || user?.name || 'Techhansa Franchise'}</p>
+                    <p className="font-bold text-slate-900 uppercase">{storeProfileData?.storeName || storeProfileData?.companyName || storeProfileData?.franchiseName || user?.companyName || user?.name || 'Techhansa Franchise'}</p>
                     <p className="text-sm text-slate-700">{storeProfileData?.address || storeProfileData?.location || user?.address || 'Franchise Address'}</p>
-                    <p className="text-sm text-slate-700 mt-1"><strong>Phone:</strong> {storeProfileData?.phone || storeProfileData?.contactNumber || user?.phone || 'N/A'}</p>
+                    <p className="text-sm text-slate-700 mt-1"><strong>Phone:</strong> {storeProfileData?.contact || storeProfileData?.phone || storeProfileData?.contactNumber || user?.phone || 'N/A'}</p>
                     <p className="text-sm text-slate-700"><strong>Email:</strong> {storeProfileData?.email || user?.email || 'N/A'}</p>
                   </div>
                 </div>
@@ -701,26 +701,49 @@ export default function Procurement() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {(() => {
-                      const itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : [{ productName: 'Procurement Services / Goods', quantity: 1, unitPrice: selectedInvoice.amount }];
+                      let itemsList = [];
+                      if (selectedInvoice.items && selectedInvoice.items.length > 0) {
+                        itemsList = selectedInvoice.items;
+                      } else if (selectedInvoice.requestId && orders && orders.length > 0) {
+                        const relatedOrder = orders.find(o => o.requestId === selectedInvoice.requestId);
+                        if (relatedOrder && relatedOrder.items && relatedOrder.items.length > 0) {
+                          itemsList = relatedOrder.items;
+                        }
+                      }
+                      
+                      if (itemsList.length === 0) {
+                        itemsList = [{ productName: 'Procurement Services / Goods', quantity: 1, unitPrice: selectedInvoice.amount }];
+                      }
+
                       const totalQtyAcrossAllItems = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
-                      const assumedRate = totalQtyAcrossAllItems > 0 ? (selectedInvoice.amount / 1.18) / totalQtyAcrossAllItems : 0;
+                      const assumedRate = totalQtyAcrossAllItems > 0 ? selectedInvoice.amount / totalQtyAcrossAllItems : 0;
 
                       return itemsList.map((item, i) => {
-                        const rate = item.rate || item.unitPrice || item.price || assumedRate;
+                        const inclusiveRate = item.rate || item.unitPrice || item.price || assumedRate;
                         const qty = item.quantity || 1;
-                        const baseAmt = rate * qty;
-                        const gstAmt = baseAmt * 0.18;
-                        const totalAmt = baseAmt + gstAmt;
+                        const totalAmt = inclusiveRate * qty;
+                        const baseAmt = totalAmt / 1.18;
+                        const gstAmt = totalAmt - baseAmt;
 
                         const configStr = (() => {
-                          if (typeof item.configuration === 'string' && item.configuration) return item.configuration;
+                          if (typeof item.configuration === 'string' && item.configuration) {
+                            try {
+                              const parsed = JSON.parse(item.configuration);
+                              if (typeof parsed === 'object' && parsed !== null) {
+                                return Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join('\n');
+                              }
+                            } catch (e) {
+                              return item.configuration;
+                            }
+                            return item.configuration;
+                          }
                           if (item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0) {
                             return Object.entries(item.specs)
                               .map(([k, v]) => `${k}: ${v}`)
-                              .join(', ');
+                              .join('\n');
                           }
                           if (item.configuration && typeof item.configuration === 'object') {
-                            return JSON.stringify(item.configuration);
+                            return Object.entries(item.configuration).map(([k, v]) => `${k}: ${v}`).join('\n');
                           }
                           return '-';
                         })();
@@ -728,13 +751,13 @@ export default function Procurement() {
                         return (
                           <tr key={i} className="hover:bg-slate-50 transition-colors bg-white">
                             <td className="px-4 py-3 text-sm text-slate-900 text-center">{i + 1}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900">{item.productName || item.category || 'Item'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900">{item.hardwareType || item.productName || item.category || 'Item'}</td>
                             <td className="px-4 py-3 text-sm text-slate-900">{item.brand || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900">{item.model || item.productName || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-slate-600 max-w-[150px] truncate" title={configStr}>{configStr}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900">{item.model || item.hardwareType || item.productName || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-600 whitespace-pre-wrap break-words min-w-[200px]">{configStr}</td>
                             <td className="px-4 py-3 text-sm text-slate-600">{selectedInvoice.date || new Date(selectedInvoice.createdAt || Date.now()).toLocaleDateString('en-GB')}</td>
                             <td className="px-4 py-3 text-sm text-slate-900 text-center font-medium">{qty}</td>
-                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">{rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">{inclusiveRate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                             <td className="px-4 py-3 text-sm text-slate-900 text-right font-medium">{gstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                             <td className="px-4 py-3 text-sm text-slate-900 text-right font-bold text-emerald-600">{totalAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                           </tr>
@@ -747,25 +770,42 @@ export default function Procurement() {
                       <td colSpan="6" className="px-4 py-3 text-sm font-bold text-right text-slate-900 uppercase">Total</td>
                       <td className="px-4 py-3 text-sm font-bold text-center text-slate-900">
                         {(() => {
-                          const itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : [{ quantity: 1 }];
+                          let itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : null;
+                          if (!itemsList && selectedInvoice.requestId && orders) {
+                            const relatedOrder = orders.find(o => o.requestId === selectedInvoice.requestId);
+                            if (relatedOrder && relatedOrder.items) itemsList = relatedOrder.items;
+                          }
+                          itemsList = itemsList || [{ quantity: 1 }];
                           return itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
                         })()}
                       </td>
                       <td className="px-4 py-3 text-sm font-bold text-right text-slate-900">-</td>
                       <td className="px-4 py-3 text-sm font-bold text-right text-slate-900">
                         {(() => {
-                          const itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : [{ quantity: 1 }];
+                          let itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : null;
+                          if (!itemsList && selectedInvoice.requestId && orders) {
+                            const relatedOrder = orders.find(o => o.requestId === selectedInvoice.requestId);
+                            if (relatedOrder && relatedOrder.items) itemsList = relatedOrder.items;
+                          }
+                          itemsList = itemsList || [{ quantity: 1 }];
                           const totalQty = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
-                          const assumedRate = totalQty > 0 ? (selectedInvoice.amount / 1.18) / totalQty : 0;
-                          return (itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || assumedRate) * (curr.quantity || 1)), 0) * 0.18).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                          const assumedRate = totalQty > 0 ? selectedInvoice.amount / totalQty : 0;
+                          const totalAmt = itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || assumedRate) * (curr.quantity || 1)), 0);
+                          return (totalAmt - (totalAmt / 1.18)).toLocaleString('en-IN', { minimumFractionDigits: 2 });
                         })()}
                       </td>
                       <td className="px-4 py-3 text-sm font-bold text-right text-emerald-600">
                         {(() => {
-                          const itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : [{ quantity: 1 }];
+                          let itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : null;
+                          if (!itemsList && selectedInvoice.requestId && orders) {
+                            const relatedOrder = orders.find(o => o.requestId === selectedInvoice.requestId);
+                            if (relatedOrder && relatedOrder.items) itemsList = relatedOrder.items;
+                          }
+                          itemsList = itemsList || [{ quantity: 1 }];
                           const totalQty = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
-                          const assumedRate = totalQty > 0 ? (selectedInvoice.amount / 1.18) / totalQty : 0;
-                          return (itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || assumedRate) * (curr.quantity || 1)), 0) * 1.18).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                          const assumedRate = totalQty > 0 ? selectedInvoice.amount / totalQty : 0;
+                          const totalAmt = itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || assumedRate) * (curr.quantity || 1)), 0);
+                          return totalAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 });
                         })()}
                       </td>
                     </tr>
@@ -820,7 +860,7 @@ export default function Procurement() {
 
                   {/* Signatory */}
                   <div className="p-4 flex-1 flex flex-col justify-between min-h-[120px] text-right text-sm">
-                    <p className="font-bold text-slate-900">for {companySettingsMock.companyName}</p>
+                    <p className="font-bold text-slate-900">for {resolvedCompanySettings.companyName}</p>
                     <div className="mt-auto">
                       <p className="text-slate-500 whitespace-pre-wrap leading-tight">Verified by & Authorised Signatory<br />Company Secretary</p>
                     </div>
@@ -839,7 +879,7 @@ export default function Procurement() {
               <button onClick={() => setSelectedInvoice(null)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-colors">
                 Close
               </button>
-              <button onClick={() => printInvoice({ invoice: selectedInvoice, companySettings: companySettingsMock, user: storeProfileData || user })} className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+              <button onClick={() => printInvoice({ invoice: selectedInvoice, companySettings: resolvedCompanySettings, user: storeProfileData || user })} className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm">
                 <Printer className="w-4 h-4" /> Print PDF
               </button>
             </div>

@@ -170,13 +170,21 @@ export default function AllOrders() {
   });
 
   const getCatalogMatch = (item) => {
-    if (!catalog || catalog.length === 0) return null;
+    if (!item || !catalog || catalog.length === 0) return null;
     return catalog.find(c => {
-      if (c.name?.trim().toLowerCase() === item.hardwareType?.trim().toLowerCase()) return true;
+      // 1. Franchise order match (hardwareType)
+      if (item.hardwareType && c.name?.trim().toLowerCase() === item.hardwareType.trim().toLowerCase()) return true;
+      
+      // 2. Franchise order match via specs.model
       if (item.specs && typeof item.specs === 'object') {
         const model = item.specs.model || item.specs.Model;
-        if (model && c.model?.trim().toLowerCase() === model?.trim().toLowerCase()) return true;
+        if (model && c.model?.trim().toLowerCase() === model.trim().toLowerCase()) return true;
       }
+
+      // 3. Channel RFP match (model or name)
+      if (item.model && c.model?.trim().toLowerCase() === item.model.trim().toLowerCase()) return true;
+      if (item.name && c.name?.trim().toLowerCase() === item.name.trim().toLowerCase()) return true;
+
       return false;
     });
   };
@@ -539,9 +547,13 @@ export default function AllOrders() {
                     >
                       {catalog.length > 0 ? (
                         (() => {
-                           const item = selectedOrder.items?.[0] || selectedOrder.quotationReference?.rfpReference?.products?.[0];
+                           const items = selectedOrder.orderType === 'Franchise Procurement' 
+                               ? selectedOrder.items 
+                               : selectedOrder.quotationReference?.rfpReference?.products;
+                           const item = items?.[0];
                            const match = getCatalogMatch(item);
-                           if (!match) return `Confirm (No Match found for ${item?.hardwareType})`;
+                           const itemName = item?.hardwareType || item?.model || item?.name || 'Item';
+                           if (!match) return `Confirm (No Match: ${itemName})`;
                            return `Confirm (Qty: ${item?.quantity}, Stock: ${match.availableStock})`;
                         })()
                       ) : 'Confirm & Send Quotation'}

@@ -32,7 +32,7 @@ export default function Checkout() {
     );
   }
 
-  const totalAmount = passedTotalAmount || ((quotation.amount || quotation.totalAmount || 0) * 1.18);
+  const totalAmount = passedTotalAmount || (quotation.amount || quotation.totalAmount || 0);
   const subtotal = totalAmount / 1.18;
   const gst = totalAmount - subtotal;
 

@@ -378,61 +378,6 @@ export default function FinanceDashboard() {
                   </div>
                 </div>
 
-                <div>
-                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4" />
-                    Uploaded Receipt
-                  </div>
-                  {selectedPayment.receiptUrl ? (
-                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center min-h-[200px]">
-                      <img 
-                        src={selectedPayment.receiptUrl.startsWith('http') ? selectedPayment.receiptUrl : `${selectedPayment.receiptUrl}`} 
-                        alt="Payment Receipt" 
-                        className="max-w-full max-h-[400px] object-contain rounded-lg shadow-sm"
-                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
-                      />
-                      <div className="hidden text-slate-400 font-medium p-8 text-center">
-                        Image failed to load
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 bg-slate-50 flex items-center justify-center text-slate-400 font-medium">
-                      No receipt uploaded
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-slate-100">
-                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <List className="w-4 h-4" />
-                    Store Credit Ledger
-                  </div>
-                  {loadingLedger ? (
-                    <div className="text-center text-slate-400 py-4 text-sm font-medium">Loading ledger...</div>
-                  ) : storeLedger.length === 0 ? (
-                    <div className="text-center text-slate-400 py-4 text-sm font-medium">No ledger history found</div>
-                  ) : (
-                    <div className="space-y-3">
-                      {storeLedger.slice(0, 5).map((txn, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                          <div>
-                            <div className="font-semibold text-sm text-slate-800">{txn.description || txn.txnId}</div>
-                            <div className="text-xs text-slate-500">{new Date(txn.date).toLocaleDateString()} &middot; {txn.type}</div>
-                          </div>
-                          <div className={`font-bold ${txn.type === 'Credit In' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {txn.type === 'Credit In' ? '+' : '-'}{formatCurrency(txn.amount)}
-                          </div>
-                        </div>
-                      ))}
-                      {storeLedger.length > 5 && (
-                         <div className="text-center text-xs text-slate-400 font-medium pt-2">
-                            Showing 5 of {storeLedger.length} transactions
-                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
               </div>
 
               {/* Footer */}
