@@ -114,13 +114,12 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / 1.18) / totalQtyAcrossAllItems : 0;
 
   const tableData = invoiceItems.map((item, index) => {
-    const inclusiveRate = item.rate || item.unitPrice || assumedRate;
+    const rate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
-    const totalAmount = inclusiveRate * qty;
     const gstRate = item.taxRate || 18;
-    const taxableValue = totalAmount / (1 + (gstRate / 100));
-    const gstAmount = totalAmount - taxableValue;
-    const rate = taxableValue / (qty || 1);
+    const taxableValue = rate * qty;
+    const gstAmount = taxableValue * (gstRate / 100);
+    const totalAmount = taxableValue + gstAmount;
 
     const purchaseDate = item.purchaseDate || invoice.date || invoice.createdAt || Date.now();
 
@@ -156,19 +155,20 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   let finalAmt = 0;
 
   invoiceItems.forEach(item => {
-    const inclusiveRate = item.rate || item.unitPrice || assumedRate;
+    const rate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
-    const totalAmount = inclusiveRate * qty;
     const gstRate = item.taxRate || 18;
-    const taxableValue = totalAmount / (1 + (gstRate / 100));
-    const gstAmount = totalAmount - taxableValue;
+    const taxableValue = rate * qty;
+    const gstAmount = taxableValue * (gstRate / 100);
+    const totalAmount = taxableValue + gstAmount;
 
     totalQty += qty;
     totalGstAmt += gstAmount;
     finalAmt += totalAmount;
   });
 
-  if (invoice.amount) {
+  if (invoice.amount && invoiceItems.length === 0) {
+    // Only use invoice.amount directly if there are no items to sum from
     finalAmt = invoice.amount;
   }
 
@@ -259,9 +259,12 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
     doc.text('Product Details', 15, finalY + 4);
 
     const prodTableData = prodList.map(p => {
-      const t = p.totalAmount || (p.rate || 0);
-      const g = p.gstAmount || (t - (t / 1.18));
-      const r = t - g;
+      const r = p.rate || p.unitPrice || 0;
+      const qty = p.quantity || 1;
+      const gstRate = p.taxRate || 18;
+      const taxableValue = r * qty;
+      const g = p.gstAmount || (taxableValue * (gstRate / 100));
+      const t = p.totalAmount || (taxableValue + g);
       return [
         p.productName || p.category || '-',
         p.brand || '-',

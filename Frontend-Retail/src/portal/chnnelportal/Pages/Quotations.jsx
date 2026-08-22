@@ -99,6 +99,14 @@ export default function Quotations() {
     return qtId.toLowerCase().includes(searchQuery.toLowerCase()) || vendor.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  const getCardAmount = (qt) => {
+    const rItems = qt.items?.length > 0 ? qt.items : (qt.rfpReference?.products || []);
+    if (rItems.length > 0) {
+      return rItems.reduce((sum, item) => sum + ((item.unitPrice || item.price || item.rate || 0) * (item.quantity || 1) * 1.18), 0);
+    }
+    return (qt.amount || qt.rfpReference?.estimatedTotal || qt.totalAmount || 0) * 1.18;
+  };
+
   const fallbackTotalAmount = selectedQuotation?.amount || selectedQuotation?.rfpReference?.estimatedTotal || selectedQuotation?.totalAmount || 0;
 
   const selectedRfp = selectedQuotation?.rfpReference || rfps.find(r => r.rfpId === selectedQuotation?.quotationNo?.replace('QT-', ''));
@@ -117,17 +125,16 @@ export default function Quotations() {
     }
     
     const qty = p.quantity || 1;
-    // Force recalculation to fix old DB data that had * 1.18 stored as totalAmount
-    const totalAmount = unitPrice * qty;
-    const baseAmt = totalAmount / 1.18;
-    const gstAmt = totalAmount - baseAmt;
+    const baseAmt = unitPrice * qty;
+    const gstAmt = baseAmt * 0.18;
+    const totalAmount = baseAmt + gstAmt;
 
     return { ...p, unitPrice, totalAmount, gstAmt, baseAmt };
   });
 
   const displayTotalAmount = quotationItems.length > 0 
     ? quotationItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0)
-    : fallbackTotalAmount;
+    : (fallbackTotalAmount * 1.18);
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
@@ -187,7 +194,7 @@ export default function Quotations() {
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500">
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Value:</span>
-                  <span className="text-slate-700 font-semibold text-emerald-600">₹{(qt.amount || qt.rfpReference?.estimatedTotal || qt.totalAmount || 0).toLocaleString('en-IN')}</span>
+                  <span className="text-slate-700 font-semibold text-emerald-600">₹{getCardAmount(qt).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Valid Until:</span>

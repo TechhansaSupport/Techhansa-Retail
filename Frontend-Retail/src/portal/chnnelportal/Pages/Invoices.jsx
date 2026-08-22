@@ -166,7 +166,11 @@ export default function Invoices() {
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 mt-4">
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Amount:</span>
-                  <span className="text-slate-700 font-semibold text-emerald-600"> {inv.amount?.toLocaleString('en-IN') || 0}</span>
+                  <span className="text-slate-700 font-semibold text-emerald-600"> 
+                    {((inv.items && inv.items.length > 0) 
+                      ? inv.items.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) 
+                      : ((inv.amount || 0) * 1.18)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Date:</span>
