@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, LogOut, User, Menu, X, ChevronDown, Shield } from 'lucide-react';
+import { LayoutDashboard, Package, LogOut, User, Menu, X, ChevronDown, Shield, Truck } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/logo.png';
@@ -28,7 +28,8 @@ export default function WarehouseLayout() {
 
   const navItems = [
     { name: 'Dashboard', path: '/warehouse', end: true, icon: <LayoutDashboard size={20} /> },
-    { name: 'Inventory Intake', path: '/warehouse/inventory', icon: <Package size={20} /> }
+    { name: 'Inventory Intake', path: '/warehouse/inventory', icon: <Package size={20} /> },
+    { name: 'Dispatches', path: '/warehouse/dispatches', icon: <Truck size={20} /> }
   ];
 
   return (

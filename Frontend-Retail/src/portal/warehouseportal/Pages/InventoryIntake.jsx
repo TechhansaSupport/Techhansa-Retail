@@ -8,6 +8,7 @@ export default function InventoryIntake() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -28,7 +29,7 @@ export default function InventoryIntake() {
 
   const fetchInventory = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await axios.get('/api/warehouse/inventory', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -65,7 +66,7 @@ export default function InventoryIntake() {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       await axios.post('/api/warehouse/inventory/add', {
         ...formData,
         serialNumbers: cleanSerials
@@ -127,7 +128,11 @@ export default function InventoryIntake() {
             </thead>
             <tbody>
               {filteredInventory.map((item) => (
-                <tr key={item._id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                <tr 
+                  key={item._id} 
+                  className="border-b border-slate-100 hover:bg-slate-50/50 cursor-pointer transition-colors"
+                  onClick={() => setSelectedProduct(item)}
+                >
                   <td className="p-4">
                     <p className="font-medium text-slate-800">{item.name}</p>
                     <p className="text-xs text-slate-500">{item.brand} • {item.model}</p>
@@ -146,8 +151,8 @@ export default function InventoryIntake() {
                         </span>
                       ))}
                       {item.serialNumbers?.length > 3 && (
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded border border-slate-200">
-                          +{item.serialNumbers.length - 3} more
+                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-xs rounded border border-indigo-100 cursor-pointer font-medium hover:bg-indigo-100">
+                          +{item.serialNumbers.length - 3} more (Click to view)
                         </span>
                       )}
                       {(!item.serialNumbers || item.serialNumbers.length === 0) && (
@@ -244,6 +249,121 @@ export default function InventoryIntake() {
               </button>
               <button form="stock-form" type="submit" disabled={isSubmitting} className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-70">
                 {isSubmitting ? 'Saving...' : 'Save Inventory'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Details Modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">{selectedProduct.name}</h2>
+                <p className="text-sm text-slate-500">Product Details & Inventory</p>
+              </div>
+              <button onClick={() => setSelectedProduct(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              
+              {/* Key Information */}
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">Specifications</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Brand</p>
+                    <p className="font-medium text-slate-800">{selectedProduct.brand || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Model</p>
+                    <p className="font-medium text-slate-800">{selectedProduct.model || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Category</p>
+                    <p className="font-medium text-slate-800">{selectedProduct.category || 'N/A'}</p>
+                  </div>
+                  <div className="md:col-span-3">
+                    <p className="text-xs text-slate-500 mb-1">Specs</p>
+                    <p className="font-medium text-slate-800">{selectedProduct.specs || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pricing & Stock */}
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">Pricing & Stock</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100/50">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Selling Price</p>
+                    <p className="font-semibold text-indigo-700">₹{selectedProduct.sellingPrice?.toLocaleString() || '0'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Physical Qty</p>
+                    <p className="font-semibold text-slate-800">{selectedProduct.quantity || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Available Qty</p>
+                    <p className="font-semibold text-emerald-600">{selectedProduct.availableStock || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Reserved</p>
+                    <p className="font-semibold text-amber-600">{selectedProduct.reservedStock || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Serial Numbers */}
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider flex items-center justify-between">
+                  <span>Serial Numbers</span>
+                  <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded font-medium normal-case">
+                    Total: {selectedProduct.serialNumbers?.length || 0}
+                  </span>
+                </h3>
+                {selectedProduct.serialNumbers && selectedProduct.serialNumbers.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {selectedProduct.serialNumbers.map((sn, i) => (
+                      <div key={i} className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                        <Barcode className="w-4 h-4 text-slate-400" />
+                        <span className="font-mono text-sm text-slate-700 truncate" title={sn}>{sn}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500">
+                    No serial numbers tracked for this product.
+                  </div>
+                )}
+              </div>
+              
+            </div>
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
+              <button 
+                onClick={() => {
+                  setFormData({
+                    name: selectedProduct.name || '',
+                    brand: selectedProduct.brand || '',
+                    model: selectedProduct.model || '',
+                    specs: selectedProduct.specs || '',
+                    category: selectedProduct.category || '',
+                    buyingPrice: selectedProduct.buyingPrice || '',
+                    sellingPrice: selectedProduct.sellingPrice || '',
+                    serialNumbers: ['']
+                  });
+                  setSelectedProduct(null);
+                  setIsModalOpen(true);
+                }}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add More Units
+              </button>
+              <button onClick={() => setSelectedProduct(null)} className="px-6 py-2 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-900 transition-colors">
+                Close
               </button>
             </div>
           </div>

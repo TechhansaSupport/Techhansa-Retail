@@ -35,7 +35,6 @@ export default function AdminLayout() {
     { name: 'Inventory', path: '/admin/catalog', icon: <Package size={20} /> },
     { name: 'Global Orders', path: '/admin/orders', icon: <ShoppingCart size={20} /> },
     { name: 'Payment Approvals', path: '/admin/finance', icon: <IndianRupee size={20} /> },
-    { name: 'Warehouse Portal', path: '/warehouse', icon: <Warehouse size={20} /> },
     { name: 'Audit Logs', path: '/admin/audit', icon: <FileText size={20} /> },
   ].filter(item => {
     if (user?.role === 'account_manager') {
@@ -112,22 +111,38 @@ export default function AdminLayout() {
         </div>
 
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.path}
-              end={item.end}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                  ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-sm'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-500'
-                }`
-              }
-            >
-              {item.icon}
-              {item.name}
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            if (item.external) {
+              return (
+                <a
+                  key={item.name}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-500 hover:bg-slate-50 hover:text-indigo-500"
+                >
+                  {item.icon}
+                  {item.name}
+                </a>
+              );
+            }
+            return (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                end={item.end}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
+                    ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-sm'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-500'
+                  }`
+                }
+              >
+                {item.icon}
+                {item.name}
+              </NavLink>
+            );
+          })}
         </nav>
       </aside>
 

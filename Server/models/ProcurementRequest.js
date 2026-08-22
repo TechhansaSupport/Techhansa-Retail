@@ -8,7 +8,8 @@ const requestItemSchema = new mongoose.Schema({
   specs: { type: mongoose.Schema.Types.Mixed, default: {} },
   comments: { type: String, default: '' },
   price: { type: Number, default: 0 },
-  amount: { type: Number, default: 0 }
+  amount: { type: Number, default: 0 },
+  assignedSerials: [{ type: String }]
 }, { _id: false });
 
 const procurementRequestSchema = new mongoose.Schema({
@@ -19,6 +20,13 @@ const procurementRequestSchema = new mongoose.Schema({
   items: [requestItemSchema],
   totalAmount: { type: Number, default: 0 },
   total: { type: Number, default: 0 },
+  trackingInfo: {
+    courier: { type: String },
+    currentLocation: { type: String },
+    progress: { type: Number, default: 0 }
+  },
+  trackingId: { type: String },
+  expectedDelivery: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
 
