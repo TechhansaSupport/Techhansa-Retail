@@ -40,7 +40,7 @@ const verifyAdminToken = (req, res, next) => {
     const verified = jwt.verify(token, JWT_SECRET);
     req.user = verified;
 
-    const allowedRoles = ['admin', 'franchise', 'channel', 'account_manager', 'inventory_manager', 'finance_manager'];
+    const allowedRoles = ['admin', 'franchise', 'channel', 'account_manager', 'inventory_manager', 'finance_manager', 'warehouse_manager'];
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({ message: 'Access Denied: Admin privileges required' });
     }

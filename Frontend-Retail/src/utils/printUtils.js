@@ -214,22 +214,43 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   // -----------------------------------------
   // Product Details Section (with fallback to RFP products)
   // -----------------------------------------
-  const prodList = (invoice.productDetails && invoice.productDetails.length > 0)
+  const baseProdList = (invoice.productDetails && invoice.productDetails.length > 0)
     ? invoice.productDetails
-    : (rfp?.products || []).map(p => {
-      const perItemRate = assumedRate;
-      const gst = perItemRate * 0.18;
-      return {
-        productName: p.category || p.name || '-',
-        brand: p.brand || '-',
-        model: p.model || '-',
-        configuration: p.configuration || '-',
-        serialNumber: '',
-        rate: perItemRate,
-        gstAmount: gst,
-        totalAmount: perItemRate + gst
-      };
-    });
+    : (invoice.items && invoice.items.length > 0)
+      ? invoice.items
+      : (rfp?.products || []);
+
+  const prodList = baseProdList.map(p => {
+    const perItemRate = p.rate || p.unitPrice || assumedRate;
+    const gst = p.gstAmount || (perItemRate * (p.taxRate || 18) / 100);
+    
+    let serialStr = p.serialNumber || '-';
+    if (p.assignedSerials && p.assignedSerials.length > 0) {
+      serialStr = p.assignedSerials.join(', ');
+    }
+
+    const configStr = (() => {
+      if (typeof p.configuration === 'string' && p.configuration) return p.configuration;
+      if (p.specs && typeof p.specs === 'object' && Object.keys(p.specs).length > 0) {
+        return Object.entries(p.specs).map(([k, v]) => `${k}: ${v}`).join(', ');
+      }
+      if (p.configuration && typeof p.configuration === 'object') {
+        return JSON.stringify(p.configuration);
+      }
+      return '-';
+    })();
+
+    return {
+      productName: p.name || p.productName || p.category || '-',
+      brand: p.brand || '-',
+      model: p.model || '-',
+      configuration: configStr,
+      serialNumber: serialStr,
+      rate: perItemRate,
+      gstAmount: gst,
+      totalAmount: p.totalAmount || (perItemRate + gst)
+    };
+  });
 
   if (prodList.length > 0) {
     finalY += 4;

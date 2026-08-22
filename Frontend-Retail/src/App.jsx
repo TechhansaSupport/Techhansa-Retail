@@ -69,6 +69,7 @@ import Invoices from './portal/chnnelportal/Pages/Invoices';
 import WarehouseLayout from './portal/warehouseportal/Layout/WarehouseLayout';
 import WarehouseDashboard from './portal/warehouseportal/Pages/WarehouseDashboard';
 import InventoryIntake from './portal/warehouseportal/Pages/InventoryIntake';
+import WarehouseDispatches from './portal/warehouseportal/Pages/WarehouseDispatches';
 
 
 // --- Scroll To Hash / Top Component ---  
@@ -156,6 +157,7 @@ function App() {
           }>
             <Route index element={<WarehouseDashboard />} />
             <Route path="inventory" element={<InventoryIntake />} />
+            <Route path="dispatches" element={<WarehouseDispatches />} />
           </Route>
 
           {/* Franchise Portal */}

@@ -1,5 +1,5 @@
 export const fetchWithAuth = async (url, options = {}) => {
-  const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   
   // Convert any existing headers to a plain object
   const headers = {};

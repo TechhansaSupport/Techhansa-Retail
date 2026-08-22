@@ -30,7 +30,8 @@ const OrderSchema = new mongoose.Schema({
     unitPrice: Number,
     totalAmount: Number,
     hsn: String,
-    taxRate: { type: Number, default: 18 }
+    taxRate: { type: Number, default: 18 },
+    assignedSerials: [{ type: String }]
   }],
   userId: { type: String, required: false },
   invoiceSent: { type: Boolean, default: false }

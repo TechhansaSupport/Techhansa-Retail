@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import axios from '../../../api/axios';
 import { motion } from 'framer-motion';
 
@@ -18,7 +19,7 @@ export default function WarehouseDashboard() {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await axios.get('/api/warehouse/inventory', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -92,9 +93,9 @@ export default function WarehouseDashboard() {
         <p className="text-slate-500 text-sm mb-6">Manage the warehouse physical inventory and register serial numbers for incoming stock.</p>
         
         <div className="flex gap-4">
-          <a href="/warehouse/inventory" className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
+          <Link to="inventory" className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
             Intake New Stock
-          </a>
+          </Link>
         </div>
       </div>
     </div>
