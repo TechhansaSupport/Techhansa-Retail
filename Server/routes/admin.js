@@ -15,7 +15,7 @@ const B2BInvoice = require('../models/B2BInvoice');
 const Quotation = require('../models/Quotation');
 const RFP = require('../models/RFP');
 const StoreProfile = require('../models/StoreProfile');
-const User = require('../models/User');
+
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
