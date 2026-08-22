@@ -290,7 +290,6 @@ export default function CentralCatalog() {
                 <th className="px-6 py-4 font-medium">Category</th>
                 <th className="px-6 py-4 font-medium">Brand & Model</th>
                 <th className="px-6 py-4 font-medium w-1/4">Specifications</th>
-                <th className="px-6 py-4 font-medium text-right">Base Purchase Price</th>
                 <th className="px-6 py-4 font-medium text-right">Store Selling Price</th>
                 <th className="px-6 py-4 font-medium text-center">Available Qty</th>
               </tr>
@@ -320,9 +319,6 @@ export default function CentralCatalog() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs text-slate-600 line-clamp-2" title={item.specs}>{item.specs || 'N/A'}</div>
-                    </td>
-                    <td className="px-6 py-4 text-right font-medium text-slate-700">
-                      ₹{item.buyingPrice?.toLocaleString() || 0}
                     </td>
                     <td className="px-6 py-4 text-right font-bold text-indigo-600">
                       ₹{item.sellingPrice?.toLocaleString() || 0}
@@ -382,11 +378,7 @@ export default function CentralCatalog() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-xl p-3">
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Buying Price</p>
-                    <p className="font-semibold text-slate-700">₹{item.buyingPrice?.toLocaleString() || 0}</p>
-                  </div>
+                <div className="grid grid-cols-1 gap-4 bg-slate-50 rounded-xl p-3">
                   <div>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Selling Price</p>
                     <p className="font-bold text-indigo-600">₹{item.sellingPrice?.toLocaleString() || 0}</p>
@@ -562,14 +554,13 @@ export default function CentralCatalog() {
                   <th className="px-6 py-4 font-medium">Order ID</th>
                   <th className="px-6 py-4 font-medium">Partner</th>
                   <th className="px-6 py-4 font-medium">Type</th>
-                  <th className="px-6 py-4 font-medium text-right">Amount</th>
                   <th className="px-6 py-4 font-medium text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {dispatchOrders.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500">
                       No dispatches found.
                     </td>
                   </tr>
@@ -592,9 +583,6 @@ export default function CentralCatalog() {
                       <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${order.orderType === 'Franchise Procurement' ? 'bg-indigo-50 text-indigo-700' : 'bg-blue-50 text-blue-700'}`}>
                         {order.orderType}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right font-bold text-slate-800">
-                      ₹{order.totalAmount?.toLocaleString() || 0}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex justify-center gap-2">

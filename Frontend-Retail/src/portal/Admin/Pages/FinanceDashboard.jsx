@@ -119,7 +119,7 @@ export default function FinanceDashboard() {
           <div>
             <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Value Pending</div>
             <div className="text-2xl font-black text-slate-900">
-              {formatCurrency(payments.reduce((acc, p) => acc + p.amount, 0))}
+              {formatCurrency(payments.reduce((acc, p) => acc + (p.amount || 0), 0))}
             </div>
           </div>
         </div>
@@ -197,7 +197,7 @@ export default function FinanceDashboard() {
                       </div>
                     </td>
                     <td className="p-4 text-right">
-                      <div className="font-bold text-slate-900">{formatCurrency(payment.amount)}</div>
+                      <div className="font-bold text-slate-900">{formatCurrency(payment.amount || 0)}</div>
                     </td>
                     <td className="p-4 pr-6 text-right flex justify-end gap-2 items-center">
                       {payment.status === 'Paid' ? (
@@ -362,7 +362,7 @@ export default function FinanceDashboard() {
                   </div>
                   <div>
                     <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Amount</div>
-                    <div className="font-bold text-emerald-600 text-lg">{formatCurrency(selectedPayment.amount)}</div>
+                    <div className="font-bold text-emerald-600 text-lg">{formatCurrency(selectedPayment.amount || 0)}</div>
                   </div>
                   <div>
                     <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Payment Method</div>

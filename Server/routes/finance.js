@@ -24,25 +24,41 @@ router.get('/pending-payments', financeAuth, async (req, res) => {
       procurementReference: { $exists: true, $ne: null }
     });
 
-    const formattedOrders = orders.map(o => ({
-      _id: o._id,
-      transactionId: o.orderNumber,
-      orderType: 'Channel Order',
-      date: o.transactionDate || o.updatedAt,
-      amount: o.totalAmount,
-      utrNumber: o.utrNumber,
-      receiptUrl: o.receiptUrl,
-      paymentMethod: o.paymentMethod,
-      status: o.paymentStatus,
-      storeId: o.userId || 'N/A',
-      invoiceSent: o.invoiceSent || false
-    }));
+    const formattedOrders = orders.map(o => {
+      const calculatedAmount = o.items && o.items.length > 0
+        ? o.items.reduce((sum, item) => {
+            // item.totalAmount in DB already includes GST for Channel Orders.
+            // If item.totalAmount is missing, use unitPrice * quantity (and add GST since unitPrice is base).
+            const hasInclusiveTotal = item.totalAmount != null && item.totalAmount > 0;
+            if (hasInclusiveTotal) {
+              return sum + item.totalAmount;
+            } else {
+              const base = item.amount || ((item.unitPrice || item.price || 0) * (item.quantity || 1));
+              return sum + (base * 1.18);
+            }
+          }, 0)
+        : o.totalAmount * 1.18;
+
+      return {
+        _id: o._id,
+        transactionId: o.orderNumber,
+        orderType: 'Channel Order',
+        date: o.updatedAt,
+        amount: calculatedAmount,
+        utrNumber: o.utrNumber,
+        receiptUrl: o.receiptUrl,
+        paymentMethod: o.paymentMethod,
+        status: o.paymentStatus,
+        storeId: o.userId || 'N/A',
+        invoiceSent: o.invoiceSent || false
+      };
+    });
 
     const formattedQuotations = quotations.map(q => ({
       _id: q._id,
       transactionId: q.quotationNo,
       orderType: 'Franchise Quotation Order',
-      date: q.transactionDate || q.updatedAt,
+      date: q.updatedAt,
       amount: q.amount,
       utrNumber: q.utrNumber,
       receiptUrl: q.receiptUrl || '',
@@ -56,7 +72,7 @@ router.get('/pending-payments', financeAuth, async (req, res) => {
       _id: inv._id,
       transactionId: inv.invoiceNo,
       orderType: 'Franchise B2B Invoice',
-      date: inv.paymentDetails?.date || inv.updatedAt,
+      date: inv.updatedAt,
       amount: inv.amount,
       utrNumber: inv.paymentDetails?.utr || 'N/A',
       receiptUrl: inv.paymentDetails?.receipt || '',

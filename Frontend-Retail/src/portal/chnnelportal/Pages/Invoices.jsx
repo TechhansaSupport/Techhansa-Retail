@@ -21,6 +21,7 @@ export default function Invoices() {
   const [invoices, setInvoices] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [trackingInvoice, setTrackingInvoice] = useState(null);
   const [rfps, setRfps] = useState([]);
   const [companySettings, setCompanySettings] = useState(null);
   const [showWhatsappModal, setShowWhatsappModal] = useState(false);
@@ -158,6 +159,11 @@ export default function Invoices() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
+                  {inv.paymentStatus === 'Paid' && (
+                    <button onClick={() => setTrackingInvoice(inv)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Delivery Tracking">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M14 9h4"/><path d="M14 15h4"/></svg>
+                    </button>
+                  )}
                   <button onClick={() => setSelectedInvoice(inv)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View Details">
                     <Eye className="w-4 h-4" />
                   </button>
@@ -181,6 +187,83 @@ export default function Invoices() {
           ))
         )}
       </motion.div>
+
+      {/* Tracking Modal */}
+      {trackingInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-emerald-50">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Delivery Tracking</h2>
+                <p className="text-sm text-slate-500 mt-1">Invoice: {getFormattedInvoiceNumber(trackingInvoice)}</p>
+              </div>
+              <button onClick={() => setTrackingInvoice(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-emerald-100 rounded-full transition-colors">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {trackingInvoice.orderReference?.trackingId || trackingInvoice.orderReference?.trackingInfo?.courier ? (
+                <>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Courier Partner</h3>
+                    <p className="font-bold text-slate-800 text-lg">{trackingInvoice.orderReference?.trackingInfo?.courier || 'N/A'}</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Tracking ID</h3>
+                    <p className="font-bold text-slate-800 text-lg font-mono">{trackingInvoice.orderReference?.trackingId || 'N/A'}</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Expected Delivery</h3>
+                    <p className="font-bold text-slate-800 text-lg">
+                      {trackingInvoice.orderReference?.expectedDelivery 
+                        ? new Date(trackingInvoice.orderReference.expectedDelivery).toLocaleDateString('en-GB') 
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  {trackingInvoice.orderReference?.items?.some(item => item.assignedSerials && item.assignedSerials.length > 0) && (
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mt-4 md:col-span-full">
+                      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Dispatched Serial Numbers</h3>
+                      <div className="space-y-3">
+                        {trackingInvoice.orderReference.items.map((item, idx) => {
+                          if (!item.assignedSerials || item.assignedSerials.length === 0) return null;
+                          return (
+                            <div key={idx}>
+                              <p className="text-sm font-bold text-slate-700 mb-1">{item.model || item.productName || item.category || 'Product'}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {item.assignedSerials.map((sn, i) => (
+                                  <span key={i} className="px-2 py-1 bg-white border border-slate-200 rounded text-xs font-mono text-slate-600">
+                                    {sn}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="bg-amber-50 p-6 rounded-xl border border-amber-100 text-center">
+                  <h3 className="text-amber-800 font-bold mb-2">Not Dispatched Yet</h3>
+                  <p className="text-sm text-amber-700">Delivery tracking information will be available once the order has been dispatched from the warehouse.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button onClick={() => setTrackingInvoice(null)} className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-100 transition-colors">
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* View Invoice Modal */}
       {selectedInvoice && (
@@ -475,7 +558,7 @@ export default function Invoices() {
                             <span className="text-slate-600">A/c No.</span>
                             <span className="font-bold text-slate-900">: {companySettings?.bankDetails?.accountNo || 'N/A'}</span>
                             <span className="text-slate-600">Branch & IFS Code</span>
-                            <span className="font-bold text-slate-900">: {companySettings?.bankDetails?.ifscCode || 'N/A'}</span>
+                            <span className="font-bold text-slate-900">: {companySettings?.bankDetails?.branchName ? `${companySettings.bankDetails.branchName}, ` : ''}{companySettings?.bankDetails?.ifscCode || 'N/A'}</span>
                           </div>
                         </div>
 

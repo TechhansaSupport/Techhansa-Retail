@@ -18,6 +18,20 @@ export default function Checkout() {
   const [utrNumber, setUtrNumber] = useState('');
   const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]);
   const [receiptUrl, setReceiptUrl] = useState('');
+  const [companySettings, setCompanySettings] = useState(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/settings/company`);
+        const data = await res.json();
+        setCompanySettings(data);
+      } catch (err) {
+        console.error('Failed to fetch settings', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -32,10 +46,10 @@ export default function Checkout() {
     );
   }
 
-  const baseAmount = passedTotalAmount || (quotation.amount || quotation.totalAmount || 0);
-  const subtotal = baseAmount;
-  const gst = subtotal * 0.18;
-  const totalAmount = subtotal + gst;
+  const totalAmount = passedTotalAmount || (quotation.amount || quotation.totalAmount || 0);
+  // totalAmount is already GST-inclusive from the quotations page logic
+  const subtotal = totalAmount / 1.18;
+  const gst = totalAmount - subtotal;
 
   const availableCredit = (user?.totalCredit || 0) - (user?.usedCredit || 0);
   const hasEnoughCredit = availableCredit >= totalAmount;
@@ -190,10 +204,11 @@ export default function Checkout() {
                   <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2"><Building2 className="w-4 h-4"/> Bank Details</h4>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <p><span className="font-medium text-gray-900">Account Name:</span> Techhansa Solutions Pvt Ltd</p>
-                      <p><span className="font-medium text-gray-900">Bank Name:</span> HDFC Bank</p>
-                      <p><span className="font-medium text-gray-900">Account Number:</span> 50200012345678</p>
-                      <p><span className="font-medium text-gray-900">IFSC Code:</span> HDFC0001234</p>
+                      <p><span className="font-medium text-gray-900">Account Name:</span> {companySettings?.bankDetails?.accountHolderName || 'Techhansa Solutions Pvt Ltd'}</p>
+                      <p><span className="font-medium text-gray-900">Bank Name:</span> {companySettings?.bankDetails?.bankName || 'HDFC Bank'}</p>
+                      <p><span className="font-medium text-gray-900">Branch Name:</span> {companySettings?.bankDetails?.branchName || 'N/A'}</p>
+                      <p><span className="font-medium text-gray-900">Account Number:</span> {companySettings?.bankDetails?.accountNo || '50200012345678'}</p>
+                      <p><span className="font-medium text-gray-900">IFSC Code:</span> {companySettings?.bankDetails?.ifscCode || 'HDFC0001234'}</p>
                     </div>
                   </div>
                 )}
