@@ -80,11 +80,11 @@ export const AuthProvider = ({ children }) => {
       const data = await res.json();
       // Only persist to local state & storage if backend was successful
       setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      sessionStorage.setItem('user', JSON.stringify(data.user));
     } catch (error) {
       console.error('Failed to sync profile to server:', error);
       // Revert to old user state if backend failed
-      const storedUser = localStorage.getItem('user');
+      const storedUser = sessionStorage.getItem('user');
       if (storedUser) setUser(JSON.parse(storedUser));
     }
   };

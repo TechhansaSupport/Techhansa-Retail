@@ -12,9 +12,14 @@ const ChannelPartner = require('../models/ChannelPartner');
 const Order = require('../models/Order');
 const ProcurementRequest = require('../models/ProcurementRequest');
 const B2BInvoice = require('../models/B2BInvoice');
-const StoreProfile = require('../models/StoreProfile');
 const Quotation = require('../models/Quotation');
 const RFP = require('../models/RFP');
+const StoreProfile = require('../models/StoreProfile');
+const User = require('../models/User');
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 // Middleware to check if user is admin (Assuming basic auth or we check token in a real scenario)
 // For simplicity and matching current setup, we might rely on the frontend to protect routes,
 // but it's good practice to add a middleware if we were passing tokens.
@@ -366,6 +371,7 @@ router.get('/orders', async (req, res) => {
           pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
           pr.status === 'APPROVED' ? 'Processing' :
           pr.status === 'Paid' ? 'Paid' :
+          pr.status === 'SENT_TO_WAREHOUSE' ? 'Sent to Warehouse' :
           pr.status === 'DISPATCHED' ? 'Dispatched' :
           pr.status === 'DELIVERED' ? 'Delivered' : pr.status
       };
@@ -425,6 +431,21 @@ router.patch('/orders/:id/status', async (req, res) => {
 
     // Deduct inventory when dispatched
     if (status === 'Dispatched') {
+      const { assignedSerialsMapping, dispatchDetails } = req.body; // e.g. { "ModelX": ["SN1", "SN2"] }
+
+      if (dispatchDetails) {
+        order.trackingInfo = {
+          courier: dispatchDetails.courierName || '',
+          currentLocation: 'Dispatched from Warehouse',
+          progress: 20
+        };
+        order.trackingId = dispatchDetails.trackingId || '';
+        if (dispatchDetails.expectedDate) {
+          order.expectedDelivery = new Date(dispatchDetails.expectedDate);
+        }
+        await order.save();
+      }
+
       let itemsToDeduct = order.items && order.items.length > 0 ? order.items : [];
       if (itemsToDeduct.length === 0 && order.quotationReference && order.quotationReference.items && order.quotationReference.items.length > 0) {
         itemsToDeduct = order.quotationReference.items;
@@ -438,22 +459,120 @@ router.patch('/orders/:id/status', async (req, res) => {
         }));
       }
 
-      for (const item of itemsToDeduct) {
-        if (!item.brand || (!item.model && !item.productName)) continue;
+      for (let i = 0; i < itemsToDeduct.length; i++) {
+        const item = itemsToDeduct[i];
+        if (!item.productName && !item.hardwareType) continue;
+        const pName = item.productName || item.hardwareType || item.otherType || item.category;
+
+        let mappingKey = item.model || pName;
+        let assignedSerials = (assignedSerialsMapping && assignedSerialsMapping[mappingKey]) || [];
+
+        // Save assigned serials to the order item for invoice generation
+        if (order.items && order.items.length > 0 && order.items[i]) {
+          order.items[i].assignedSerials = assignedSerials;
+        }
 
         let product;
         if (item.model) {
           product = await GlobalProduct.findOne({ brand: item.brand, model: item.model });
         }
-        if (!product && item.productName) {
-          product = await GlobalProduct.findOne({ name: item.productName });
+        if (!product && pName) {
+          product = await GlobalProduct.findOne({ brand: item.brand, name: pName });
+        }
+        if (!product && pName) {
+          product = await GlobalProduct.findOne({ brand: item.brand, category: pName });
         }
 
         if (product) {
           product.quantity = Math.max(0, product.quantity - item.quantity);
           product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.quantity);
+
+          if (assignedSerials.length > 0) {
+            product.serialNumbers = (product.serialNumbers || []).filter(sn => !assignedSerials.includes(sn));
+          }
+
           await product.save();
         }
+      }
+
+      await order.save();
+
+      // --- EMAIL NOTIFICATION LOGIC ---
+      try {
+        const { dispatchDetails, assignedSerialsMapping } = req.body;
+        if (dispatchDetails) {
+          // Look up user to get email
+          const user = await User.findOne({ userId: order.userId });
+          const customerEmail = user?.email || 'customer@example.com'; 
+
+          // Construct Items HTML
+          let itemsHtml = `
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+              <thead>
+                <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                  <th style="padding: 12px; font-size: 14px; color: #475569;">Item</th>
+                  <th style="padding: 12px; font-size: 14px; color: #475569;">Qty</th>
+                  <th style="padding: 12px; font-size: 14px; color: #475569;">Assigned Serial Numbers</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          for (const item of (order.items || [])) {
+            const itemName = item.brand + ' ' + (item.model || item.productName || item.hardwareType);
+            const mappingKey = item.model || item.productName || item.hardwareType;
+            const serials = (assignedSerialsMapping && assignedSerialsMapping[mappingKey]) || [];
+            
+            itemsHtml += `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 12px; font-size: 14px; color: #1e293b; font-weight: 500;">${itemName}</td>
+                  <td style="padding: 12px; font-size: 14px; color: #64748b;">${item.quantity}</td>
+                  <td style="padding: 12px; font-size: 14px;">
+                    ${serials.map(sn => `<span style="display: inline-block; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #334155; margin: 2px;">${sn}</span>`).join('') || '<span style="color: #94a3b8; font-size: 12px;">N/A</span>'}
+                  </td>
+                </tr>
+            `;
+          }
+          itemsHtml += `</tbody></table>`;
+
+          const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+              <div style="background-color: #4f46e5; padding: 20px; color: white;">
+                <h2 style="margin: 0; font-size: 20px;">Your Order Has Been Dispatched! 🚀</h2>
+              </div>
+              <div style="padding: 20px;">
+                <p style="color: #334155; font-size: 16px; line-height: 1.5;">Hello,</p>
+                <p style="color: #334155; font-size: 16px; line-height: 1.5;">Great news! Your order <strong>#${order.orderNumber}</strong> has left our warehouse and is on its way to you.</p>
+                
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                  <h3 style="margin-top: 0; font-size: 16px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Delivery Tracking Details</h3>
+                  <p style="margin: 8px 0; color: #475569; font-size: 14px;"><strong>Courier Partner:</strong> ${dispatchDetails.courierName}</p>
+                  <p style="margin: 8px 0; color: #475569; font-size: 14px;"><strong>Tracking ID:</strong> <span style="background: #e0e7ff; color: #4338ca; padding: 2px 6px; border-radius: 4px; font-weight: 600;">${dispatchDetails.trackingId}</span></p>
+                  <p style="margin: 8px 0; color: #475569; font-size: 14px;"><strong>Expected Delivery:</strong> ${new Date(dispatchDetails.expectedDate).toLocaleDateString()}</p>
+                </div>
+
+                <h3 style="font-size: 16px; color: #1e293b; margin-bottom: 10px;">Items in this Shipment:</h3>
+                ${itemsHtml}
+
+                <p style="color: #64748b; font-size: 14px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                  If you have any questions about your delivery, please contact our support team.<br><br>
+                  Best regards,<br>
+                  <strong>Techhansa Retail Team</strong>
+                </p>
+              </div>
+            </div>
+          `;
+
+          await resend.emails.send({
+            from: 'Techhansa Notifications <onboarding@resend.dev>',
+            to: [customerEmail], // Real app: replace with customerEmail. Using onboarding@resend.dev or customerEmail
+            subject: `Order Dispatched: #${order.orderNumber} is on the way!`,
+            html: emailHtml
+          });
+        }
+      } catch (err) {
+        console.error('Failed to send dispatch email:', err);
+        // Do not block the dispatch process if email fails
       }
     }
 
@@ -500,6 +619,8 @@ router.get('/procurement-requests/:id', async (req, res) => {
       request.status = 'Pending';
     } else if (request.status === 'APPROVED') {
       request.status = 'Processing';
+    } else if (request.status === 'SENT_TO_WAREHOUSE') {
+      request.status = 'Sent to Warehouse';
     } else if (request.status === 'DISPATCHED') {
       request.status = 'Dispatched';
     } else if (request.status === 'DELIVERED') {
@@ -658,10 +779,30 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
 
     // Deduct inventory when dispatched
     if (status === 'DISPATCHED') {
-      for (const item of request.items) {
+      const { assignedSerialsMapping, dispatchDetails } = req.body;
+
+      if (dispatchDetails) {
+        request.trackingInfo = {
+          courier: dispatchDetails.courierName || '',
+          currentLocation: 'Dispatched from Warehouse',
+          progress: 20
+        };
+        request.trackingId = dispatchDetails.trackingId || '';
+        if (dispatchDetails.expectedDate) {
+          request.expectedDelivery = new Date(dispatchDetails.expectedDate);
+        }
+        // Save immediately, but there is also a request.save() at the end
+      }
+
+      for (let i = 0; i < request.items.length; i++) {
+        const item = request.items[i];
         if (!item.hardwareType) continue;
-        // Franchise requests use hardwareType/otherType as name, and brand as brand.
         const productName = item.hardwareType === 'Others' ? item.otherType : item.hardwareType;
+        
+        let mappingKey = item.model || productName;
+        let assignedSerials = (assignedSerialsMapping && assignedSerialsMapping[mappingKey]) || [];
+        
+        request.items[i].assignedSerials = assignedSerials;
 
         let product;
         if (item.model) {
@@ -674,7 +815,6 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
           }
         }
         if (!product) {
-          // Fallback to searching by brand and name/category
           product = await GlobalProduct.findOne({ brand: item.brand, name: item.hardwareType });
         }
         if (!product) {
@@ -684,8 +824,88 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
         if (product) {
           product.quantity = Math.max(0, product.quantity - item.quantity);
           product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.quantity);
+          
+          if (assignedSerials.length > 0) {
+            product.serialNumbers = (product.serialNumbers || []).filter(sn => !assignedSerials.includes(sn));
+          }
           await product.save();
         }
+      }
+      await request.save();
+
+      // --- EMAIL NOTIFICATION LOGIC ---
+      try {
+        if (dispatchDetails) {
+          const StoreProfile = require('../models/StoreProfile');
+          const store = await StoreProfile.findOne({ storeId: request.storeId });
+          const customerEmail = store?.email || 'customer@example.com'; 
+
+          let itemsHtml = `
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+              <thead>
+                <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                  <th style="padding: 12px; font-size: 14px; color: #475569;">Item</th>
+                  <th style="padding: 12px; font-size: 14px; color: #475569;">Qty</th>
+                  <th style="padding: 12px; font-size: 14px; color: #475569;">Assigned Serial Numbers</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          for (const item of (request.items || [])) {
+            const mappingKey = item.model || (item.hardwareType === 'Others' ? item.otherType : item.hardwareType);
+            const itemName = item.hardwareType === 'Others' ? item.otherType : item.hardwareType;
+            const serials = (assignedSerialsMapping && assignedSerialsMapping[mappingKey]) || [];
+            
+            itemsHtml += `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 12px; font-size: 14px; color: #1e293b; font-weight: 500;">${itemName}</td>
+                  <td style="padding: 12px; font-size: 14px; color: #64748b;">${item.quantity}</td>
+                  <td style="padding: 12px; font-size: 14px;">
+                    ${serials.map(sn => `<span style="display: inline-block; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #334155; margin: 2px;">${sn}</span>`).join('') || '<span style="color: #94a3b8; font-size: 12px;">N/A</span>'}
+                  </td>
+                </tr>
+            `;
+          }
+          itemsHtml += `</tbody></table>`;
+
+          const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+              <div style="background-color: #4f46e5; padding: 20px; color: white;">
+                <h2 style="margin: 0; font-size: 20px;">Your Procurement Request Has Been Dispatched! 🚀</h2>
+              </div>
+              <div style="padding: 20px;">
+                <p style="color: #334155; font-size: 16px; line-height: 1.5;">Hello,</p>
+                <p style="color: #334155; font-size: 16px; line-height: 1.5;">Great news! Your procurement request for <strong>Store ${request.storeId}</strong> has left our warehouse and is on its way to you.</p>
+                
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                  <h3 style="margin-top: 0; font-size: 16px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Delivery Tracking Details</h3>
+                  <p style="margin: 8px 0; color: #475569; font-size: 14px;"><strong>Courier Partner:</strong> ${dispatchDetails.courierName}</p>
+                  <p style="margin: 8px 0; color: #475569; font-size: 14px;"><strong>Tracking ID:</strong> <span style="background: #e0e7ff; color: #4338ca; padding: 2px 6px; border-radius: 4px; font-weight: 600;">${dispatchDetails.trackingId}</span></p>
+                  <p style="margin: 8px 0; color: #475569; font-size: 14px;"><strong>Expected Delivery:</strong> ${new Date(dispatchDetails.expectedDate).toLocaleDateString()}</p>
+                </div>
+
+                <h3 style="font-size: 16px; color: #1e293b; margin-bottom: 10px;">Items in this Shipment:</h3>
+                ${itemsHtml}
+
+                <p style="color: #64748b; font-size: 14px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                  If you have any questions about your delivery, please contact our support team.<br><br>
+                  Best regards,<br>
+                  <strong>Techhansa Retail Team</strong>
+                </p>
+              </div>
+            </div>
+          `;
+
+          await resend.emails.send({
+            from: 'Techhansa Notifications <onboarding@resend.dev>',
+            to: [customerEmail],
+            subject: `Procurement Dispatched: Store ${request.storeId} shipment is on the way!`,
+            html: emailHtml
+          });
+        }
+      } catch (err) {
+        console.error('Failed to send dispatch email:', err);
       }
     }
 

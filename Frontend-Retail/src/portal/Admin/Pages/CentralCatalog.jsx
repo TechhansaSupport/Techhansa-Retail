@@ -28,7 +28,8 @@ export default function CentralCatalog() {
   // View Order Modal State
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  
+
+
   const initialFormState = {
     category: '',
     brand: '',
@@ -53,7 +54,7 @@ export default function CentralCatalog() {
   const fetchOrders = async () => {
     try {
       const response = await axios.get('/api/admin/orders');
-      const processingOrders = response.data.filter(o => o.status === 'Processing' || o.status === 'Dispatched' || o.status === 'DISPATCHED');
+      const processingOrders = response.data.filter(o => ['Processing', 'Dispatched', 'DISPATCHED', 'Sent to Warehouse', 'SENT_TO_WAREHOUSE'].includes(o.status));
       setDispatchOrders(processingOrders);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
@@ -165,19 +166,22 @@ export default function CentralCatalog() {
     }
   };
 
-  const handleDispatch = async (orderId, orderType) => {
+  const handleSendToWarehouse = async (order) => {
     try {
-      if (orderType === 'Franchise Procurement') {
-        await axios.patch(`/api/admin/procurement-requests/${orderId}/status`, { status: 'DISPATCHED' });
+      if (order.orderType === 'Franchise Procurement') {
+        await axios.patch(`/api/admin/procurement-requests/${order._id}/status`, { 
+          status: 'SENT_TO_WAREHOUSE'
+        });
       } else {
-        await axios.patch(`/api/admin/orders/${orderId}/status`, { status: 'Dispatched' });
+        await axios.patch(`/api/admin/orders/${order._id}/status`, { 
+          status: 'Sent to Warehouse'
+        });
       }
-      toast.success('Order dispatched successfully!');
+      toast.success('Order sent to Warehouse for dispatch!');
       fetchOrders();
-      fetchCatalog(); // Refresh catalog to show deducted inventory
     } catch (error) {
       console.error(error);
-      toast.error('Failed to dispatch order');
+      toast.error('Failed to send order to warehouse');
     }
   };
 
@@ -245,15 +249,6 @@ export default function CentralCatalog() {
               </div>
             )}
           </div>
-          {user?.role !== 'account_manager' && (
-            <button 
-              onClick={() => handleOpenModal()}
-              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
-            >
-              <Plus size={16} />
-              Add Product
-            </button>
-          )}
         </div>
       </div>
 
@@ -298,7 +293,6 @@ export default function CentralCatalog() {
                 <th className="px-6 py-4 font-medium text-right">Base Purchase Price</th>
                 <th className="px-6 py-4 font-medium text-right">Store Selling Price</th>
                 <th className="px-6 py-4 font-medium text-center">Available Qty</th>
-                {user?.role !== 'account_manager' && <th className="px-6 py-4 font-medium text-center">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -358,26 +352,6 @@ export default function CentralCatalog() {
                         )}
                       </div>
                     </td>
-                    {user?.role !== 'account_manager' && (
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <button 
-                            onClick={() => handleOpenModal(item)}
-                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                            title="Update Product"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(item._id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete Product"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    )}
                   </tr>
                 );
               })}
@@ -406,22 +380,6 @@ export default function CentralCatalog() {
                       <div className="text-xs text-slate-500 mt-1 line-clamp-2">{item.specs}</div>
                     )}
                   </div>
-                  {user?.role !== 'account_manager' && (
-                    <div className="flex space-x-1">
-                      <button 
-                        onClick={() => handleOpenModal(item)}
-                        className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(item._id)}
-                        className="p-1.5 bg-red-50 text-red-600 rounded-lg"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-xl p-3">
@@ -648,18 +606,18 @@ export default function CentralCatalog() {
                           <Eye size={16} />
                           View
                         </button>
-                        {order.status === 'Dispatched' ? (
-                          <span className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg text-sm font-semibold flex items-center gap-2">
+                        {['Dispatched', 'Sent to Warehouse'].includes(order.status) ? (
+                          <span className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${order.status === 'Dispatched' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
                             <Truck size={16} />
-                            Dispatched
+                            {order.status}
                           </span>
                         ) : (
                           <button 
-                            onClick={() => handleDispatch(order._id, order.orderType)}
-                            className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                            onClick={() => handleSendToWarehouse(order)}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2"
                           >
                             <Truck size={16} />
-                            Dispatch Order
+                            Send to Warehouse
                           </button>
                         )}
                       </div>
@@ -714,7 +672,8 @@ export default function CentralCatalog() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {(selectedOrder.items || []).map((item, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                        <React.Fragment key={idx}>
+                        <tr className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-4 py-3">
                             <div className="font-bold text-slate-800">{item.productName || item.hardwareType || item.otherType}</div>
                             <div className="text-xs text-slate-500">{item.brand} {item.model ? `- ${item.model}` : ''}</div>
@@ -746,6 +705,15 @@ export default function CentralCatalog() {
                             {item.quantity}
                           </td>
                         </tr>
+                        {item.assignedSerials && item.assignedSerials.length > 0 && (
+                          <tr key={`serials-${idx}`} className="bg-slate-50 border-b border-slate-100">
+                            <td colSpan="3" className="px-4 py-2 text-xs">
+                              <span className="font-bold text-slate-600 mr-2">Dispatched Serials:</span>
+                              <span className="text-indigo-600 font-mono tracking-wider">{item.assignedSerials.join(', ')}</span>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -760,22 +728,24 @@ export default function CentralCatalog() {
               >
                 Close
               </button>
-              {selectedOrder.status !== 'Dispatched' && (
+              {!['Dispatched', 'Sent to Warehouse'].includes(selectedOrder.status) && (
                 <button
                   onClick={() => {
                     setIsOrderModalOpen(false);
-                    handleDispatch(selectedOrder._id, selectedOrder.orderType);
+                    handleSendToWarehouse(selectedOrder);
                   }}
-                  className="px-6 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2"
+                  className="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
                 >
                   <Truck size={18} />
-                  Dispatch Order
+                  Send to Warehouse
                 </button>
               )}
             </div>
           </motion.div>
         </div>
       )}
+
+
     </div>
   );
 }
