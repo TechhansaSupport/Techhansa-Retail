@@ -50,6 +50,13 @@ export default function Orders() {
     return matchesSearch && matchesStatus;
   });
 
+  const getOrderAmount = (order) => {
+    if (order.items && order.items.length > 0) {
+      return order.items.reduce((sum, item) => sum + ((item.unitPrice || item.price || item.rate || 0) * (item.quantity || 1) * 1.18), 0);
+    }
+    return (order.totalAmount || 0) * 1.18;
+  };
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -147,7 +154,7 @@ export default function Orders() {
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 mt-4">
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Value:</span>
-                  <span className="text-slate-700 font-semibold">₹{order.totalAmount?.toLocaleString('en-IN') || 0}</span>
+                  <span className="text-slate-700 font-semibold">₹{getOrderAmount(order).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 font-medium">Date:</span>

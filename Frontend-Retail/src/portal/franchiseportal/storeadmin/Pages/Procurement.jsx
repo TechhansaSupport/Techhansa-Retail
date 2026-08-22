@@ -293,7 +293,22 @@ export default function Procurement() {
                 if (activeTab === 'quotations') return inv.status !== 'Pending' && inv.type === 'Quotation';
                 if (activeTab === 'invoices') return inv.status !== 'Pending' && inv.type === 'Invoice';
                 return false;
-              }).map(inv => (
+              }).map(inv => {
+                const getInvoiceAmount = () => {
+                  let itemsList = (inv.items && inv.items.length > 0) ? inv.items : [];
+                  if (itemsList.length === 0 && inv.requestId && orders && orders.length > 0) {
+                    const relatedOrder = orders.find(o => o.requestId === inv.requestId);
+                    if (relatedOrder && relatedOrder.items && relatedOrder.items.length > 0) {
+                      itemsList = relatedOrder.items;
+                    }
+                  }
+                  if (itemsList.length > 0) {
+                    return itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || 0) * (curr.quantity || 1) * 1.18), 0);
+                  }
+                  return (inv.amount || 0) * 1.18;
+                };
+                
+                return (
                 <tr key={inv._id || inv.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 text-sm text-slate-600">{inv.requestId || 'N/A'}</td>
                   <td className="px-4 py-3 font-semibold text-slate-800">{inv.documentNo || inv.invoiceNo || inv.id}</td>
@@ -303,7 +318,7 @@ export default function Procurement() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm">{inv.date || new Date(inv.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-right font-medium text-rose-600">₹{inv.amount.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right font-medium text-rose-600">₹{getInvoiceAmount().toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`px-2 py-1 rounded-full text-xs font-bold ${inv.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                       {inv.status}
@@ -325,7 +340,7 @@ export default function Procurement() {
                     )}
                   </td>
                 </tr>
-              ))}
+              )})}
               {b2bInvoices.filter(inv => {
                 if (activeTab === 'approvals') return inv.status === 'Pending';
                 if (activeTab === 'quotations') return inv.status !== 'Pending' && inv.type === 'Quotation';
@@ -716,14 +731,16 @@ export default function Procurement() {
                       }
 
                       const totalQtyAcrossAllItems = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
-                      const assumedRate = totalQtyAcrossAllItems > 0 ? selectedInvoice.amount / totalQtyAcrossAllItems : 0;
+                      const assumedRate = totalQtyAcrossAllItems > 0 ? (selectedInvoice.amount / 1.18) / totalQtyAcrossAllItems : 0;
 
                       return itemsList.map((item, i) => {
-                        const inclusiveRate = item.rate || item.unitPrice || item.price || assumedRate;
+                        const baseRate = item.rate || item.unitPrice || item.price || assumedRate;
                         const qty = item.quantity || 1;
-                        const totalAmt = inclusiveRate * qty;
-                        const baseAmt = totalAmt / 1.18;
-                        const gstAmt = totalAmt - baseAmt;
+                        const gstRate = item.taxRate || 18;
+                        const baseAmt = baseRate * qty;
+                        const gstAmt = baseAmt * (gstRate / 100);
+                        const totalAmt = baseAmt + gstAmt;
+                        const inclusiveRate = baseRate;
 
                         const configStr = (() => {
                           if (typeof item.configuration === 'string' && item.configuration) {
@@ -789,9 +806,14 @@ export default function Procurement() {
                           }
                           itemsList = itemsList || [{ quantity: 1 }];
                           const totalQty = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
-                          const assumedRate = totalQty > 0 ? selectedInvoice.amount / totalQty : 0;
-                          const totalAmt = itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || assumedRate) * (curr.quantity || 1)), 0);
-                          return (totalAmt - (totalAmt / 1.18)).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                          const assumedRate = totalQty > 0 ? (selectedInvoice.amount / 1.18) / totalQty : 0;
+                          const totalGst = itemsList.reduce((acc, curr) => {
+                            const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
+                            const qty = curr.quantity || 1;
+                            const gstRate = curr.taxRate || 18;
+                            return acc + (rate * qty * (gstRate / 100));
+                          }, 0);
+                          return totalGst.toLocaleString('en-IN', { minimumFractionDigits: 2 });
                         })()}
                       </td>
                       <td className="px-4 py-3 text-sm font-bold text-right text-emerald-600">
@@ -803,9 +825,15 @@ export default function Procurement() {
                           }
                           itemsList = itemsList || [{ quantity: 1 }];
                           const totalQty = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
-                          const assumedRate = totalQty > 0 ? selectedInvoice.amount / totalQty : 0;
-                          const totalAmt = itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || assumedRate) * (curr.quantity || 1)), 0);
-                          return totalAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                          const assumedRate = totalQty > 0 ? (selectedInvoice.amount / 1.18) / totalQty : 0;
+                          const finalAmt = itemsList.reduce((acc, curr) => {
+                            const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
+                            const qty = curr.quantity || 1;
+                            const gstRate = curr.taxRate || 18;
+                            const taxable = rate * qty;
+                            return acc + taxable + (taxable * (gstRate / 100));
+                          }, 0);
+                          return finalAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 });
                         })()}
                       </td>
                     </tr>

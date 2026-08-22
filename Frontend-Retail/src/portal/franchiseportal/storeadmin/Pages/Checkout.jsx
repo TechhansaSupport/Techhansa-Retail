@@ -31,11 +31,11 @@ export default function Checkout() {
     );
   }
 
-  const totalAmount = invoice.amount || 0;
-  // Let's assume invoice amount already includes GST if applicable.
-  // Or we can extract subtotal/gst if needed, but we'll show just Total Payable.
-  const subtotal = totalAmount / 1.18;
-  const gst = totalAmount - subtotal;
+  const baseAmount = invoice.amount || 0;
+  // invoice.amount holds the base total, so we calculate GST on top.
+  const subtotal = baseAmount;
+  const gst = subtotal * 0.18;
+  const totalAmount = subtotal + gst;
 
   const availableCredit = metrics?.walletBalance || 0;
   const hasEnoughCredit = availableCredit >= totalAmount;

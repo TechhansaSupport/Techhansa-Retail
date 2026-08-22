@@ -32,9 +32,10 @@ export default function Checkout() {
     );
   }
 
-  const totalAmount = passedTotalAmount || (quotation.amount || quotation.totalAmount || 0);
-  const subtotal = totalAmount / 1.18;
-  const gst = totalAmount - subtotal;
+  const baseAmount = passedTotalAmount || (quotation.amount || quotation.totalAmount || 0);
+  const subtotal = baseAmount;
+  const gst = subtotal * 0.18;
+  const totalAmount = subtotal + gst;
 
   const availableCredit = (user?.totalCredit || 0) - (user?.usedCredit || 0);
   const hasEnoughCredit = availableCredit >= totalAmount;

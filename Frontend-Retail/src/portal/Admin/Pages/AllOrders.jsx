@@ -169,6 +169,19 @@ export default function AllOrders() {
     return matchesSearch && matchesRole;
   });
 
+  const getOrderAmount = (o) => {
+    let items = [];
+    if (o.orderType === 'Franchise Procurement' && o.items) {
+      items = o.items;
+    } else if (o.quotationReference?.rfpReference?.products) {
+      items = o.quotationReference.rfpReference.products;
+    }
+    if (items.length > 0) {
+      return items.reduce((sum, item) => sum + ((item.unitPrice || item.price || item.rate || 0) * (item.quantity || 1) * 1.18), 0);
+    }
+    return (o.totalAmount || 0) * 1.18;
+  };
+
   const getCatalogMatch = (item) => {
     if (!item || !catalog || catalog.length === 0) return null;
     return catalog.find(c => {
@@ -299,7 +312,7 @@ export default function AllOrders() {
                       </div>
                     </td>
                     <td className="p-4 font-semibold text-slate-700">
-                      ₹{order.totalAmount?.toLocaleString() || 0}
+                      ₹{getOrderAmount(order).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col">
@@ -532,7 +545,7 @@ export default function AllOrders() {
               <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex flex-col">
                   <span className="text-indigo-800 font-bold uppercase tracking-wider text-sm mb-1">Total Amount</span>
-                  <span className="text-2xl font-black text-indigo-900">₹{selectedOrder.totalAmount?.toLocaleString() || 0}</span>
+                  <span className="text-2xl font-black text-indigo-900">₹{getOrderAmount(selectedOrder).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
                 </div>
                 {getDisplayStatus(selectedOrder.status, selectedOrder.paymentStatus) === 'New Order' ? (
                   <div className="flex flex-col items-end">

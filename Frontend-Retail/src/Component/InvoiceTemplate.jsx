@@ -6,9 +6,9 @@ export default function InvoiceTemplate({ invoice, storeData }) {
 
   const invoiceDate = new Date(invoice.createdAt).toLocaleDateString('en-GB');
   
-  // Calculate tax amounts
-  const subtotal = invoice.subtotalAmount || 0;
-  const total = invoice.amount || 0;
+  // Calculate tax amounts backwards from the total (MRP)
+  const total = invoice.amount || invoice.items.reduce((acc, item) => acc + ((item.quantity || 1) * (item.sellingPrice || 0)), 0);
+  const subtotal = total / 1.18;
   const taxAmount = total - subtotal;
   
   const amountInWords = `INR ${numberToWords(Math.round(total))} Only`;
@@ -89,8 +89,10 @@ export default function InvoiceTemplate({ invoice, storeData }) {
             </thead>
             <tbody>
               {invoice.items.map((item, idx) => {
-                const itemTotal = item.quantity * item.sellingPrice;
-                const itemTax = itemTotal * 0.18; // assuming 18% for display
+                const itemTotal = (item.quantity || 1) * (item.sellingPrice || 0);
+                const baseRate = (item.sellingPrice || 0) / 1.18;
+                const itemBaseTotal = baseRate * (item.quantity || 1);
+                const itemTax = itemTotal - itemBaseTotal;
                 return (
                   <tr key={idx} className="border-b border-black last:border-b-2">
                     <td className="p-2 border-r-2 border-black text-center align-top">{idx + 1}</td>
@@ -104,7 +106,7 @@ export default function InvoiceTemplate({ invoice, storeData }) {
                     <td className="p-2 border-r-2 border-black align-top">{item.model || '-'}</td>
                     <td className="p-2 border-r-2 border-black align-top">{item.specs || '-'}</td>
                     <td className="p-2 border-r-2 border-black align-top text-center">{item.quantity}</td>
-                    <td className="p-2 border-r-2 border-black align-top text-right">{item.sellingPrice.toFixed(2)}</td>
+                    <td className="p-2 border-r-2 border-black align-top text-right">{baseRate.toFixed(2)}</td>
                     <td className="p-2 border-r-2 border-black align-top text-right">{itemTax.toFixed(2)}</td>
                     <td className="p-2 align-top text-right font-bold">{itemTotal.toFixed(2)}</td>
                   </tr>
