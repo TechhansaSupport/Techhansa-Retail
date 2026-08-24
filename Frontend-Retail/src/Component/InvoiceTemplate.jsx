@@ -5,13 +5,12 @@ export default function InvoiceTemplate({ invoice, storeData, companySettings })
   if (!invoice) return null;
 
   const invoiceDate = new Date(invoice.createdAt).toLocaleDateString('en-GB');
-  const globalGst = companySettings?.globalGstPercentage ?? 18;
-  const gstMultiplier = 1 + (globalGst / 100);
   
-  // Calculate tax amounts backwards from the total (MRP)
-  const total = invoice.items.reduce((acc, item) => acc + ((item.quantity || 1) * (item.sellingPrice || 0)), 0);
-  const subtotal = total / gstMultiplier;
+  // Use backend calculated amounts if available, otherwise fallback
+  const subtotal = invoice.subtotalAmount || invoice.items.reduce((acc, item) => acc + ((item.quantity || 1) * (item.sellingPrice || 0)), 0);
+  const total = invoice.amount || subtotal;
   const taxAmount = total - subtotal;
+  const gstMultiplier = subtotal > 0 ? (total / subtotal) : 1;
   
   const amountInWords = `INR ${numberToWords(Math.round(total))} Only`;
   const taxInWords = `INR ${numberToWords(Math.round(taxAmount))} Only`;

@@ -61,10 +61,16 @@ router.post('/checkout', async (req, res) => {
     }));
     const CompanySettings = require('../models/CompanySettings');
     let settings = await CompanySettings.findOne();
-    const gstRate = settings && settings.globalGstPercentage !== undefined ? settings.globalGstPercentage : 18;
+    
+    let gstRate = settings && settings.globalGstPercentage !== undefined ? settings.globalGstPercentage : 18;
+    if (customer && customer.gstPercentage !== undefined && customer.gstPercentage !== '') {
+      gstRate = Number(customer.gstPercentage);
+    }
 
-    const tax = subtotal * (gstRate / 100);
-    const grandTotal = subtotal + tax;
+    // Calculate inclusive GST: grandTotal is the original subtotal (inclusive amount)
+    const grandTotal = subtotal;
+    const tax = grandTotal * gstRate / (100 + gstRate);
+    const baseSubtotal = grandTotal - tax;
 
     // Create Invoice with sequential number
     const year = new Date().getFullYear();
@@ -89,7 +95,7 @@ router.post('/checkout', async (req, res) => {
       employeeId,
       storeId,
       totalQuantity,
-      subtotalAmount: subtotal,
+      subtotalAmount: baseSubtotal,
       paymentStatus: 'Paid',
       items: invoiceItems
     });

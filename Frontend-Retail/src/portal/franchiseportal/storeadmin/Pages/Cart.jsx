@@ -9,7 +9,7 @@ import InvoiceActions from '../../../../Component/InvoiceActions';
 export default function Cart() {
   const { globalCart, updateGlobalCartQuantity, removeGlobalCartItem, clearGlobalCart, processSale, storeProfileData } = useFranchise();
   const navigate = useNavigate();
-  const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
+  const [customer, setCustomer] = useState({ name: '', phone: '', email: '', gstPercentage: '' });
   const [generatedInvoice, setGeneratedInvoice] = useState(null);
   const invoiceRef = useRef(null);
   
@@ -17,6 +17,7 @@ export default function Cart() {
   const [serialNumbers, setSerialNumbers] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Cart total is the inclusive amount (sum of all item selling prices)
   const cartTotal = globalCart.reduce((acc, item) => acc + (item.sellingPrice * item.quantity), 0);
 
   const handleInitiateCheckout = () => {
@@ -56,7 +57,7 @@ export default function Cart() {
       setShowSerialModal(false);
       setGeneratedInvoice(invoice);
       clearGlobalCart();
-      setCustomer({ name: '', phone: '', email: '' });
+      setCustomer({ name: '', phone: '', email: '', gstPercentage: '' });
     } else {
       alert("Checkout failed. Please check stock availability and try again.");
     }
@@ -141,6 +142,10 @@ export default function Cart() {
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input type="text" placeholder="Phone Number" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow" />
               </div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</div>
+                <input type="number" placeholder="GST Percentage (e.g. 18)" value={customer.gstPercentage} onChange={e => setCustomer({...customer, gstPercentage: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow" />
+              </div>
             </div>
           </div>
             
@@ -222,18 +227,29 @@ export default function Cart() {
                     <div key={itemId} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                       <h4 className="font-bold text-slate-800 mb-3">{item.name} <span className="text-xs text-indigo-600 ml-2 font-mono">Qty: {item.quantity}</span></h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {Array.from({ length: item.quantity }).map((_, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-400 w-6">#{idx + 1}</span>
-                            <input 
-                              type="text" 
-                              placeholder="Serial Number..."
-                              value={serialNumbers[itemId]?.[idx] || ''}
-                              onChange={(e) => handleSerialChange(itemId, idx, e.target.value)}
-                              className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                            />
-                          </div>
-                        ))}
+                        {Array.from({ length: item.quantity }).map((_, idx) => {
+                          const currentSelected = serialNumbers[itemId] || [];
+                          const availableOptions = (item.serialNumbers || []).filter(sn => sn === currentSelected[idx] || !currentSelected.includes(sn));
+                          
+                          return (
+                            <div key={idx} className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-400 w-6">#{idx + 1}</span>
+                              <input 
+                                type="text" 
+                                list={`serials-${itemId}-${idx}`}
+                                placeholder="Search or Scan Serial Number..."
+                                value={currentSelected[idx] || ''}
+                                onChange={(e) => handleSerialChange(itemId, idx, e.target.value)}
+                                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                              />
+                              <datalist id={`serials-${itemId}-${idx}`}>
+                                {availableOptions.map(sn => (
+                                  <option key={sn} value={sn} />
+                                ))}
+                              </datalist>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
