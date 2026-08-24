@@ -14,13 +14,26 @@ export default function AllOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [catalog, setCatalog] = useState([]);
+  const [companySettings, setCompanySettings] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, type: '', orderId: null, newStatus: '' });
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { user } = useContext(AuthContext) || { user: null };
 
   useEffect(() => {
     fetchOrders();
     fetchCatalog();
+    fetchCompanySettings();
   }, []);
+
+  const fetchCompanySettings = async () => {
+    try {
+      const res = await axios.get('/api/settings/company');
+      setCompanySettings(res.data);
+    } catch (err) {
+      console.error('Failed to fetch company settings', err);
+    }
+  };
 
   const fetchCatalog = async () => {
     try {
@@ -63,6 +76,15 @@ export default function AllOrders() {
   };
 
   const handleUpdateStatus = async (orderId, newStatus) => {
+    if (newStatus === 'Declined') {
+      setConfirmDialog({ isOpen: true, type: 'decline', orderId, newStatus });
+      return;
+    }
+    await processUpdateStatus(orderId, newStatus);
+  };
+  
+  const processUpdateStatus = async (orderId, newStatus) => {
+    setIsProcessing(true);
     try {
       const targetOrder = orders.find(o => o._id === orderId);
       if (targetOrder && targetOrder.orderType === 'Franchise Procurement') {
@@ -82,10 +104,17 @@ export default function AllOrders() {
     } catch (error) {
       console.error('Failed to update order status:', error);
       toast.error('Failed to update order status');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleApproveProcurement = async (orderId) => {
+    setConfirmDialog({ isOpen: true, type: 'approve', orderId });
+  };
+  
+  const processApproveProcurement = async (orderId) => {
+    setIsProcessing(true);
     const finalAmount = getOrderAmount(selectedOrder);
     try {
       if (selectedOrder.orderType === 'Enterprise') {
@@ -101,6 +130,8 @@ export default function AllOrders() {
     } catch (error) {
       console.error('Failed to send quotation:', error);
       toast.error(error.response?.data?.message || 'Failed to send quotation');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -171,15 +202,16 @@ export default function AllOrders() {
 
   const getOrderAmount = (o) => {
     let items = [];
+    const gstMultiplier = 1 + (companySettings?.globalGstPercentage ?? 18) / 100;
     if (o.orderType === 'Franchise Procurement' && o.items) {
       items = o.items;
     } else if (o.quotationReference?.rfpReference?.products) {
       items = o.quotationReference.rfpReference.products;
     }
     if (items.length > 0) {
-      return items.reduce((sum, item) => sum + ((item.unitPrice || item.price || item.rate || 0) * (item.quantity || 1) * 1.18), 0);
+      return items.reduce((sum, item) => sum + ((item.unitPrice || item.price || item.rate || 0) * (item.quantity || 1) * gstMultiplier), 0);
     }
-    return (o.totalAmount || 0) * 1.18;
+    return (o.totalAmount || 0) * gstMultiplier;
   };
 
   const getCatalogMatch = (item) => {
@@ -584,6 +616,54 @@ export default function AllOrders() {
                   </button>
                 ) : null}
               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center"
+          >
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmDialog.type === 'approve' ? 'bg-indigo-100 text-indigo-600' : 'bg-red-100 text-red-600'}`}>
+              {confirmDialog.type === 'approve' ? <Check size={32} /> : <X size={32} />}
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Are you sure?</h3>
+            <p className="text-slate-500 mb-6">
+              {confirmDialog.type === 'approve' 
+                ? 'Are you sure you want to confirm and send a quotation for this order?' 
+                : 'Are you sure you want to decline this order? This action cannot be undone.'}
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setConfirmDialog({ isOpen: false, type: '', orderId: null, newStatus: '' })}
+                className="px-5 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirmDialog.type === 'decline') {
+                    await processUpdateStatus(confirmDialog.orderId, confirmDialog.newStatus);
+                  } else if (confirmDialog.type === 'approve') {
+                    await processApproveProcurement(confirmDialog.orderId);
+                  }
+                  setConfirmDialog({ isOpen: false, type: '', orderId: null, newStatus: '' });
+                }}
+                className={`px-5 py-2.5 text-white font-bold rounded-xl transition-colors ${
+                  confirmDialog.type === 'approve' 
+                    ? 'bg-indigo-600 hover:bg-indigo-700' 
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+                disabled={isProcessing}
+              >
+                {isProcessing ? 'Processing...' : `Yes, ${confirmDialog.type === 'approve' ? 'Confirm' : 'Decline'}`}
+              </button>
             </div>
           </motion.div>
         </div>

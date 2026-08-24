@@ -47,8 +47,9 @@ export default function Checkout() {
   }
 
   const totalAmount = passedTotalAmount || (quotation.amount || quotation.totalAmount || 0);
+  const gstMultiplier = 1 + (companySettings?.globalGstPercentage ?? 18) / 100;
   // totalAmount is already GST-inclusive from the quotations page logic
-  const subtotal = totalAmount / 1.18;
+  const subtotal = totalAmount / gstMultiplier;
   const gst = totalAmount - subtotal;
 
   const availableCredit = (user?.totalCredit || 0) - (user?.usedCredit || 0);

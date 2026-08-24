@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const Quotation = require('../models/Quotation');
 const B2BInvoice = require('../models/B2BInvoice');
 const ProcurementRequest = require('../models/ProcurementRequest');
+const CompanySettings = require('../models/CompanySettings');
 const { verifyAdminToken, requireRoles } = require('../middleware/auth');
 
 const financeAuth = requireRoles(['admin', 'finance_manager']);
@@ -17,6 +18,10 @@ router.get('/pending-payments', financeAuth, async (req, res) => {
 
     // Fetch more than limit just in case, but real pagination across multiple collections is complex.
     // For now, since we have 3 collections, we'll fetch them, merge, sort, and slice for the specific page.
+    let settings = await CompanySettings.findOne();
+    const gstRate = settings && settings.globalGstPercentage !== undefined ? settings.globalGstPercentage : 18;
+    const gstMultiplier = 1 + (gstRate / 100);
+
     const orders = await Order.find({ paymentStatus: { $in: ['Pending Verification', 'Paid', 'Rejected'] } });
     const b2bInvoices = await B2BInvoice.find({ status: { $in: ['Payment Verification', 'Paid', 'Rejected'] } });
     const quotations = await Quotation.find({ 
@@ -29,15 +34,16 @@ router.get('/pending-payments', financeAuth, async (req, res) => {
         ? o.items.reduce((sum, item) => {
             // item.totalAmount in DB already includes GST for Channel Orders.
             // If item.totalAmount is missing, use unitPrice * quantity (and add GST since unitPrice is base).
-            const hasInclusiveTotal = item.totalAmount != null && item.totalAmount > 0;
-            if (hasInclusiveTotal) {
-              return sum + item.totalAmount;
-            } else {
-              const base = item.amount || ((item.unitPrice || item.price || 0) * (item.quantity || 1));
-              return sum + (base * 1.18);
-            }
+            // We no longer rely strictly on item.totalAmount from DB because some older records 
+            // stored the unit total instead of the line total.
+            // Recalculate accurately based on unitPrice and quantity.
+            const base = item.amount || ((item.unitPrice || item.price || 0) * (item.quantity || 1));
+            const calculatedLineTotal = base * gstMultiplier;
+            
+            // If item.totalAmount is substantially larger, it might have been correct, but let's trust our calc
+            return sum + calculatedLineTotal;
           }, 0)
-        : o.totalAmount * 1.18;
+        : o.totalAmount * gstMultiplier;
 
       return {
         _id: o._id,

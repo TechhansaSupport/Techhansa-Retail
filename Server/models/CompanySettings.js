@@ -7,6 +7,7 @@ const CompanySettingsSchema = new mongoose.Schema({
   stateName: { type: String, default: 'N/A' },
   contactNumber: { type: String, default: '+91-7007650206 , 9711888951' },
   email: { type: String, default: 'finance@techhansa.com' },
+  globalGstPercentage: { type: Number, default: 18 },
   bankDetails: {
     accountHolderName: { type: String, default: 'TECHHANSA RETAIL PVT LTD' },
     bankName: { type: String, default: 'N/A' },

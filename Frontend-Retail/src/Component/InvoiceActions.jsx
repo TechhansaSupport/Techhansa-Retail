@@ -10,7 +10,7 @@ import { Printer, Share2, Download, MessageCircle, X, CheckCircle2, Loader2 } fr
  *  - storeData: Store profile data (for store name in the WhatsApp message)
  *  - invoiceRef: A React ref pointing to the invoice DOM element to capture
  */
-export default function InvoiceActions({ invoice, storeData, invoiceRef }) {
+export default function InvoiceActions({ invoice, storeData, invoiceRef, companySettings }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
 
@@ -96,7 +96,7 @@ ${itemLines}
 
 ━━━━━━━━━━━━━━━━━━
 💰 Subtotal: ₹${subtotal.toLocaleString()}
-🧾 GST (18%): ₹${taxAmount.toFixed(2)}
+🧾 GST (${companySettings?.globalGstPercentage ?? 18}%): ₹${taxAmount.toFixed(2)}
 ✅ *Grand Total: ₹${total.toFixed(2)}*
 ━━━━━━━━━━━━━━━━━━
 Payment Status: ✅ Paid

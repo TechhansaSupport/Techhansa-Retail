@@ -23,6 +23,7 @@ export default function Settings() {
     stateName: '',
     contactNumber: '',
     email: '',
+    globalGstPercentage: 18,
     declaration: '',
     authorizedSignatoryText: '',
     bankDetails: {
@@ -56,6 +57,7 @@ export default function Settings() {
           email: res.data.email || '',
           declaration: res.data.declaration || '',
           authorizedSignatoryText: res.data.authorizedSignatoryText || '',
+          globalGstPercentage: res.data.globalGstPercentage ?? 18,
           bankDetails: res.data.bankDetails || {
             accountHolderName: '',
             bankName: '',
@@ -298,6 +300,17 @@ export default function Settings() {
                 type="text"
                 value={companySettings.email}
                 onChange={(e) => setCompanySettings({ ...companySettings, email: e.target.value })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Global GST % (Purchasing)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={companySettings.globalGstPercentage ?? 18}
+                onChange={(e) => setCompanySettings({ ...companySettings, globalGstPercentage: Number(e.target.value) })}
                 className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               />
             </div>

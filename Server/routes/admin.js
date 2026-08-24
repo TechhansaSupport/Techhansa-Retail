@@ -62,7 +62,7 @@ router.get('/dashboard', async (req, res) => {
     const invoices = await Invoice.find({ paymentStatus: 'Paid' }).populate('items.productId').lean();
     const b2bInvoices = await require('../models/B2BInvoice').find({ status: { $in: ['Paid', 'DISPATCHED'] } }).lean();
     const orders = await require('../models/Order').find({ paymentStatus: 'Paid' }).lean();
-    
+
     let totalRevenue = 0;
     let totalCogs = 0;
 
@@ -89,8 +89,8 @@ router.get('/dashboard', async (req, res) => {
       totalRevenue += ord.totalAmount || 0;
       if (ord.items && Array.isArray(ord.items)) {
         ord.items.forEach(item => {
-           let bp = (item.unitPrice || 0) * 0.7; // Approximation for Channel B2B COGS
-           totalCogs += bp * (item.quantity || 0);
+          let bp = (item.unitPrice || 0) * 0.7; // Approximation for Channel B2B COGS
+          totalCogs += bp * (item.quantity || 0);
         });
       }
     });
@@ -354,8 +354,8 @@ router.get('/orders', async (req, res) => {
     const mappedProcurements = procurements.map(pr => {
       let paymentStatus = pr.quotationPaymentStatus || 'Pending';
       if (!pr.quotationPaymentStatus) {
-        paymentStatus = (pr.status === 'PENDING' || pr.status === 'Quotation Sent') ? 'Pending' : 
-                        (pr.status === 'PAYMENT_VERIFICATION' ? 'Pending Verification' : 'Verified');
+        paymentStatus = (pr.status === 'PENDING' || pr.status === 'Quotation Sent') ? 'Pending' :
+          (pr.status === 'PAYMENT_VERIFICATION' ? 'Pending Verification' : 'Verified');
       } else if (paymentStatus === 'Paid') {
         paymentStatus = 'Verified';
       }
@@ -368,12 +368,12 @@ router.get('/orders', async (req, res) => {
         paymentStatus,
         status: pr.status === 'PENDING' ? 'Pending' :
           pr.status === 'PAYMENT_REJECTED' ? 'Declined' :
-          pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
-          pr.status === 'APPROVED' ? 'Processing' :
-          pr.status === 'Paid' ? 'Paid' :
-          pr.status === 'SENT_TO_WAREHOUSE' ? 'Sent to Warehouse' :
-          pr.status === 'DISPATCHED' ? 'Dispatched' :
-          pr.status === 'DELIVERED' ? 'Delivered' : pr.status
+            pr.status === 'PAYMENT_VERIFICATION' ? 'Payment Verification' :
+              pr.status === 'APPROVED' ? 'Processing' :
+                pr.status === 'Paid' ? 'Paid' :
+                  pr.status === 'SENT_TO_WAREHOUSE' ? 'Sent to Warehouse' :
+                    pr.status === 'DISPATCHED' ? 'Dispatched' :
+                      pr.status === 'DELIVERED' ? 'Delivered' : pr.status
       };
     });
 
@@ -503,7 +503,7 @@ router.patch('/orders/:id/status', async (req, res) => {
         if (dispatchDetails) {
           // Look up user to get email
           const user = await User.findOne({ userId: order.userId });
-          const customerEmail = user?.email || 'customer@example.com'; 
+          const customerEmail = user?.email || 'customer@example.com';
 
           // Construct Items HTML
           let itemsHtml = `
@@ -522,7 +522,7 @@ router.patch('/orders/:id/status', async (req, res) => {
             const itemName = item.brand + ' ' + (item.model || item.productName || item.hardwareType);
             const mappingKey = item.model || item.productName || item.hardwareType;
             const serials = (assignedSerialsMapping && assignedSerialsMapping[mappingKey]) || [];
-            
+
             itemsHtml += `
                 <tr style="border-bottom: 1px solid #e2e8f0;">
                   <td style="padding: 12px; font-size: 14px; color: #1e293b; font-weight: 500;">${itemName}</td>
@@ -573,6 +573,78 @@ router.patch('/orders/:id/status', async (req, res) => {
       } catch (err) {
         console.error('Failed to send dispatch email:', err);
         // Do not block the dispatch process if email fails
+      }
+    }
+
+    // Auto-add to inventory when delivered
+    if (status === 'Delivered' || status === 'DELIVERED') {
+      try {
+        const user = await User.findOne({ userId: order.userId });
+        const storeId = user ? user.storeId : null;
+
+        if (storeId) {
+          const itemsToAdd = [];
+          
+          const groupedItems = {};
+          for (const item of (order.items || [])) {
+            const itemBrand = item.brand || 'N/A';
+            const itemModel = item.model || item.productName || 'N/A';
+            const modelKey = `${itemBrand}_${itemModel}`;
+            
+            const qty = item.quantity || (item.assignedSerials && item.assignedSerials.length > 0 ? item.assignedSerials.length : 1);
+            if (!groupedItems[modelKey]) {
+              groupedItems[modelKey] = { ...(item.toObject ? item.toObject() : item), _quantity: qty, _assignedSerials: new Set(item.assignedSerials || []) };
+            } else {
+              groupedItems[modelKey]._quantity += qty;
+              if (item.assignedSerials) {
+                item.assignedSerials.forEach(sn => groupedItems[modelKey]._assignedSerials.add(sn));
+              }
+            }
+          }
+
+          for (const modelKey in groupedItems) {
+            const item = groupedItems[modelKey];
+            const basePayload = {
+              storeId: storeId,
+              name: item.productName || item.category || 'Product',
+              brand: item.brand || 'N/A',
+              model: item.model || item.productName || 'N/A',
+              category: item.category || 'N/A',
+              specs: item.configuration || '',
+              sellingPrice: item.unitPrice || item.price || 0
+            };
+
+            const quantity = item._quantity;
+            const assignedSerials = Array.from(item._assignedSerials);
+
+            const existing = await Product.findOne({ storeId: storeId, brand: basePayload.brand, model: basePayload.model });
+
+            if (existing) {
+              existing.quantity += quantity;
+              existing.availableStock += quantity;
+              if (assignedSerials.length > 0) {
+                const existingSerialsSet = new Set(existing.serialNumbers || []);
+                for (const sn of assignedSerials) {
+                  existingSerialsSet.add(sn);
+                }
+                existing.serialNumbers = Array.from(existingSerialsSet);
+              }
+              await existing.save();
+            } else {
+              itemsToAdd.push({ 
+                ...basePayload, 
+                quantity: quantity, 
+                availableStock: quantity,
+                serialNumbers: assignedSerials
+              });
+            }
+          }
+          if (itemsToAdd.length > 0) {
+            await Product.insertMany(itemsToAdd);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to auto-add delivered order items to inventory:', err);
       }
     }
 
@@ -700,7 +772,7 @@ router.post('/procurement-requests/:id/approve', async (req, res) => {
     for (const item of request.items) {
       if (!item.hardwareType) continue;
       const productName = item.hardwareType === 'Others' ? item.otherType : item.hardwareType;
-      
+
       let product;
       if (item.model) {
         product = await GlobalProduct.findOne({ brand: item.brand, model: item.model });
@@ -717,7 +789,7 @@ router.post('/procurement-requests/:id/approve', async (req, res) => {
       if (!product) {
         product = await GlobalProduct.findOne({ brand: item.brand, category: item.hardwareType });
       }
-      
+
       if (product) {
         product.availableStock = Math.max(0, product.availableStock - item.quantity);
         product.reservedStock = (product.reservedStock || 0) + item.quantity;
@@ -800,10 +872,10 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
         const item = request.items[i];
         if (!item.hardwareType) continue;
         const productName = item.hardwareType === 'Others' ? item.otherType : item.hardwareType;
-        
+
         let mappingKey = item.model || productName;
         let assignedSerials = (assignedSerialsMapping && assignedSerialsMapping[mappingKey]) || [];
-        
+
         request.items[i].assignedSerials = assignedSerials;
 
         let product;
@@ -826,7 +898,7 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
         if (product) {
           product.quantity = Math.max(0, product.quantity - item.quantity);
           product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.quantity);
-          
+
           if (assignedSerials.length > 0) {
             product.serialNumbers = (product.serialNumbers || []).filter(sn => !assignedSerials.includes(sn));
           }
@@ -840,7 +912,7 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
         if (dispatchDetails) {
           const StoreProfile = require('../models/StoreProfile');
           const store = await StoreProfile.findOne({ storeId: request.storeId });
-          const customerEmail = store?.email || 'customer@example.com'; 
+          const customerEmail = store?.email || 'customer@example.com';
 
           let itemsHtml = `
             <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
@@ -858,7 +930,7 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
             const mappingKey = item.model || (item.hardwareType === 'Others' ? item.otherType : item.hardwareType);
             const itemName = item.hardwareType === 'Others' ? item.otherType : item.hardwareType;
             const serials = (assignedSerialsMapping && assignedSerialsMapping[mappingKey]) || [];
-            
+
             itemsHtml += `
                 <tr style="border-bottom: 1px solid #e2e8f0;">
                   <td style="padding: 12px; font-size: 14px; color: #1e293b; font-weight: 500;">${itemName}</td>
@@ -908,6 +980,76 @@ router.patch('/procurement-requests/:id/status', async (req, res) => {
         }
       } catch (err) {
         console.error('Failed to send dispatch email:', err);
+      }
+    }
+
+    // Auto-add to inventory when delivered
+    if (status === 'Delivered' || status === 'DELIVERED') {
+      try {
+        const storeId = request.storeId;
+        if (storeId) {
+          const itemsToAdd = [];
+          
+          const groupedItems = {};
+          for (const item of (request.items || [])) {
+            const itemBrand = item.brand || 'N/A';
+            const itemModel = item.model || item.productName || item.hardwareType || item.otherType || 'N/A';
+            const modelKey = `${itemBrand}_${itemModel}`;
+            
+            const qty = item.quantity || (item.assignedSerials && item.assignedSerials.length > 0 ? item.assignedSerials.length : 1);
+            if (!groupedItems[modelKey]) {
+              groupedItems[modelKey] = { ...(item.toObject ? item.toObject() : item), _quantity: qty, _assignedSerials: new Set(item.assignedSerials || []) };
+            } else {
+              groupedItems[modelKey]._quantity += qty;
+              if (item.assignedSerials) {
+                item.assignedSerials.forEach(sn => groupedItems[modelKey]._assignedSerials.add(sn));
+              }
+            }
+          }
+
+          for (const modelKey in groupedItems) {
+            const item = groupedItems[modelKey];
+            const basePayload = {
+              storeId: storeId,
+              name: item.productName || item.hardwareType || item.otherType || item.category || 'Product',
+              brand: item.brand || 'N/A',
+              model: item.model || item.productName || item.hardwareType || item.otherType || 'N/A',
+              category: item.category || item.hardwareType || 'N/A',
+              specs: typeof item.specs === 'string' ? item.specs : JSON.stringify(item.specs || item.configuration || {}),
+              sellingPrice: item.price || item.unitPrice || 0
+            };
+
+            const quantity = item._quantity;
+            const assignedSerials = Array.from(item._assignedSerials);
+
+            const existing = await Product.findOne({ storeId: storeId, brand: basePayload.brand, model: basePayload.model });
+
+            if (existing) {
+              existing.quantity += quantity;
+              existing.availableStock += quantity;
+              if (assignedSerials.length > 0) {
+                const existingSerialsSet = new Set(existing.serialNumbers || []);
+                for (const sn of assignedSerials) {
+                  existingSerialsSet.add(sn);
+                }
+                existing.serialNumbers = Array.from(existingSerialsSet);
+              }
+              await existing.save();
+            } else {
+              itemsToAdd.push({ 
+                ...basePayload, 
+                quantity: quantity, 
+                availableStock: quantity,
+                serialNumbers: assignedSerials
+              });
+            }
+          }
+          if (itemsToAdd.length > 0) {
+            await Product.insertMany(itemsToAdd);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to auto-add delivered procurement items to inventory:', err);
       }
     }
 
@@ -1447,7 +1589,7 @@ router.post('/orders/:id/tracking-email', async (req, res) => {
   try {
     const { orderType } = req.body;
     let order;
-    
+
     if (orderType === 'Franchise Procurement') {
       order = await ProcurementRequest.findById(req.params.id);
     } else {
@@ -1566,12 +1708,16 @@ router.post('/orders/:id/tracking-email', async (req, res) => {
       await resend.emails.send({
         from: 'Techhansa Notifications <onboarding@resend.dev>',
         to: ['onboarding@resend.dev'], // Use onboarding@resend.dev for test environment
-        subject: `Your Order ${order.orderNumber} has been Dispatched!`,
+        subject: `Your Order ${order.orderNumber || order.requestId} has been Dispatched!`,
         html: emailContent
       });
+      order.trackingEmailSent = true;
+      await order.save();
     } catch (e) {
       console.error('Error sending tracking email via Resend:', e);
       // Proceed even if resend fails (e.g. invalid API key) to allow frontend flow testing
+      order.trackingEmailSent = true;
+      await order.save();
     }
 
     res.json({ message: 'Tracking details sent successfully' });

@@ -227,13 +227,26 @@ export default function Cart() {
                         {Array.from({ length: item.quantity }).map((_, idx) => (
                           <div key={idx} className="flex items-center gap-2">
                             <span className="text-xs font-bold text-slate-400 w-6">#{idx + 1}</span>
-                            <input 
-                              type="text" 
-                              placeholder="Serial Number..."
-                              value={serialNumbers[itemId]?.[idx] || ''}
-                              onChange={(e) => handleSerialChange(itemId, idx, e.target.value)}
-                              className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                            />
+                            {item.serialNumbers && item.serialNumbers.length > 0 ? (
+                              <select
+                                value={serialNumbers[itemId]?.[idx] || ''}
+                                onChange={(e) => handleSerialChange(itemId, idx, e.target.value)}
+                                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
+                              >
+                                <option value="">Select Serial Number...</option>
+                                {item.serialNumbers.map(sn => (
+                                  <option key={sn} value={sn}>{sn}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input 
+                                type="text" 
+                                placeholder="Serial Number (Optional)..."
+                                value={serialNumbers[itemId]?.[idx] || ''}
+                                onChange={(e) => handleSerialChange(itemId, idx, e.target.value)}
+                                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                              />
+                            )}
                           </div>
                         ))}
                       </div>

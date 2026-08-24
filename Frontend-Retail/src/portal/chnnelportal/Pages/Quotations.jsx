@@ -111,17 +111,21 @@ export default function Quotations() {
   });
 
   const getCardAmount = (qt) => {
+    const gstMultiplier = 1 + (companySettings?.globalGstPercentage ?? 18) / 100;
     const rItems = qt.items?.length > 0 ? qt.items : (qt.rfpReference?.products || []);
     if (rItems.length > 0) {
-      return rItems.reduce((sum, item) => sum + ((item.unitPrice || item.price || item.rate || 0) * (item.quantity || 1) * 1.18), 0);
+      return rItems.reduce((sum, item) => sum + ((item.unitPrice || item.price || item.rate || 0) * (item.quantity || 1) * gstMultiplier), 0);
     }
-    return (qt.amount || qt.rfpReference?.estimatedTotal || qt.totalAmount || 0) * 1.18;
+    return (qt.amount || qt.rfpReference?.estimatedTotal || qt.totalAmount || 0) * gstMultiplier;
   };
 
   const fallbackTotalAmount = selectedQuotation?.amount || selectedQuotation?.rfpReference?.estimatedTotal || selectedQuotation?.totalAmount || 0;
 
   const selectedRfp = selectedQuotation?.rfpReference || rfps.find(r => r.rfpId === selectedQuotation?.quotationNo?.replace('QT-', ''));
   const rawItems = (selectedQuotation?.items?.length > 0) ? selectedQuotation.items : (selectedRfp?.products || []);
+
+  const gstMultiplier = 1 + (companySettings?.globalGstPercentage ?? 18) / 100;
+  const gstRateDecimal = (companySettings?.globalGstPercentage ?? 18) / 100;
 
   const quotationItems = rawItems.map(p => {
     let unitPrice = p.unitPrice ?? p.price;
@@ -137,7 +141,7 @@ export default function Quotations() {
     
     const qty = p.quantity || 1;
     const baseAmt = unitPrice * qty;
-    const gstAmt = baseAmt * 0.18;
+    const gstAmt = baseAmt * gstRateDecimal;
     const totalAmount = baseAmt + gstAmt;
 
     return { ...p, unitPrice, totalAmount, gstAmt, baseAmt };
@@ -145,7 +149,7 @@ export default function Quotations() {
 
   const displayTotalAmount = quotationItems.length > 0 
     ? quotationItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0)
-    : (fallbackTotalAmount * 1.18);
+    : (fallbackTotalAmount * gstMultiplier);
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-[1600px] mx-auto pb-12 space-y-6">

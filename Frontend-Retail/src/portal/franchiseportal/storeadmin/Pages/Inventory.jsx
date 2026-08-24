@@ -14,6 +14,7 @@ export default function Inventory() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [viewingSerialsItem, setViewingSerialsItem] = useState(null);
   
   const initialFormState = {
     category: '',
@@ -193,6 +194,7 @@ export default function Inventory() {
                 <th className="px-6 py-4 font-medium text-right">B2B Purchase Price</th>
                 <th className="px-6 py-4 font-medium text-right">Store Selling Price</th>
                 <th className="px-6 py-4 font-medium text-center">Available Qty</th>
+                <th className="px-6 py-4 font-medium text-center">Serial Numbers</th>
                 <th className="px-6 py-4 font-medium text-center">Actions</th>
               </tr>
             </thead>
@@ -212,7 +214,20 @@ export default function Inventory() {
                       <div className="text-xs text-slate-500 font-mono mt-0.5">{item.model}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-xs text-slate-600 leading-relaxed">{item.specs || '—'}</span>
+                      <div className="text-xs text-slate-600 leading-relaxed max-w-xs break-words">
+                        {(() => {
+                          if (!item.specs) return '—';
+                          if (typeof item.specs !== 'string') return JSON.stringify(item.specs);
+                          try {
+                            const parsed = JSON.parse(item.specs);
+                            if (parsed.Specs) return parsed.Specs; // If it has a "Specs" key, use it
+                            // Otherwise show values separated by comma
+                            return Object.values(parsed).filter(Boolean).join(', ');
+                          } catch (e) {
+                            return item.specs; // Not valid JSON, just return string
+                          }
+                        })()}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-right font-medium text-slate-700">
                       ₹{item.buyingPrice?.toLocaleString()}
@@ -227,6 +242,20 @@ export default function Inventory() {
                         </span>
                         {isLowStock && (
                           <span className="text-[10px] font-bold text-red-500 uppercase mt-1">Low Stock</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1 items-start">
+                        {item.serialNumbers && item.serialNumbers.length > 0 ? (
+                          <button 
+                            onClick={() => setViewingSerialsItem(item)}
+                            className="px-3 py-1 bg-indigo-50 text-indigo-600 text-xs rounded border border-indigo-100 font-medium hover:bg-indigo-100 transition-colors shadow-sm"
+                          >
+                            View Serials ({item.serialNumbers.length})
+                          </button>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">No serials tracked</span>
                         )}
                       </div>
                     </td>
@@ -285,12 +314,30 @@ export default function Inventory() {
                 </div>
                 
                 <div className="flex justify-between items-center pt-2">
-                  <div className="flex gap-4">
+                  <div className="flex flex-col gap-2">
                     <div>
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Available</p>
                       <p className={`font-black text-xl ${isLowStock ? 'text-red-500' : 'text-slate-800'}`}>
                         {item.availableStock}
                       </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Serial Numbers</p>
+                      <div className="flex flex-wrap gap-1">
+                        {item.serialNumbers?.slice(0, 3).map((sn, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded border border-slate-200 font-mono">
+                            {sn}
+                          </span>
+                        ))}
+                        {item.serialNumbers?.length > 3 && (
+                          <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] rounded border border-indigo-100 font-medium">
+                            +{item.serialNumbers.length - 3} more
+                          </span>
+                        )}
+                        {(!item.serialNumbers || item.serialNumbers.length === 0) && (
+                          <span className="text-[10px] text-slate-400 italic">No serials tracked</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
@@ -403,6 +450,47 @@ export default function Inventory() {
           </div>
         </div>
       )}
+      {/* View Serials Modal */}
+      {viewingSerialsItem && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-indigo-50 shrink-0">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Serial Numbers</h2>
+                <p className="text-sm text-slate-500 mt-1">{viewingSerialsItem.name}</p>
+              </div>
+              <button onClick={() => setViewingSerialsItem(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-indigo-100 rounded-full transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4">
+              <div className="flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <span className="font-semibold text-slate-600 uppercase text-sm tracking-wide">Total Units</span>
+                <span className="font-bold text-indigo-700 text-lg">{viewingSerialsItem.serialNumbers.length}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {viewingSerialsItem.serialNumbers.map((sn, i) => (
+                  <div key={i} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono text-slate-700 text-center shadow-sm">
+                    {sn}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end shrink-0">
+              <button onClick={() => setViewingSerialsItem(null)} className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-100 transition-colors">
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
     </div>
   );
 }

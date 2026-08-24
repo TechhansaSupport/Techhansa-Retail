@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const productSchema = new mongoose.Schema({
   storeId: { type: String, required: true },
   serialNumber: { type: String, required: false, unique: true, sparse: true },
+  serialNumbers: [{ type: String }],
 
   name: { type: String, required: true },
   brand: { type: String, required: false },

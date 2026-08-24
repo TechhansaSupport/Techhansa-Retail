@@ -24,10 +24,25 @@ export default function Orders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState(location.state?.filter || 'All');
   
+  const [companySettings, setCompanySettings] = useState(null);
+
   useEffect(() => {
-    if (user?.userId) fetchOrders();
+    if (user?.userId) {
+      fetchOrders();
+      fetchCompanySettings();
+    }
   }, [user]);
-  
+
+  const fetchCompanySettings = async () => {
+    try {
+      const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/settings/company`);
+      const data = await res.json();
+      setCompanySettings(data);
+    } catch (err) {
+      console.error('Failed to fetch company settings', err);
+    }
+  };
+
   const fetchOrders = async () => {
     if (!user?.userId) return;
     try {
@@ -51,10 +66,11 @@ export default function Orders() {
   });
 
   const getOrderAmount = (order) => {
+    const gstMultiplier = 1 + (companySettings?.globalGstPercentage ?? 18) / 100;
     if (order.items && order.items.length > 0) {
-      return order.items.reduce((sum, item) => sum + ((item.unitPrice || item.price || item.rate || 0) * (item.quantity || 1) * 1.18), 0);
+      return order.items.reduce((sum, item) => sum + ((item.unitPrice || item.price || item.rate || 0) * (item.quantity || 1) * gstMultiplier), 0);
     }
-    return (order.totalAmount || 0) * 1.18;
+    return (order.totalAmount || 0) * gstMultiplier;
   };
 
   return (

@@ -302,11 +302,14 @@ export default function Procurement() {
                       itemsList = relatedOrder.items;
                     }
                   }
+                  
+                  const gstMultiplier = 1 + (companySettings?.globalGstPercentage ?? 18) / 100;
+                  
                   if (itemsList.length > 0) {
-                    const sum = itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || 0) * (curr.quantity || 1) * 1.18), 0);
+                    const sum = itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || 0) * (curr.quantity || 1) * gstMultiplier), 0);
                     if (sum > 0) return sum;
                   }
-                  return (inv.amount || 0) * 1.18;
+                  return (inv.amount || 0) * gstMultiplier;
                 };
                 
                 return (
@@ -377,9 +380,9 @@ export default function Procurement() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col"
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
           >
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-indigo-50">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-indigo-50 shrink-0">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Delivery Tracking</h2>
                 <p className="text-sm text-slate-500 mt-1">Request ID: {trackingInvoice.requestId}</p>
@@ -389,7 +392,7 @@ export default function Procurement() {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto">
               {trackingInvoice.trackingId || trackingInvoice.trackingInfo?.courier ? (
                 <>
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
@@ -826,7 +829,7 @@ export default function Procurement() {
                       return itemsList.map((item, i) => {
                         const baseRate = item.rate || item.unitPrice || item.price || assumedRate;
                         const qty = item.quantity || 1;
-                        const gstRate = item.taxRate || 18;
+                        const gstRate = companySettings?.globalGstPercentage ?? 18;
                         const baseAmt = baseRate * qty;
                         const gstAmt = baseAmt * (gstRate / 100);
                         const totalAmt = baseAmt + gstAmt;
@@ -900,7 +903,7 @@ export default function Procurement() {
                           const totalGst = itemsList.reduce((acc, curr) => {
                             const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
                             const qty = curr.quantity || 1;
-                            const gstRate = curr.taxRate || 18;
+                            const gstRate = companySettings?.globalGstPercentage ?? 18;
                             return acc + (rate * qty * (gstRate / 100));
                           }, 0);
                           return totalGst.toLocaleString('en-IN', { minimumFractionDigits: 2 });
@@ -919,7 +922,7 @@ export default function Procurement() {
                           const finalAmt = itemsList.reduce((acc, curr) => {
                             const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
                             const qty = curr.quantity || 1;
-                            const gstRate = curr.taxRate || 18;
+                            const gstRate = companySettings?.globalGstPercentage ?? 18;
                             const taxable = rate * qty;
                             return acc + taxable + (taxable * (gstRate / 100));
                           }, 0);
@@ -948,7 +951,7 @@ export default function Procurement() {
                       return itemsList.reduce((acc, curr) => {
                         const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
                         const qty = curr.quantity || 1;
-                        const gstRate = curr.taxRate || 18;
+                        const gstRate = companySettings?.globalGstPercentage ?? 18;
                         return acc + (rate * qty) * (1 + (gstRate / 100));
                       }, 0);
                     };
@@ -972,7 +975,7 @@ export default function Procurement() {
                       return itemsList.reduce((acc, curr) => {
                         const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
                         const qty = curr.quantity || 1;
-                        const gstRate = curr.taxRate || 18;
+                        const gstRate = companySettings?.globalGstPercentage ?? 18;
                         return acc + (rate * qty) * (1 + (gstRate / 100));
                       }, 0);
                     };
@@ -1036,7 +1039,7 @@ export default function Procurement() {
                     return itemsList.reduce((acc, curr) => {
                       const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
                       const qty = curr.quantity || 1;
-                      const gstRate = curr.taxRate || 18;
+                      const gstRate = companySettings?.globalGstPercentage ?? 18;
                       return acc + (rate * qty) * (1 + (gstRate / 100));
                     }, 0);
                   };
