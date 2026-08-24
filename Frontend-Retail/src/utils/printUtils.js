@@ -390,7 +390,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   drawBankDetail("A/c Holder's Name", companySettings?.bankDetails?.accountHolderName || 'N/A');
   drawBankDetail("Bank Name", companySettings?.bankDetails?.bankName || 'N/A');
   drawBankDetail("A/c No.", companySettings?.bankDetails?.accountNo || 'N/A');
-  drawBankDetail("Branch & IFS Code", companySettings?.bankDetails?.ifscCode || 'N/A');
+  drawBankDetail("Branch & IFS Code", companySettings?.bankDetails?.branchName ? `${companySettings.bankDetails.branchName}, ${companySettings.bankDetails.ifscCode || ''}` : (companySettings?.bankDetails?.ifscCode || 'N/A'));
 
   // Horizontal line separating Bank Details and Signatory (Right Side Only)
   doc.line(110, finalY + 28, 196, finalY + 28);

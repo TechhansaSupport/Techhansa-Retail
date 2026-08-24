@@ -23,7 +23,6 @@ export default function Inventory() {
     specs: '',
     serialNumber: '',
     buyingPrice: '',
-    mrp: '',
     sellingPrice: '',
     availableStock: '',
     lowStockAlert: '',
@@ -86,7 +85,6 @@ export default function Inventory() {
     const processedData = {
       ...formData,
       buyingPrice: Number(formData.buyingPrice),
-      mrp: Number(formData.mrp),
       sellingPrice: Number(formData.sellingPrice),
       availableStock: Number(formData.availableStock),
       quantity: Number(formData.availableStock), // keep in sync
@@ -368,14 +366,10 @@ export default function Inventory() {
                 {/* Pricing & Stock */}
                 <div className="bg-slate-50 p-4 rounded-xl space-y-4 border border-slate-100">
                   <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Pricing & Quantities</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">Buying Price (₹) *</label>
                       <input type="number" name="buyingPrice" value={formData.buyingPrice} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">MRP (₹) *</label>
-                      <input type="number" name="mrp" value={formData.mrp} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">Selling Price (₹) *</label>

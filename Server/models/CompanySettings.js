@@ -11,7 +11,8 @@ const CompanySettingsSchema = new mongoose.Schema({
     accountHolderName: { type: String, default: 'TECHHANSA RETAIL PVT LTD' },
     bankName: { type: String, default: 'N/A' },
     accountNo: { type: String, default: 'N/A' },
-    ifscCode: { type: String, default: 'N/A' }
+    ifscCode: { type: String, default: 'N/A' },
+    branchName: { type: String, default: 'N/A' }
   },
   declaration: { type: String, default: 'We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.' },
   authorizedSignatoryText: { type: String, default: 'Verified by & Authorised Signatory\nCompany Secretary' }

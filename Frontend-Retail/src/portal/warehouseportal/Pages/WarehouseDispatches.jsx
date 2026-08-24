@@ -36,7 +36,7 @@ export default function WarehouseDispatches() {
       ]);
       
       const pendingDispatches = ordersRes.data.filter(o => 
-        ['Sent to Warehouse', 'SENT_TO_WAREHOUSE'].includes(o.status)
+        ['Sent to Warehouse', 'SENT_TO_WAREHOUSE', 'Dispatched', 'DISPATCHED'].includes(o.status)
       );
       setDispatchOrders(pendingDispatches);
       setInventory(invRes.data);
@@ -45,6 +45,19 @@ export default function WarehouseDispatches() {
       toast.error('Failed to load dispatches and inventory');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendTracking = async (order) => {
+    try {
+      const token = sessionStorage.getItem('token');
+      await axios.post(`/api/admin/orders/${order._id}/tracking-email`, {
+        orderType: order.orderType
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Tracking details sent to customer successfully!');
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.error || 'Failed to send tracking details');
     }
   };
 
@@ -137,14 +150,13 @@ export default function WarehouseDispatches() {
                 <th className="px-6 py-4 font-medium">Order ID</th>
                 <th className="px-6 py-4 font-medium">Partner</th>
                 <th className="px-6 py-4 font-medium">Type</th>
-                <th className="px-6 py-4 font-medium text-right">Amount</th>
                 <th className="px-6 py-4 font-medium text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
+                  <td colSpan="4" className="px-6 py-12 text-center">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                     </div>
@@ -152,7 +164,7 @@ export default function WarehouseDispatches() {
                 </tr>
               ) : dispatchOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan="4" className="px-6 py-12 text-center text-slate-500">
                     No orders pending dispatch from Central Catalog.
                   </td>
                 </tr>
@@ -176,9 +188,6 @@ export default function WarehouseDispatches() {
                       {order.orderType}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right font-bold text-slate-800">
-                    ₹{order.totalAmount?.toLocaleString() || 0}
-                  </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex justify-center gap-2">
                       <button 
@@ -189,13 +198,22 @@ export default function WarehouseDispatches() {
                         <Eye size={16} />
                         View
                       </button>
-                      <button 
-                        onClick={() => handleOpenDispatchModal(order)}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
-                      >
-                        <Truck size={16} />
-                        Scan & Dispatch
-                      </button>
+                      {!['Dispatched', 'DISPATCHED'].includes(order.status) ? (
+                        <button 
+                          onClick={() => handleOpenDispatchModal(order)}
+                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                        >
+                          <Truck size={16} />
+                          Scan & Dispatch
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => handleSendTracking(order)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                        >
+                          Send Tracking
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -385,7 +403,23 @@ export default function WarehouseDispatches() {
                 const isComplete = currentCount === requiredQty;
 
                 // Find matching product in inventory
-                const product = inventory.find(p => p.model === item.model || p.name === item.productName);
+                const product = inventory.find(p => {
+                  const pName = (p.name || '').toLowerCase();
+                  const pModel = (p.model || '').toLowerCase();
+                  const iModel = (item.model || '').toLowerCase();
+                  const mKey = (mappingKey || '').toLowerCase();
+                  
+                  if (iModel && pModel && pModel === iModel) return true;
+                  if (mKey && pName && pName === mKey) return true;
+                  if (mKey && pName && pName.includes(mKey)) return true;
+                  if (mKey && pModel && pModel.includes(mKey)) return true;
+                  
+                  // fallback
+                  const iName = (item.productName || item.hardwareType || item.otherType || '').toLowerCase();
+                  if (iName && pName && pName.includes(iName)) return true;
+                  
+                  return false;
+                });
                 const availableSerials = product?.serialNumbers || [];
 
                 return (

@@ -18,6 +18,7 @@ export default function Procurement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderItems, setOrderItems] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [trackingInvoice, setTrackingInvoice] = useState(null);
 
   const resolvedCompanySettings = companySettings || {
     companyName: 'TECHHANSA RETAIL PVT LTD',
@@ -183,7 +184,7 @@ export default function Procurement() {
 
           {orders && orders.length > 0 ? (
             <div className="grid grid-cols-1 gap-6">
-              {orders.slice().reverse().map(order => (
+              {[...orders].sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0)).map(order => (
                 <div key={order._id || order.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                   <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
                     <div>
@@ -208,8 +209,8 @@ export default function Procurement() {
                       <thead>
                         <tr className="bg-white text-slate-400 text-xs uppercase border-b border-slate-100">
                           <th className="px-6 py-3 font-semibold">Category</th>
-                          <th className="px-6 py-3 font-semibold">Hardware</th>
-                          <th className="px-6 py-3 font-semibold">Brand / Specs</th>
+                          <th className="px-6 py-3 font-semibold">Brand</th>
+                          <th className="px-6 py-3 font-semibold">Specs</th>
                           <th className="px-6 py-3 font-semibold text-center">Qty</th>
                         </tr>
                       </thead>
@@ -217,11 +218,10 @@ export default function Procurement() {
                         {order.items && order.items.length > 0 ? order.items.map((item, idx) => {
                           return (
                             <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-6 py-4 font-medium text-slate-600">{item.category}</td>
                               <td className="px-6 py-4 font-medium text-slate-800">
-                                {item.hardwareType === 'Others' ? item.otherType : item.hardwareType}
+                                {item.category || (item.hardwareType === 'Others' ? item.otherType : item.hardwareType)}
                               </td>
-                              <td className="px-6 py-4 text-slate-600">{item.brand}</td>
+                              <td className="px-6 py-4 text-slate-600 font-medium">{item.brand || '-'}</td>
                               <td className="px-6 py-4 text-sm text-slate-500">
                                 {typeof item.specs === 'string' && item.specs ? (
                                   <span className="block">{item.specs}</span>
@@ -303,7 +303,8 @@ export default function Procurement() {
                     }
                   }
                   if (itemsList.length > 0) {
-                    return itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || 0) * (curr.quantity || 1) * 1.18), 0);
+                    const sum = itemsList.reduce((acc, curr) => acc + ((curr.rate || curr.unitPrice || curr.price || 0) * (curr.quantity || 1) * 1.18), 0);
+                    if (sum > 0) return sum;
                   }
                   return (inv.amount || 0) * 1.18;
                 };
@@ -332,10 +333,22 @@ export default function Procurement() {
                   <td className="px-4 py-3 text-center">
                     {inv.status === 'Pending' && (
                       <button
-                        onClick={() => navigate('/franchise/checkout', { state: { invoice: inv } })}
+                        onClick={() => navigate('/franchise/checkout', { state: { invoice: inv, finalAmount: getInvoiceAmount() } })}
                         className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100"
                       >
                         Proceed to Checkout
+                      </button>
+                    )}
+                    {inv.status === 'Paid' && (
+                      <button
+                        onClick={() => {
+                          const relOrder = orders?.find(o => o.requestId === inv.requestId);
+                          setTrackingInvoice(relOrder || { requestId: inv.requestId, notDispatched: true });
+                        }}
+                        className="text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-sm font-medium w-full transition-colors mx-auto"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M14 9h4"/><path d="M14 15h4"/></svg>
+                        Track
                       </button>
                     )}
                   </td>
@@ -355,6 +368,83 @@ export default function Procurement() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Tracking Modal */}
+      {trackingInvoice && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-indigo-50">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Delivery Tracking</h2>
+                <p className="text-sm text-slate-500 mt-1">Request ID: {trackingInvoice.requestId}</p>
+              </div>
+              <button onClick={() => setTrackingInvoice(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-indigo-100 rounded-full transition-colors">
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {trackingInvoice.trackingId || trackingInvoice.trackingInfo?.courier ? (
+                <>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Courier Partner</h3>
+                    <p className="font-bold text-slate-800 text-lg">{trackingInvoice.trackingInfo?.courier || 'N/A'}</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Tracking ID</h3>
+                    <p className="font-bold text-slate-800 text-lg font-mono">{trackingInvoice.trackingId || 'N/A'}</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Expected Delivery</h3>
+                    <p className="font-bold text-slate-800 text-lg">
+                      {trackingInvoice.expectedDelivery 
+                        ? new Date(trackingInvoice.expectedDelivery).toLocaleDateString('en-GB') 
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  {trackingInvoice.items?.some(item => item.assignedSerials && item.assignedSerials.length > 0) && (
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mt-4 md:col-span-full">
+                      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Dispatched Serial Numbers</h3>
+                      <div className="space-y-3">
+                        {trackingInvoice.items.map((item, idx) => {
+                          if (!item.assignedSerials || item.assignedSerials.length === 0) return null;
+                          return (
+                            <div key={idx}>
+                              <p className="text-sm font-bold text-slate-700 mb-1">{item.model || item.hardwareType || item.category || 'Product'}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {item.assignedSerials.map((sn, i) => (
+                                  <span key={i} className="px-2 py-1 bg-white border border-slate-200 rounded text-xs font-mono text-slate-600">
+                                    {sn}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="bg-amber-50 p-6 rounded-xl border border-amber-100 text-center">
+                  <h3 className="text-amber-800 font-bold mb-2">Not Dispatched Yet</h3>
+                  <p className="text-sm text-amber-700">Delivery tracking information will be available once the order has been dispatched from the warehouse.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button onClick={() => setTrackingInvoice(null)} className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-100 transition-colors">
+                Close
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
 
@@ -731,7 +821,7 @@ export default function Procurement() {
                       }
 
                       const totalQtyAcrossAllItems = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
-                      const assumedRate = totalQtyAcrossAllItems > 0 ? (selectedInvoice.amount / 1.18) / totalQtyAcrossAllItems : 0;
+                      const assumedRate = totalQtyAcrossAllItems > 0 ? selectedInvoice.amount / totalQtyAcrossAllItems : 0;
 
                       return itemsList.map((item, i) => {
                         const baseRate = item.rate || item.unitPrice || item.price || assumedRate;
@@ -806,7 +896,7 @@ export default function Procurement() {
                           }
                           itemsList = itemsList || [{ quantity: 1 }];
                           const totalQty = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
-                          const assumedRate = totalQty > 0 ? (selectedInvoice.amount / 1.18) / totalQty : 0;
+                          const assumedRate = totalQty > 0 ? selectedInvoice.amount / totalQty : 0;
                           const totalGst = itemsList.reduce((acc, curr) => {
                             const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
                             const qty = curr.quantity || 1;
@@ -825,7 +915,7 @@ export default function Procurement() {
                           }
                           itemsList = itemsList || [{ quantity: 1 }];
                           const totalQty = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
-                          const assumedRate = totalQty > 0 ? (selectedInvoice.amount / 1.18) / totalQty : 0;
+                          const assumedRate = totalQty > 0 ? selectedInvoice.amount / totalQty : 0;
                           const finalAmt = itemsList.reduce((acc, curr) => {
                             const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
                             const qty = curr.quantity || 1;
@@ -846,15 +936,49 @@ export default function Procurement() {
                 <div className="text-sm flex items-center gap-2">
                   <span className="text-slate-500">Received Amount:</span>
                   <span className="font-bold text-emerald-600"> {(() => {
-                    const received = (selectedInvoice.paymentStatus === 'Paid' || selectedInvoice.status === 'Paid') ? selectedInvoice.amount : 0;
+                    const getModalTotal = () => {
+                      let itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : null;
+                      if (!itemsList && selectedInvoice.requestId && orders) {
+                        const relatedOrder = orders.find(o => o.requestId === selectedInvoice.requestId);
+                        if (relatedOrder && relatedOrder.items) itemsList = relatedOrder.items;
+                      }
+                      itemsList = itemsList || [{ quantity: 1 }];
+                      const totalQty = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
+                      const assumedRate = totalQty > 0 ? selectedInvoice.amount / totalQty : 0;
+                      return itemsList.reduce((acc, curr) => {
+                        const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
+                        const qty = curr.quantity || 1;
+                        const gstRate = curr.taxRate || 18;
+                        return acc + (rate * qty) * (1 + (gstRate / 100));
+                      }, 0);
+                    };
+                    const modalTotal = getModalTotal();
+                    const received = (selectedInvoice.paymentStatus === 'Paid' || selectedInvoice.status === 'Paid') ? modalTotal : 0;
                     return received.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                   })()}</span>
                 </div>
                 <div className="text-sm flex items-center gap-2">
                   <span className="text-slate-500">Balance Amount:</span>
                   <span className="font-bold text-amber-600"> {(() => {
-                    const received = (selectedInvoice.paymentStatus === 'Paid' || selectedInvoice.status === 'Paid') ? selectedInvoice.amount : 0;
-                    const balance = Math.max(0, selectedInvoice.amount - received);
+                    const getModalTotal = () => {
+                      let itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : null;
+                      if (!itemsList && selectedInvoice.requestId && orders) {
+                        const relatedOrder = orders.find(o => o.requestId === selectedInvoice.requestId);
+                        if (relatedOrder && relatedOrder.items) itemsList = relatedOrder.items;
+                      }
+                      itemsList = itemsList || [{ quantity: 1 }];
+                      const totalQty = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
+                      const assumedRate = totalQty > 0 ? selectedInvoice.amount / totalQty : 0;
+                      return itemsList.reduce((acc, curr) => {
+                        const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
+                        const qty = curr.quantity || 1;
+                        const gstRate = curr.taxRate || 18;
+                        return acc + (rate * qty) * (1 + (gstRate / 100));
+                      }, 0);
+                    };
+                    const modalTotal = getModalTotal();
+                    const received = (selectedInvoice.paymentStatus === 'Paid' || selectedInvoice.status === 'Paid') ? modalTotal : 0;
+                    const balance = Math.max(0, modalTotal - received);
                     return balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                   })()}</span>
                 </div>
@@ -876,13 +1000,13 @@ export default function Procurement() {
                     <p className="underline font-medium mb-1">Company's Bank Details</p>
                     <div className="grid grid-cols-[120px_1fr] gap-x-2 gap-y-0.5">
                       <span className="text-slate-600">A/c Holder's Name</span>
-                      <span className="font-bold text-slate-900">: N/A</span>
+                      <span className="font-bold text-slate-900">: {resolvedCompanySettings.bankDetails?.accountHolderName || 'N/A'}</span>
                       <span className="text-slate-600">Bank Name</span>
-                      <span className="font-bold text-slate-900">: N/A</span>
+                      <span className="font-bold text-slate-900">: {resolvedCompanySettings.bankDetails?.bankName || 'N/A'}</span>
                       <span className="text-slate-600">A/c No.</span>
-                      <span className="font-bold text-slate-900">: N/A</span>
+                      <span className="font-bold text-slate-900">: {resolvedCompanySettings.bankDetails?.accountNo || 'N/A'}</span>
                       <span className="text-slate-600">Branch & IFS Code</span>
-                      <span className="font-bold text-slate-900">: N/A</span>
+                      <span className="font-bold text-slate-900">: {resolvedCompanySettings.bankDetails?.branchName ? `${resolvedCompanySettings.bankDetails.branchName}, ` : ''}{resolvedCompanySettings.bankDetails?.ifscCode || 'N/A'}</span>
                     </div>
                   </div>
 
@@ -899,7 +1023,25 @@ export default function Procurement() {
               {/* Amount in words */}
               <div className="mb-6 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                 <p className="text-sm font-semibold text-blue-900 mb-1">Total Amount (in words)</p>
-                <p className="text-sm text-blue-800 font-medium">INR {numberToWords(Math.round(selectedInvoice.amount))} Only</p>
+                <p className="text-sm text-blue-800 font-medium">INR {(() => {
+                  const getModalTotal = () => {
+                    let itemsList = (selectedInvoice.items && selectedInvoice.items.length > 0) ? selectedInvoice.items : null;
+                    if (!itemsList && selectedInvoice.requestId && orders) {
+                      const relatedOrder = orders.find(o => o.requestId === selectedInvoice.requestId);
+                      if (relatedOrder && relatedOrder.items) itemsList = relatedOrder.items;
+                    }
+                    itemsList = itemsList || [{ quantity: 1 }];
+                    const totalQty = itemsList.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
+                    const assumedRate = totalQty > 0 ? selectedInvoice.amount / totalQty : 0;
+                    return itemsList.reduce((acc, curr) => {
+                      const rate = curr.rate || curr.unitPrice || curr.price || assumedRate;
+                      const qty = curr.quantity || 1;
+                      const gstRate = curr.taxRate || 18;
+                      return acc + (rate * qty) * (1 + (gstRate / 100));
+                    }, 0);
+                  };
+                  return numberToWords(Math.round(getModalTotal()));
+                })()} Only</p>
               </div>
             </div>
 

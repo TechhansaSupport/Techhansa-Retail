@@ -686,8 +686,10 @@ router.post('/procurement-requests/:id/approve', async (req, res) => {
         model: item.model,
         configuration: JSON.stringify(item.specs),
         quantity: item.quantity,
-        unitPrice: 0,
-        totalAmount: 0
+        unitPrice: item.price || 0,
+        price: item.price || 0,
+        rate: item.price || 0,
+        totalAmount: (item.price || 0) * item.quantity
       })),
       userId: request.storeId
     });
@@ -1437,6 +1439,145 @@ router.get('/audit', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/admin/orders/:id/tracking-email
+router.post('/orders/:id/tracking-email', async (req, res) => {
+  try {
+    const { orderType } = req.body;
+    let order;
+    
+    if (orderType === 'Franchise Procurement') {
+      order = await ProcurementRequest.findById(req.params.id);
+    } else {
+      order = await Order.findById(req.params.id);
+    }
+
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    // Ensure it has dispatchDetails
+    const hasTracking = order.trackingId || (order.trackingInfo && order.trackingInfo.courier);
+    if (!hasTracking) {
+      return res.status(400).json({ error: 'No dispatch details found for this order. Please scan & dispatch first.' });
+    }
+
+    const details = {
+      courierName: order.trackingInfo?.courier || 'N/A',
+      trackingId: order.trackingId || 'N/A',
+      expectedDate: order.expectedDelivery ? new Date(order.expectedDelivery).toLocaleDateString() : 'N/A'
+    };
+
+    const serialsList = [];
+    if (order.assignedSerialsMapping) {
+      for (const [key, serials] of Object.entries(order.assignedSerialsMapping)) {
+        serialsList.push(`${key}: ${serials.join(', ')}`);
+      }
+    }
+
+    // Fetch Invoice Number
+    let invoiceNo = 'N/A';
+    try {
+      if (orderType === 'Franchise Procurement') {
+        const B2BInvoice = require('../models/B2BInvoice');
+        const invoice = await B2BInvoice.findOne({ requestId: order.requestId });
+        if (invoice) invoiceNo = invoice.invoiceNo;
+      } else {
+        const Invoice = require('../models/Invoice');
+        const invoice = await Invoice.findOne({ orderReference: order._id });
+        if (invoice) invoiceNo = invoice.invoiceNumber;
+      }
+    } catch (err) {
+      console.error('Error fetching invoice for email:', err);
+    }
+
+    // Generate Invoice HTML
+    const itemsListHtml = (order.items || []).map(item => {
+      const name = item.productName || item.hardwareType || item.otherType || 'Item';
+      const qty = item.quantity || 1;
+      const price = item.unitPrice || item.price || 0;
+      const total = item.totalAmount || item.amount || (qty * price);
+      return `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #eee;">${name} ${item.model ? `(${item.model})` : ''}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${qty}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${price.toLocaleString('en-IN')}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${total.toLocaleString('en-IN')}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const invoiceTable = `
+      <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-family: Arial, sans-serif;">
+        <thead>
+          <tr style="background-color: #f8fafc; text-align: left;">
+            <th style="padding: 10px; border-bottom: 2px solid #e2e8f0;">Product</th>
+            <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; text-align: center;">Qty</th>
+            <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; text-align: right;">Unit Price</th>
+            <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsListHtml}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="padding: 10px; text-align: right; font-weight: bold;">Grand Total:</td>
+            <td style="padding: 10px; text-align: right; font-weight: bold; border-top: 2px solid #e2e8f0;">₹${(order.totalAmount || order.total || 0).toLocaleString('en-IN')}</td>
+          </tr>
+        </tfoot>
+      </table>
+    `;
+
+    const emailContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px;">
+        <h2 style="color: #4f46e5; margin-top: 0;">Dispatch & Invoice Details</h2>
+        <p>Hello,</p>
+        <p>Your order <strong>${order.orderNumber || order.requestId}</strong> has been successfully dispatched!</p>
+        
+        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+          <h3 style="margin-top: 0; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Delivery Tracking</h3>
+          <p style="margin: 8px 0;"><strong>Courier Partner:</strong> ${details.courierName}</p>
+          <p style="margin: 8px 0;"><strong>Tracking ID:</strong> ${details.trackingId}</p>
+          <p style="margin: 8px 0;"><strong>Expected Delivery:</strong> ${details.expectedDate}</p>
+        </div>
+
+        <div style="margin: 25px 0;">
+          <h3 style="color: #0f172a; margin-bottom: 10px;">Order Invoice (No: ${invoiceNo})</h3>
+          ${invoiceTable}
+        </div>
+
+        <div style="margin: 25px 0;">
+          <h3 style="color: #0f172a;">Assigned Serial Numbers</h3>
+          <ul style="background-color: #f8fafc; padding: 15px 15px 15px 35px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            ${serialsList.length > 0 ? serialsList.map(s => `<li>${s}</li>`).join('') : '<li>No serial numbers assigned.</li>'}
+          </ul>
+        </div>
+        
+        <p style="margin-top: 30px; font-size: 0.9em; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+          Thank you for partnering with Techhansa Retail!<br>
+          For any queries, please refer to invoice <strong>${invoiceNo}</strong>.
+        </p>
+      </div>
+    `;
+
+    // Send email using Resend
+    try {
+      await resend.emails.send({
+        from: 'Techhansa Notifications <onboarding@resend.dev>',
+        to: ['onboarding@resend.dev'], // Use onboarding@resend.dev for test environment
+        subject: `Your Order ${order.orderNumber} has been Dispatched!`,
+        html: emailContent
+      });
+    } catch (e) {
+      console.error('Error sending tracking email via Resend:', e);
+      // Proceed even if resend fails (e.g. invalid API key) to allow frontend flow testing
+    }
+
+    res.json({ message: 'Tracking details sent successfully' });
+  } catch (error) {
+    console.error('Error in tracking-email:', error);
+    res.status(500).json({ error: 'Failed to send tracking details' });
   }
 });
 

@@ -25,13 +25,24 @@ export default function Quotations() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedQuotation, setSelectedQuotation] = useState(location.state?.openQuotation || null);
   const [rfps, setRfps] = useState([]);
+  const [companySettings, setCompanySettings] = useState(null);
 
   useEffect(() => {
     if (user?.userId) {
       fetchQuotations();
       fetchRfps();
+      fetchCompanySettings();
     }
   }, [user]);
+
+  const fetchCompanySettings = async () => {
+    try {
+      const res = await axios.get('/api/settings/company');
+      setCompanySettings(res.data);
+    } catch (err) {
+      console.error('Failed to fetch company settings', err);
+    }
+  };
 
   const fetchQuotations = async () => {
     if (!user?.userId) return;
@@ -415,10 +426,11 @@ export default function Quotations() {
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
                   <p className="text-slate-700 font-medium mb-1.5 border-b border-slate-200 pb-1.5">Bank Details</p>
                   <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 mt-1.5">
-                    <span className="text-slate-500">Bank:</span><span className="font-semibold text-slate-900">HDFC Bank</span>
-                    <span className="text-slate-500">A/C Name:</span><span className="font-semibold text-slate-900">Techhansa Retail</span>
-                    <span className="text-slate-500">A/C No:</span><span className="font-semibold text-slate-900 font-mono">50200012345678</span>
-                    <span className="text-slate-500">IFSC:</span><span className="font-semibold text-slate-900 font-mono">HDFC0001234</span>
+                    <span className="text-slate-500">Bank:</span><span className="font-semibold text-slate-900">{companySettings?.bankDetails?.bankName || 'HDFC Bank'}</span>
+                    <span className="text-slate-500">Branch:</span><span className="font-semibold text-slate-900">{companySettings?.bankDetails?.branchName || 'N/A'}</span>
+                    <span className="text-slate-500">A/C Name:</span><span className="font-semibold text-slate-900">{companySettings?.bankDetails?.accountHolderName || 'Techhansa Retail'}</span>
+                    <span className="text-slate-500">A/C No:</span><span className="font-semibold text-slate-900 font-mono">{companySettings?.bankDetails?.accountNo || '50200012345678'}</span>
+                    <span className="text-slate-500">IFSC:</span><span className="font-semibold text-slate-900 font-mono">{companySettings?.bankDetails?.ifscCode || 'HDFC0001234'}</span>
                   </div>
                 </div>
               )}

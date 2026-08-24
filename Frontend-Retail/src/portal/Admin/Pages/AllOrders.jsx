@@ -86,7 +86,7 @@ export default function AllOrders() {
   };
 
   const handleApproveProcurement = async (orderId) => {
-    const finalAmount = selectedOrder.totalAmount || 0;
+    const finalAmount = getOrderAmount(selectedOrder);
     try {
       if (selectedOrder.orderType === 'Enterprise') {
         // Assume channel partner order: we patch status to 'Quotation Sent' (not directly implemented here but admin.js handles RFP approve elsewhere; wait, for standard orders without RFP? Let's just patch status)

@@ -24,7 +24,14 @@ export default function Settings() {
     contactNumber: '',
     email: '',
     declaration: '',
-    authorizedSignatoryText: ''
+    authorizedSignatoryText: '',
+    bankDetails: {
+      accountHolderName: '',
+      bankName: '',
+      branchName: '',
+      accountNo: '',
+      ifscCode: ''
+    }
   });
 
   useEffect(() => {
@@ -48,7 +55,14 @@ export default function Settings() {
           contactNumber: res.data.contactNumber || '',
           email: res.data.email || '',
           declaration: res.data.declaration || '',
-          authorizedSignatoryText: res.data.authorizedSignatoryText || ''
+          authorizedSignatoryText: res.data.authorizedSignatoryText || '',
+          bankDetails: res.data.bankDetails || {
+            accountHolderName: '',
+            bankName: '',
+            branchName: '',
+            accountNo: '',
+            ifscCode: ''
+          }
         });
       } catch (error) {
         console.error('Failed to fetch company settings', error);
@@ -314,6 +328,77 @@ export default function Settings() {
             >
               <Save size={18} />
               Save Company Settings
+            </button>
+          </div>
+        </form>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mt-6"
+      >
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+          <Shield size={18} className="text-indigo-500" />
+          <h2 className="text-lg font-bold text-slate-800">Bank Details</h2>
+        </div>
+        <form onSubmit={handleCompanySettingsSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">Account Holder Name</label>
+              <input
+                type="text"
+                value={companySettings.bankDetails.accountHolderName}
+                onChange={(e) => setCompanySettings({ ...companySettings, bankDetails: { ...companySettings.bankDetails, accountHolderName: e.target.value } })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Bank Name</label>
+              <input
+                type="text"
+                value={companySettings.bankDetails.bankName}
+                onChange={(e) => setCompanySettings({ ...companySettings, bankDetails: { ...companySettings.bankDetails, bankName: e.target.value } })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Branch Name</label>
+              <input
+                type="text"
+                value={companySettings.bankDetails.branchName}
+                onChange={(e) => setCompanySettings({ ...companySettings, bankDetails: { ...companySettings.bankDetails, branchName: e.target.value } })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">IFSC Code</label>
+              <input
+                type="text"
+                value={companySettings.bankDetails.ifscCode}
+                onChange={(e) => setCompanySettings({ ...companySettings, bankDetails: { ...companySettings.bankDetails, ifscCode: e.target.value } })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Account Number</label>
+              <input
+                type="text"
+                value={companySettings.bankDetails.accountNo}
+                onChange={(e) => setCompanySettings({ ...companySettings, bankDetails: { ...companySettings.bankDetails, accountNo: e.target.value } })}
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+              />
+            </div>
+          </div>
+          <div className="pt-4 flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-70"
+            >
+              <Save size={18} />
+              Save Bank Details
             </button>
           </div>
         </form>
