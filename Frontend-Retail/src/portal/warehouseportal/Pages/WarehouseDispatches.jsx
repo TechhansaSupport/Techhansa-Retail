@@ -12,6 +12,7 @@ export default function WarehouseDispatches() {
   // View Order Modal State
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [sentTrackingIds, setSentTrackingIds] = useState([]);
 
   // Dispatch Modal State
   const [isDispatchModalOpen, setIsDispatchModalOpen] = useState(false);
@@ -49,6 +50,9 @@ export default function WarehouseDispatches() {
   };
 
   const handleSendTracking = async (order) => {
+    if (sentTrackingIds.includes(order._id) || order.trackingEmailSent) return;
+    setSentTrackingIds(prev => [...prev, order._id]);
+    
     try {
       const token = sessionStorage.getItem('token');
       await axios.post(`/api/admin/orders/${order._id}/tracking-email`, {
@@ -58,6 +62,7 @@ export default function WarehouseDispatches() {
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.error || 'Failed to send tracking details');
+      setSentTrackingIds(prev => prev.filter(id => id !== order._id));
     }
   };
 
@@ -209,9 +214,10 @@ export default function WarehouseDispatches() {
                       ) : (
                         <button 
                           onClick={() => handleSendTracking(order)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                          disabled={sentTrackingIds.includes(order._id) || order.trackingEmailSent}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
                         >
-                          Send Tracking
+                          {(sentTrackingIds.includes(order._id) || order.trackingEmailSent) ? 'Sent' : 'Send Tracking'}
                         </button>
                       )}
                     </div>
@@ -313,16 +319,6 @@ export default function WarehouseDispatches() {
               >
                 Close
               </button>
-              <button
-                onClick={() => {
-                  setIsOrderModalOpen(false);
-                  handleOpenDispatchModal(selectedOrder);
-                }}
-                className="px-6 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2"
-              >
-                <Truck size={18} />
-                Scan & Dispatch
-              </button>
             </div>
           </motion.div>
         </div>
@@ -387,6 +383,7 @@ export default function WarehouseDispatches() {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Expected Delivery Date *</label>
                   <input
                     type="date"
+                    min={new Date().toISOString().split('T')[0]}
                     value={expectedDate}
                     onChange={(e) => setExpectedDate(e.target.value)}
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"

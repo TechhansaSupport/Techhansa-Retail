@@ -174,8 +174,8 @@ export default function Invoices() {
                   <span className="text-slate-400 font-medium">Amount:</span>
                   <span className="text-slate-700 font-semibold text-emerald-600"> 
                     {((inv.items && inv.items.length > 0) 
-                      ? inv.items.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) 
-                      : ((inv.amount || 0) * 1.18)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                      ? inv.items.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((companySettings?.globalGstPercentage ?? 18) / 100))), 0) 
+                      : ((inv.amount || 0) * (1 + ((companySettings?.globalGstPercentage ?? 18) / 100)))).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -369,7 +369,7 @@ export default function Invoices() {
                           const rate = item.rate || item.unitPrice || 0;
                           const qty = item.quantity || 0;
                           const hsn = item.hsn || '-';
-                          const gstRate = item.taxRate || 18;
+                          const gstRate = companySettings?.globalGstPercentage ?? 18;
                           const taxableValue = rate * qty;
                           const gstAmount = taxableValue * (gstRate / 100);
                           const totalAmount = taxableValue + gstAmount;
@@ -427,7 +427,7 @@ export default function Invoices() {
                               const totalGst = invoiceItems.reduce((acc, item) => {
                                 const r = item.rate || item.unitPrice || 0;
                                 const q = item.quantity || 0;
-                                const gRate = item.taxRate || 18;
+                                const gRate = companySettings?.globalGstPercentage ?? 18;
                                 return acc + (r * q * (gRate / 100));
                               }, 0);
                               return ` ${totalGst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -438,7 +438,7 @@ export default function Invoices() {
                               const amt = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => {
                                 const r = item.rate || item.unitPrice || 0;
                                 const q = item.quantity || 0;
-                                const gRate = item.taxRate || 18;
+                                const gRate = companySettings?.globalGstPercentage ?? 18;
                                 const tVal = r * q;
                                 return acc + tVal + (tVal * (gRate / 100));
                               }, 0) : selectedInvoice.amount;
@@ -481,7 +481,7 @@ export default function Invoices() {
                       <div className="p-4 border-r border-slate-700 flex flex-col justify-between">
                         <span className="text-slate-500">Amount Chargeable (in words)</span>
                         <p className="font-bold text-slate-900 capitalize">
-                          INR {numberToWords(Math.round((invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) : selectedInvoice.amount))} Only
+                          INR {numberToWords(Math.round((invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((companySettings?.globalGstPercentage ?? 18) / 100))), 0) : selectedInvoice.amount))} Only
                         </p>
                       </div>
                       <div className="text-sm text-right">
@@ -494,7 +494,7 @@ export default function Invoices() {
                       <div className="text-sm w-1/2">
                         <span className="text-slate-500">Tax Amount (in words) : </span>
                         <p className="font-bold text-slate-900 capitalize">
-                          INR {numberToWords(Math.round(invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0)))} Only
+                          INR {numberToWords(Math.round(invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * ((companySettings?.globalGstPercentage ?? 18) / 100)), 0)))} Only
                         </p>
                       </div>
                       <div className="text-sm w-1/2 flex flex-col items-end gap-1">
@@ -507,7 +507,7 @@ export default function Invoices() {
                         <div className="flex justify-between w-48">
                           <span className="text-slate-500">Total Tax:</span>
                           <span className="font-bold text-slate-900">
-                            {invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * ((item.taxRate || 18) / 100)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * ((companySettings?.globalGstPercentage ?? 18) / 100)), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                       </div>
@@ -518,7 +518,7 @@ export default function Invoices() {
                       <div className="text-sm flex items-center gap-2">
                         <span className="text-slate-500">Received Amount:</span>
                         <span className="font-bold text-emerald-600"> {(() => {
-                          const computedTotal = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) : selectedInvoice.amount;
+                          const computedTotal = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((companySettings?.globalGstPercentage ?? 18) / 100))), 0) : selectedInvoice.amount;
                           const received = (selectedInvoice.paymentStatus === 'Paid' || selectedInvoice.paymentStatus === 'Credit') ? computedTotal : (selectedInvoice.receivedAmount || 0);
                           return received.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         })()}</span>
@@ -526,7 +526,7 @@ export default function Invoices() {
                       <div className="text-sm flex items-center gap-2">
                         <span className="text-slate-500">Balance Amount:</span>
                         <span className="font-bold text-amber-600"> {(() => {
-                          const computedTotal = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((item.taxRate || 18) / 100))), 0) : selectedInvoice.amount;
+                          const computedTotal = (invoiceItems && invoiceItems.length > 0) ? invoiceItems.reduce((acc, item) => acc + ((item.rate || item.unitPrice || 0) * (item.quantity || 0) * (1 + ((companySettings?.globalGstPercentage ?? 18) / 100))), 0) : selectedInvoice.amount;
                           const received = (selectedInvoice.paymentStatus === 'Paid' || selectedInvoice.paymentStatus === 'Credit') ? computedTotal : (selectedInvoice.receivedAmount || 0);
                           const balance = Math.max(0, computedTotal - received);
                           return balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

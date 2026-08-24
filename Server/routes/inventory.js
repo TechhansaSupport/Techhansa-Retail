@@ -50,6 +50,21 @@ router.post('/:storeId', async (req, res) => {
     payload.availableStock = stock;
     payload.storeId = req.params.storeId;
 
+    // Check if product already exists (by model and storeId) to prevent duplicates
+    const existing = await Product.findOne({ storeId: payload.storeId, model: payload.model });
+    if (existing) {
+      existing.quantity += payload.quantity;
+      existing.availableStock += payload.availableStock;
+      if (payload.serialNumber) {
+        existing.serialNumbers = existing.serialNumbers || [];
+        if (!existing.serialNumbers.includes(payload.serialNumber)) {
+          existing.serialNumbers.push(payload.serialNumber);
+        }
+      }
+      await existing.save();
+      return res.json({ success: true, data: existing });
+    }
+
     const newProduct = new Product(payload);
     await newProduct.save();
     res.json({ success: true, data: newProduct });

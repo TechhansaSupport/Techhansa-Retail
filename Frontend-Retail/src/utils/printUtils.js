@@ -110,13 +110,15 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   // Calculate an assumed rate per item if it's missing (for mock data or legacy invoices)
   const totalQtyAcrossAllItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const totalAmountFromInvoice = invoice.amount || 0;
-  // Assume GST is 18%, so base amount is Total / 1.18
-  const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / 1.18) / totalQtyAcrossAllItems : 0;
+  const globalGst = companySettings?.globalGstPercentage ?? 18;
+  const gstMultiplier = 1 + (globalGst / 100);
+  // Assume GST from global settings, so base amount is Total / gstMultiplier
+  const assumedRate = totalQtyAcrossAllItems > 0 ? (totalAmountFromInvoice / gstMultiplier) / totalQtyAcrossAllItems : 0;
 
   const tableData = invoiceItems.map((item, index) => {
     const rate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
-    const gstRate = item.taxRate || 18;
+    const gstRate = item.taxRate || globalGst;
     const taxableValue = rate * qty;
     const gstAmount = taxableValue * (gstRate / 100);
     const totalAmount = taxableValue + gstAmount;
@@ -157,7 +159,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   invoiceItems.forEach(item => {
     const rate = item.rate || item.unitPrice || assumedRate;
     const qty = item.quantity || 0;
-    const gstRate = item.taxRate || 18;
+    const gstRate = item.taxRate || globalGst;
     const taxableValue = rate * qty;
     const gstAmount = taxableValue * (gstRate / 100);
     const totalAmount = taxableValue + gstAmount;
@@ -222,7 +224,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
 
   const prodList = baseProdList.map(p => {
     const perItemRate = p.rate || p.unitPrice || assumedRate;
-    const gst = p.gstAmount || (perItemRate * (p.taxRate || 18) / 100);
+    const gst = p.gstAmount || (perItemRate * (p.taxRate || globalGst) / 100);
     
     let serialStr = p.serialNumber || '-';
     if (p.assignedSerials && p.assignedSerials.length > 0) {
@@ -261,7 +263,7 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
     const prodTableData = prodList.map(p => {
       const r = p.rate || p.unitPrice || 0;
       const qty = p.quantity || 1;
-      const gstRate = p.taxRate || 18;
+      const gstRate = p.taxRate || globalGst;
       const taxableValue = r * qty;
       const g = p.gstAmount || (taxableValue * (gstRate / 100));
       const t = p.totalAmount || (taxableValue + g);

@@ -20,9 +20,17 @@ router.post('/checkout', async (req, res) => {
     
     for (const item of cart) {
       // Find and deduct in one atomic operation
+      const updateQuery = {
+        $inc: { quantity: -item.quantity, availableStock: -item.quantity }
+      };
+      
+      if (item.serialNumbers && item.serialNumbers.length > 0) {
+        updateQuery.$pullAll = { serialNumbers: item.serialNumbers };
+      }
+
       const result = await Product.updateOne(
         { _id: item._id || item.id, availableStock: { $gte: item.quantity } },
-        { $inc: { quantity: -item.quantity, availableStock: -item.quantity } }
+        updateQuery
       );
 
       if (result.modifiedCount === 0) {
@@ -51,8 +59,11 @@ router.post('/checkout', async (req, res) => {
       sellingPrice: item.sellingPrice,
       serialNumbers: item.serialNumbers || []
     }));
+    const CompanySettings = require('../models/CompanySettings');
+    let settings = await CompanySettings.findOne();
+    const gstRate = settings && settings.globalGstPercentage !== undefined ? settings.globalGstPercentage : 18;
 
-    const tax = subtotal * 0.18; // 18% GST mock
+    const tax = subtotal * (gstRate / 100);
     const grandTotal = subtotal + tax;
 
     // Create Invoice with sequential number

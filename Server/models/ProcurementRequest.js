@@ -27,7 +27,8 @@ const procurementRequestSchema = new mongoose.Schema({
   },
   trackingId: { type: String },
   expectedDelivery: { type: Date },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  trackingEmailSent: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('ProcurementRequest', procurementRequestSchema);

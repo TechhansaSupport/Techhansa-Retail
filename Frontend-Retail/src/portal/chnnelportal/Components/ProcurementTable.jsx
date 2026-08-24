@@ -31,6 +31,7 @@ export default function ProcurementTables() {
   const navigate = useNavigate();
   const [rfps, setRfps] = useState([]);
   const [quotations, setQuotations] = useState([]);
+  const [companySettings, setCompanySettings] = useState(null);
   const [selectedRfp, setSelectedRfp] = useState(null);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [rfpSearch, setRfpSearch] = useState('');
@@ -55,9 +56,10 @@ export default function ProcurementTables() {
     const fetchData = async () => {
       if (!user?.userId) return;
       try {
-        const [rfpRes, qtRes] = await Promise.all([
+        const [rfpRes, qtRes, settingsRes] = await Promise.all([
           fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/rfp?userId=${user.userId}`),
-          fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/quotations?userId=${user.userId}`)
+          fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/procurement/quotations?userId=${user.userId}`),
+          fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/settings/company`)
         ]);
         if (rfpRes.ok) {
           const rfpData = await rfpRes.json();
@@ -66,6 +68,10 @@ export default function ProcurementTables() {
         if (qtRes.ok) {
           const qtData = await qtRes.json();
           setQuotations(qtData.slice(0, 5));
+        }
+        if (settingsRes.ok) {
+          const settingsData = await settingsRes.json();
+          setCompanySettings(settingsData);
         }
       } catch (err) {
         console.error('Failed to fetch table data:', err);
@@ -331,7 +337,8 @@ export default function ProcurementTables() {
                           const unitPrice = item.unitPrice || 0;
                           const qty = item.quantity || 1;
                           const total = unitPrice * qty;
-                          const base = total / 1.18;
+                          const gstMultiplier = 1 + (companySettings?.globalGstPercentage ?? 18) / 100;
+                          const base = total / gstMultiplier;
                           const gst = total - base;
 
                           return (

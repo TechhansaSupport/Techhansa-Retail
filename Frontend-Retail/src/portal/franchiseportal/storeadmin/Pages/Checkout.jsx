@@ -32,8 +32,9 @@ export default function Checkout() {
   }
 
   const totalAmount = location.state?.finalAmount || invoice.amount || 0;
+  const gstMultiplier = 1 + (companySettings?.globalGstPercentage ?? 18) / 100;
   // totalAmount is already GST-inclusive from the procurement page logic
-  const subtotal = totalAmount / 1.18;
+  const subtotal = totalAmount / gstMultiplier;
   const gst = totalAmount - subtotal;
 
   const availableCredit = metrics?.walletBalance || 0;
@@ -246,11 +247,11 @@ export default function Checkout() {
                 <span>Subtotal</span>
                 <span>{formatCurrency(subtotal)}</span>
               </div>
-              <div className="flex justify-between text-slate-600">
-                <span>GST (18%)</span>
-                <span>{formatCurrency(gst)}</span>
+              <div className="flex justify-between items-center text-slate-500 mb-4">
+                <span>GST ({companySettings?.globalGstPercentage ?? 18}%)</span>
+                <span>₹{gst.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
               </div>
-              <div className="flex justify-between text-slate-900 font-bold pt-3 border-t border-slate-100">
+              <div className="flex justify-between items-center text-slate-800 font-bold text-lg pt-4 border-t border-slate-200">
                 <span>Total Payable</span>
                 <span className="text-lg text-indigo-600">{formatCurrency(totalAmount)}</span>
               </div>

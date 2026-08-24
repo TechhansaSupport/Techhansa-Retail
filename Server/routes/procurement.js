@@ -78,22 +78,28 @@ router.post('/rfp', async (req, res) => {
     await newRFP.save();
 
     if (newRFP.status !== 'Draft') {
+      const CompanySettings = require('../models/CompanySettings');
+      let settings = await CompanySettings.findOne();
+      const gstRate = settings && settings.globalGstPercentage !== undefined ? settings.globalGstPercentage : 18;
+      
       // Create placeholder Quotation
       // Build items array from RFP products
       const mappedItems = (newRFP.products || []).map(p => {
-        const rate = p.price || 0; 
-        const gstAmount = rate * 0.18;
-        const totalAmount = rate + gstAmount;
+        const rate = p.price || 0;
+        const qty = p.quantity || 1;
+        const gstAmount = rate * (gstRate / 100);
+        const unitTotal = rate + gstAmount;
+        const totalAmount = unitTotal * qty;
         return {
           productName: p.category || '',
           brand: p.brand || '',
           model: p.model || '',
           configuration: p.configuration || '',
-          quantity: p.quantity || 1,
+          quantity: qty,
           unitPrice: rate,
           totalAmount: totalAmount,
           hsn: p.hsn || '-',
-          taxRate: p.taxRate || 18
+          taxRate: p.taxRate || gstRate
         };
       });
 
@@ -286,10 +292,14 @@ router.put('/rfp/:id', async (req, res) => {
         });
         await newOrder.save();
 
+        const CompanySettings = require('../models/CompanySettings');
+        let settings = await CompanySettings.findOne();
+        const gstRate = settings && settings.globalGstPercentage !== undefined ? settings.globalGstPercentage : 18;
+
         // Build productDetails from RFP products
         const prodDetails = (updatedRFP.products || []).map(p => {
           const rate = 0;
-          const gstAmount = rate * 0.18;
+          const gstAmount = rate * (gstRate / 100);
           const totalAmount = rate + gstAmount;
           return {
             productName: p.category || '',

@@ -34,7 +34,8 @@ const OrderSchema = new mongoose.Schema({
     assignedSerials: [{ type: String }]
   }],
   userId: { type: String, required: false },
-  invoiceSent: { type: Boolean, default: false }
+  invoiceSent: { type: Boolean, default: false },
+  trackingEmailSent: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', OrderSchema);

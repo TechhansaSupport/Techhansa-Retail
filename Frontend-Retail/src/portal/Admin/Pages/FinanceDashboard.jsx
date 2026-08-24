@@ -13,6 +13,7 @@ export default function FinanceDashboard() {
   
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, action: '', paymentObj: null });
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [storeLedger, setStoreLedger] = useState([]);
@@ -54,9 +55,16 @@ export default function FinanceDashboard() {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount || 0);
   };
 
-  const handleAction = async (action, paymentObj = selectedPayment) => {
+  const handleAction = (action, paymentObj = selectedPayment) => {
+    if (!paymentObj) return;
+    setConfirmDialog({ isOpen: true, action, paymentObj });
+  };
+
+  const processAction = async () => {
+    const { action, paymentObj } = confirmDialog;
     if (!paymentObj) return;
     setIsProcessing(true);
+    setConfirmDialog({ isOpen: false, action: '', paymentObj: null });
     try {
       const endpoint = action === 'approve' 
         ? `/api/finance/approve/${encodeURIComponent(paymentObj.orderType)}/${paymentObj._id}`
@@ -414,6 +422,45 @@ export default function FinanceDashboard() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Confirmation Modal */}
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center"
+          >
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmDialog.action === 'approve' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+              {confirmDialog.action === 'approve' ? <CheckCircle className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Are you sure?</h3>
+            <p className="text-slate-500 mb-6">
+              Do you really want to {confirmDialog.action} this payment? This action cannot be undone.
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setConfirmDialog({ isOpen: false, action: '', paymentObj: null })}
+                className="px-5 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={processAction}
+                className={`px-5 py-2.5 text-white font-bold rounded-xl transition-colors ${
+                  confirmDialog.action === 'approve' 
+                    ? 'bg-emerald-600 hover:bg-emerald-700' 
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+                disabled={isProcessing}
+              >
+                {isProcessing ? 'Processing...' : `Yes, ${confirmDialog.action}`}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
