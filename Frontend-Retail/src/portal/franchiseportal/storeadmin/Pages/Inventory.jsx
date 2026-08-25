@@ -52,8 +52,21 @@ export default function Inventory() {
 
   const handleOpenModal = (item = null) => {
     if (item) {
+      let formattedSpecs = item.specs || '';
+      if (typeof item.specs === 'string') {
+        try {
+          const parsed = JSON.parse(item.specs);
+          if (parsed.Specs) {
+            formattedSpecs = parsed.Specs;
+          } else {
+            formattedSpecs = Object.values(parsed).filter(Boolean).join(', ');
+          }
+        } catch (e) {
+          // Not valid JSON, leave as is
+        }
+      }
       setEditingItem(item);
-      setFormData(item);
+      setFormData({ ...item, specs: formattedSpecs });
     } else {
       setEditingItem(null);
       setFormData(initialFormState);

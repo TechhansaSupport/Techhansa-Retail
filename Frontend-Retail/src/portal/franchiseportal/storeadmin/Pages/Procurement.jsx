@@ -50,15 +50,15 @@ export default function Procurement() {
 
   // handleDownloadPDF removed as we now show a modal instead
 
-  const categories = [...new Set(techhansaCatalog.map(item => item.category?.trim()).filter(Boolean))];
-  const brands = [...new Set(techhansaCatalog.filter(item => !selectedCategory || item.category?.trim() === selectedCategory).map(item => item.brand?.trim()).filter(Boolean))];
+  const categories = [...new Set(techhansaCatalog.map(item => (item.category?.trim() || item.name?.trim())).filter(Boolean))];
+  const brands = [...new Set(techhansaCatalog.filter(item => !selectedCategory || (item.category?.trim() || item.name?.trim()) === selectedCategory).map(item => item.brand?.trim()).filter(Boolean))];
   const models = [...new Set(techhansaCatalog.filter(item => 
-    (!selectedCategory || item.category?.trim() === selectedCategory) && 
+    (!selectedCategory || (item.category?.trim() || item.name?.trim()) === selectedCategory) && 
     (!selectedBrand || item.brand?.trim() === selectedBrand)
   ).map(item => item.model?.trim()).filter(Boolean))];
   
   const specifications = techhansaCatalog.filter(item => 
-    (!selectedCategory || item.category?.trim() === selectedCategory) && 
+    (!selectedCategory || (item.category?.trim() || item.name?.trim()) === selectedCategory) && 
     (!selectedBrand || item.brand?.trim() === selectedBrand) &&
     (!selectedModel || item.model?.trim() === selectedModel)
   );
