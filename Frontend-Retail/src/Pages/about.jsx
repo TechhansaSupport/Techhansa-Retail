@@ -7,17 +7,32 @@ import {
 } from 'lucide-react';
 
 // --- IMAGE IMPORTS ---
-// Replace these with your actual local paths
 import aboutBannerImg from '../assets/about-banner.jpg'; 
 import integrity from '../assets/integrity.jpg';
 import excellenceImg from '../assets/excellence.jpg';
 import innovationImg from '../assets/innovation.jpg';
 import partnershipImg from '../assets/partnership.jpg';
 import customerSuccessImg from '../assets/customer-success.jpg';
+import missionImg from '../assets/mission.jpg';
+import visionImg from '../assets/vision.jpg';
+import everyIndustryImg from '../assets/everyIndustry.avif';
+import partnerPortalImg from '../assets/partnerportal.avif';
+import franchiseOpportunityImg from '../assets/franchiseopportunity.jpg';
+import trustedProcurementImg from '../assets/trustedprocurement.avif';
+import competitivePriceImg from '../assets/compititiveprice.jpg';
+import verifiedVendorImg from '../assets/verifiedvender.avif';
+import endToEndSupportImg from '../assets/endtoendsupport.avif';
+import qualityAssuranceImg from '../assets/qualityassurance.avif';
+import customerCentricImg from '../assets/customercentric.avif';
+import buyersImg from '../assets/buyers.jpg';
+import businessPartnerImg from '../assets/businesspartner.jpg';
+import franchisePartnerImg from '../assets/franchisepartner.jpg';
+import registerImg from '../assets/register.avif';
+import serviceRequirementImg from '../assets/servicerequirement.avif';
+import competitiveBidsImg from '../assets/compititivebids.jpg';
+import compareSelectImg from '../assets/compareselect.avif';
+import procureWithConfidenceImg from '../assets/procurewithconfidence.jpg';
 
-// Variables for Mission & Vision Images (Replace with local imports)
-const missionImg = "/src/assets/mission.jpg"; // Replace with actual path
-const visionImg = "/src/assets/vision.jpg"; // Replace with actual path
 
 // --- DATA ARRAYS ---
 
@@ -33,29 +48,29 @@ const pillars = [
     title: "Solutions for Every Industry", 
     icon: Building2, 
     desc: "We proudly serve Corporate Offices, IT Companies, Educational Institutions, Universities & Colleges, Schools, Hospitals, Public Sector Enterprises, Banking & Financial Institutions, Manufacturing Industries, Startups, MSMEs, System Integrators, and Business Consultants.",
-    image: "src/assets/everyIndustry.avif"
+    image: everyIndustryImg
   },
   { 
     title: "Partner Portal", 
     icon: Users, 
     desc: "Designed for IT distributors, suppliers, OEMs, authorized dealers, and system integrators. Partners can participate in live bidding opportunities, receive qualified leads, submit quotations, manage orders, and expand their customer base.",
-    image: "src/assets/partnerPortal.avif"
+    image: partnerPortalImg
   },
   { 
     title: "Franchise Opportunities", 
     icon: Globe, 
     desc: "Our nationwide franchise program offers an established business model, brand support, technical assistance, business training, marketing support, lead generation, sales guidance, and continuous operational support.",
-    image: "src/assets/franchiseopportunity.jpg"
+    image: franchiseOpportunityImg
   }
 ];
 
 const whyChooseUs = [
-  { title: "Trusted Procurement Platform", icon: Shield, image: "src/assets/trustedprocurement.avif" },
-  { title: "Competitive Pricing", icon: Zap, image: "src/assets/compititiveprice.jpg" },
-  { title: "Verified Vendor Network", icon: CheckCircle2, image: "src/assets/verifiedvender.avif" },
-  { title: "End-to-End Support", icon: HeadphonesIcon, image: "src/assets/endtoendsupport.avif" },
-  { title: "Quality Assurance", icon: ThumbsUp, image: "src/assets/qualityassurance.avif" },
-  { title: "Customer-Centric Approach", icon: HeartHandshake, image: "src/assets/customercentric.avif" }
+  { title: "Trusted Procurement Platform", icon: Shield, image: trustedProcurementImg },
+  { title: "Competitive Pricing", icon: Zap, image: competitivePriceImg },
+  { title: "Verified Vendor Network", icon: CheckCircle2, image: verifiedVendorImg },
+  { title: "End-to-End Support", icon: HeadphonesIcon, image: endToEndSupportImg },
+  { title: "Quality Assurance", icon: ThumbsUp, image: qualityAssuranceImg },
+  { title: "Customer-Centric Approach", icon: HeartHandshake, image: customerCentricImg }
 ];
 
 const coreValues = [
@@ -92,9 +107,9 @@ const coreValues = [
 ];
 
 const whoCanJoin = [
-  { type: "Buyers", icon: Briefcase, image: "src/assets/buyers.jpg", list: ["Corporate Companies", "Educational Institutions", "Hospitals", "Enterprises", "MSMEs", "Startups"] },
-  { type: "Business Partners", icon: Server, image: "src/assets/businesspartner.jpg", list: ["IT Distributors", "Authorized Dealers", "OEM Partners", "Suppliers", "System Integrators"] },
-  { type: "Franchise Partners", icon: TrendingUp, image: "src/assets/franchisepartner.jpg", list: ["Entrepreneurs", "Existing Business Owners", "IT Professionals", "Technology Consultants", "Regional Business Developers"] }
+  { type: "Buyers", icon: Briefcase, image: buyersImg, list: ["Corporate Companies", "Educational Institutions", "Hospitals", "Enterprises", "MSMEs", "Startups"] },
+  { type: "Business Partners", icon: Server, image: businessPartnerImg, list: ["IT Distributors", "Authorized Dealers", "OEM Partners", "Suppliers", "System Integrators"] },
+  { type: "Franchise Partners", icon: TrendingUp, image: franchisePartnerImg, list: ["Entrepreneurs", "Existing Business Owners", "IT Professionals", "Technology Consultants", "Regional Business Developers"] }
 ];
 
 // NOTE: This single "process" array (title + desc + image) now drives the
@@ -103,11 +118,11 @@ const whoCanJoin = [
 // missing images, since the render was mistakenly reading from "steps"
 // while the real image URLs lived only in "process".
 const process = [
-  { title: "Register", desc: "Create your verified business profile on the Techhansa platform.", image: "src/assets/register.avif" },
-  { title: "Submit Requirements", desc: "Share your bulk hardware needs with complete specifications.", image: "src/assets/servicerequirement.avif" },
-  { title: "Receive Competitive Bids", desc: "Verified suppliers submit competitive quotations transparently.", image: "src/assets/compititivebids.jpg" },
-  { title: "Compare & Select", desc: "Evaluate pricing and offerings before making your decision.", image: "src/assets/compareselect.avif" },
-  { title: "Procure with Confidence", desc: "Complete purchases through our secure, streamlined workflow.", image: "src/assets/procurewithconfidence.jpg" }
+  { title: "Register", desc: "Create your verified business profile on the Techhansa platform.", image: registerImg },
+  { title: "Submit Requirements", desc: "Share your bulk hardware needs with complete specifications.", image: serviceRequirementImg },
+  { title: "Receive Competitive Bids", desc: "Verified suppliers submit competitive quotations transparently.", image: competitiveBidsImg },
+  { title: "Compare & Select", desc: "Evaluate pricing and offerings before making your decision.", image: compareSelectImg },
+  { title: "Procure with Confidence", desc: "Complete purchases through our secure, streamlined workflow.", image: procureWithConfidenceImg }
 ];
 
 // --- MAIN PAGE COMPONENT ---
