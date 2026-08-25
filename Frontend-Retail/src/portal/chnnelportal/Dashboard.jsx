@@ -6,12 +6,12 @@ import { AuthContext } from '../../context/AuthContext';
 import { exportToCSV } from '../../utils/exportUtils';
 
 // Components
-import KPIGrid from './components/KPIGrid';
-import SmartAnalytics from './components/SmartAnalytics';
+import KPIGrid from './Components/KPIGrid';
+import SmartAnalytics from './Components/SmartAnalytics';
 import CreditCard from './Components/CreditCard';
 
-import RecentActivity from './components/RecentActivity';
-import ProcurementTables from './components/ProcurementTable';
+import RecentActivity from './Components/RecentActivity';
+import ProcurementTables from './Components/ProcurementTable';
 import { fetchWithAuth } from '../../utils/api.js';
 
 const containerVariants = {
