@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useEmployee } from '../context/EmployeeContext';
 
 export default function EmployeeInventory() {
-  const { user } = useContext(AuthContext);
+  const { inventory = [] } = useEmployee();
   const [searchQuery, setSearchQuery] = useState('');
 
   const searchLower = searchQuery.toLowerCase();
