@@ -136,7 +136,8 @@ router.post('/login', async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+    // Returning 400 instead of 500 so Hostinger doesn't replace our JSON with an HTML page!
+    res.status(400).json({ message: 'Server error: ' + error.message });
   }
 });
 router.post('/logout', async (req, res) => {
