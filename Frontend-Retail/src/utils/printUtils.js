@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { numberToWords } from './numberToWords';
 
-export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
+export const printInvoice = ({ invoice, companySettings, user, rfp, preview = false }) => {
   if (!invoice) return;
 
   const doc = new jsPDF();
@@ -422,8 +422,11 @@ export const printInvoice = ({ invoice, companySettings, user, rfp }) => {
   doc.setFontSize(7);
   doc.text('This is a Computer Generated Invoice', 105, finalY + 50, { align: 'center' });
 
-  // Output PDF
-  doc.save(`${invoice.invoiceNumber || invoice.invoiceId || 'Invoice'}.pdf`);
+  if (preview) {
+    window.open(doc.output('bloburl'), '_blank');
+  } else {
+    doc.save(`${invoice.invoiceNumber || invoice.invoiceId || 'Invoice'}.pdf`);
+  }
 };
 
 export const printReport = (reportTitle, data) => {
