@@ -8,6 +8,7 @@ const User = require('../models/User');
 const JWT_SECRET = process.env.JWT_SECRET || 'techhansa_super_secret_key_2026';
 
 router.post('/seed', async (req, res) => {
+  try {
     // Clear out old test users to avoid duplicate key errors if this is run multiple times
     await User.deleteMany({ userId: { $in: ['admin123', 'franchise123', 'employee123', 'channel123', 'accountmanager123', 'inventorymanager123'] } });
 
