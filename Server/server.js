@@ -50,6 +50,12 @@ app.use('/api/notifications', verifyToken, notificationsRoute);
 app.use('/api/finance', verifyToken, financeRoute);
 app.use('/api/warehouse', verifyToken, warehouseRoute);
 
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: "Server is running"
+  })
+});
 // =========================================
 // FRONTEND SERVING (Techhansa Retail)
 // =========================================
@@ -85,4 +91,7 @@ async function startServer() {
   }
 }
 
+
 startServer();
+
+
