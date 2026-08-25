@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../../api/axios';
 import { motion } from 'framer-motion';
-import { ClipboardList, FileText, ArrowRightLeft } from 'lucide-react';
+import { ClipboardList, FileText, ArrowRightLeft, Download, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { printInvoice } from '../../../utils/printUtils';
 
 export default function AuditLogs() {
   const [logs, setLogs] = useState({ creditTransactions: [], invoices: [] });
@@ -114,7 +115,7 @@ export default function AuditLogs() {
                     <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${
                       tx.type === 'Deducted' || tx.type === 'Decreased' ? 'text-red-600' : 'text-emerald-600'
                     }`}>
-                      ${tx.amount.toLocaleString()}
+                      ₹{tx.amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">{tx.description}</td>
                   </tr>
@@ -123,7 +124,15 @@ export default function AuditLogs() {
                 logs.invoices.map((inv) => (
                   <tr key={inv._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(inv.createdAt).toLocaleString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{inv.invoiceNumber}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 flex items-center gap-3">
+                      <span className="hover:underline cursor-pointer" onClick={() => printInvoice({ invoice: inv, preview: true })} title="View Invoice">
+                        {inv.invoiceNumber}
+                      </span>
+                      <div className="flex items-center gap-1.5 text-slate-400">
+                        <Eye size={16} className="hover:text-blue-600 transition-colors cursor-pointer" onClick={() => printInvoice({ invoice: inv, preview: true })} title="View Invoice PDF" />
+                        <Download size={16} className="hover:text-blue-600 transition-colors cursor-pointer" onClick={() => printInvoice({ invoice: inv })} title="Download Invoice PDF" />
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{inv.storeId || 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -133,7 +142,7 @@ export default function AuditLogs() {
                         {inv.paymentStatus}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${inv.amount.toLocaleString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">₹{inv.amount.toLocaleString()}</td>
                   </tr>
                 ))
               )}
