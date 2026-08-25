@@ -334,7 +334,7 @@ export default function CreateRFP() {
                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
                           >
                             <option value="">All Categories</option>
-                            {[...new Set(catalog.map(item => item.category?.trim()).filter(Boolean))].map(c => (
+                            {[...new Set(catalog.map(item => (item.category?.trim() || item.name?.trim())).filter(Boolean))].map(c => (
                               <option key={c} value={c}>{c}</option>
                             ))}
                           </select>
@@ -352,7 +352,7 @@ export default function CreateRFP() {
                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
                           >
                             <option value="">All Brands</option>
-                            {[...new Set(catalog.filter(item => !p.category || item.category?.trim() === p.category).map(item => item.brand?.trim()).filter(Boolean))].map(b => (
+                            {[...new Set(catalog.filter(item => !p.category || (item.category?.trim() || item.name?.trim()) === p.category).map(item => item.brand?.trim()).filter(Boolean))].map(b => (
                               <option key={b} value={b}>{b}</option>
                             ))}
                           </select>
@@ -370,7 +370,7 @@ export default function CreateRFP() {
                           >
                             <option value="">All Models</option>
                             {[...new Set(catalog.filter(item => 
-                              (!p.category || item.category?.trim() === p.category) && 
+                              (!p.category || (item.category?.trim() || item.name?.trim()) === p.category) && 
                               (!p.brand || item.brand?.trim() === p.brand)
                             ).map(item => item.model?.trim()).filter(Boolean))].map(m => (
                               <option key={m} value={m}>{m}</option>
@@ -397,7 +397,7 @@ export default function CreateRFP() {
                           >
                             <option value="">Select Specs...</option>
                             {catalog.filter(item => 
-                              (!p.category || item.category?.trim() === p.category) && 
+                              (!p.category || (item.category?.trim() || item.name?.trim()) === p.category) && 
                               (!p.brand || item.brand?.trim() === p.brand) &&
                               (!p.model || item.model?.trim() === p.model)
                             ).map(item => (

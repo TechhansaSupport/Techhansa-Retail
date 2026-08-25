@@ -105,7 +105,21 @@ export default function InvoiceTemplate({ invoice, storeData, companySettings })
                     </td>
                     <td className="p-2 border-r-2 border-black align-top">{item.brand || '-'}</td>
                     <td className="p-2 border-r-2 border-black align-top">{item.model || '-'}</td>
-                    <td className="p-2 border-r-2 border-black align-top">{item.specs || '-'}</td>
+                    <td className="p-2 border-r-2 border-black align-top">
+                      {(() => {
+                        if (!item.specs) return '-';
+                        if (typeof item.specs !== 'string') {
+                          try { return JSON.stringify(item.specs); } catch(e) { return '-'; }
+                        }
+                        try {
+                          const parsed = JSON.parse(item.specs);
+                          if (parsed.Specs) return parsed.Specs;
+                          return Object.values(parsed).filter(Boolean).join(', ');
+                        } catch (e) {
+                          return item.specs;
+                        }
+                      })()}
+                    </td>
                     <td className="p-2 border-r-2 border-black align-top text-center">{item.quantity}</td>
                     <td className="p-2 border-r-2 border-black align-top text-right">{baseRate.toFixed(2)}</td>
                     <td className="p-2 border-r-2 border-black align-top text-right">{itemTax.toFixed(2)}</td>
