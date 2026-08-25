@@ -5,10 +5,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'techhansa_super_secret_key_2026';
 
 router.post('/seed', async (req, res) => {
-  try {
     // Clear out old test users to avoid duplicate key errors if this is run multiple times
     await User.deleteMany({ userId: { $in: ['admin123', 'franchise123', 'employee123', 'channel123', 'accountmanager123', 'inventorymanager123'] } });
 
@@ -136,8 +135,7 @@ router.post('/login', async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
-    // Returning 400 instead of 500 so Hostinger doesn't replace our JSON with an HTML page!
-    res.status(400).json({ message: 'Server error: ' + error.message });
+    res.status(400).json({ message: 'Server error during login: ' + error.message });
   }
 });
 router.post('/logout', async (req, res) => {
@@ -156,7 +154,7 @@ router.post('/logout', async (req, res) => {
     res.json({ message: 'Logout successful' });
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json({ message: 'Server error during logout' });
+    res.status(400).json({ message: 'Server error during logout: ' + error.message });
   }
 });
 
@@ -184,7 +182,7 @@ router.get('/me', async (req, res) => {
     });
   } catch (error) {
     console.error('Fetch me error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(400).json({ message: 'Server error fetching user: ' + error.message });
   }
 });
 
