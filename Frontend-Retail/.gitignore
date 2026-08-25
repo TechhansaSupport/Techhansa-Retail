@@ -22,7 +22,5 @@ node_modules
 *.sln
 *.sw?
 
-# Build and Secrets
-dist
-dist/
+# Secrets
 .env
