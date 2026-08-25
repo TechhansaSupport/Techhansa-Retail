@@ -21,11 +21,18 @@ export const AuthProvider = ({ children }) => {
         
         try {
           const res = await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me?userId=${parsedUser.userId}`);
-          if (res.ok) {
-            const freshUser = await res.json();
-            setUser(freshUser);
-            sessionStorage.setItem('user', JSON.stringify(freshUser));
+          const contentType = res.headers.get("content-type") || "";
+          
+          if (!res.ok || !contentType.includes("application/json")) {
+            const text = await res.text();
+            console.error(`Sync API returned ${res.status}: ${text.slice(0, 200)}`);
+            setLoading(false);
+            return;
           }
+          
+          const freshUser = await res.json();
+          setUser(freshUser);
+          sessionStorage.setItem('user', JSON.stringify(freshUser));
         } catch (error) {
           console.error('Failed to sync user data', error);
         }
