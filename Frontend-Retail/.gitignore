@@ -21,3 +21,8 @@ node_modules
 *.njsproj
 *.sln
 *.sw?
+
+# Build and Secrets
+dist
+dist/
+.env
