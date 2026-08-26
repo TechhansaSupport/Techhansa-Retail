@@ -76,6 +76,14 @@ export default function LoginPage() {
         body: JSON.stringify({ userId, password }),
       });
 
+      const contentType = response.headers.get("content-type") || "";
+      if (!response.ok || !contentType.includes("application/json")) {
+        const text = await response.text();
+        alert(`Login API returned ${response.status}: ${text.slice(0, 200)}`);
+        setIsSubmitting(false);
+        return;
+      }
+
       const data = await response.json();
 
       if (response.ok) {
