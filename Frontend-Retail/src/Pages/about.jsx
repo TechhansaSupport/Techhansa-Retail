@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 // --- IMAGE IMPORTS ---
+import headerImg from '../assets/about-banner.jpg';
 import aboutBannerImg from '../assets/retail-store-banner.jpg'; 
 import integrity from '../assets/integrity.jpg';
 import excellenceImg from '../assets/excellence.jpg';
@@ -226,7 +227,7 @@ export default function AboutPage() {
           >
             <div className="relative w-full max-w-md lg:max-w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-[4px] border-white/60">
               <img 
-                src={excellenceImg} 
+                src={headerImg} 
                 alt="IT Hardware Procurement" 
                 className="w-full h-auto md:h-[500px] object-cover"
               />
