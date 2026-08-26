@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 // --- IMAGE IMPORTS ---
-import aboutBannerImg from '../assets/about-banner.jpg'; 
+import aboutBannerImg from '../assets/retail-store-banner.jpg'; 
 import integrity from '../assets/integrity.jpg';
 import excellenceImg from '../assets/excellence.jpg';
 import innovationImg from '../assets/innovation.jpg';
@@ -32,7 +32,6 @@ import serviceRequirementImg from '../assets/servicerequirement.avif';
 import competitiveBidsImg from '../assets/compititivebids.jpg';
 import compareSelectImg from '../assets/compareselect.avif';
 import procureWithConfidenceImg from '../assets/procurewithconfidence.jpg';
-
 
 // --- DATA ARRAYS ---
 
@@ -227,7 +226,7 @@ export default function AboutPage() {
           >
             <div className="relative w-full max-w-md lg:max-w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-[4px] border-white/60">
               <img 
-                src={aboutBannerImg} 
+                src={excellenceImg} 
                 alt="IT Hardware Procurement" 
                 className="w-full h-auto md:h-[500px] object-cover"
               />

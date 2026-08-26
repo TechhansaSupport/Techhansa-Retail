@@ -1,11 +1,20 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import HeroSec from '../../assets/Hero.mp4';
+import RetailStore from '../../assets/retail-store.jpg';
+import Hero4 from '../../assets/hero4.png';
 
 export default function Hero() {
   const heroRef = useRef(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides = [
+    { type: 'video', src: HeroSec, overlayClass: 'bg-[#07162c]/50' },
+    { type: 'image', src: RetailStore, overlayClass: 'bg-[#07162c]/50 backdrop-blur-xs' },
+    { type: 'image', src: Hero4, overlayClass: 'bg-black/40 backdrop-blur-[1px]' }
+  ];
 
   useEffect(() => {
     AOS.init({
@@ -15,6 +24,14 @@ export default function Hero() {
       offset: 50,
     });
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
   const handleScrollDown = () => {
     if (heroRef.current) {
       window.scrollTo({
@@ -24,24 +41,70 @@ export default function Hero() {
     }
   };
 
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
   return (
     <section 
       ref={heroRef}
       className="relative w-full h-[100svh] lg:h-[80vh] min-h-[550px] flex items-center justify-center overflow-hidden"
     >
-      <video
-        className="absolute inset-0 w-full h-full object-cover -z-10"
-        src={HeroSec}
-        autoPlay
-        muted
-        loop
-        playsInline
-        aria-hidden="true"
-      />
+      {slides.map((slide, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${
+            index === currentSlide ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+          }`}
+        >
+          {slide.type === 'video' ? (
+            <video
+              className="absolute inset-0 w-full h-full object-cover"
+              src={slide.src}
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-hidden="true"
+            />
+          ) : (
+            <img
+              className="absolute inset-0 w-full h-full object-cover"
+              src={slide.src}
+              alt="Hero Slide"
+            />
+          )}
+        </div>
+      ))}
+
+      {/* Manual Sliding Controls */}
+      <button 
+        onClick={prevSlide}
+        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2 text-white/50 hover:text-white transition-colors duration-300"
+        aria-label="Previous slide"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 sm:h-12 sm:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <button 
+        onClick={nextSlide}
+        className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2 text-white/50 hover:text-white transition-colors duration-300"
+        aria-label="Next slide"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 sm:h-12 sm:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
 
       {/* ================= DARK OVERLAY ================= */}
     
-      <div className="absolute inset-0 bg-[#07162c]/50 z-0"></div>
+      <div className={`absolute inset-0 z-0 transition-all duration-1000 ${slides[currentSlide].overlayClass}`}></div>
 
       {/* ================= CENTERED CONTENT ================= */}
       <div className="relative z-10 flex flex-col items-center text-center px-4 sm:px-6 max-w-5xl mx-auto w-full mt-[-2rem] sm:mt-[-3rem]">

@@ -15,6 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
+import logo from '../../../assets/logo.png';
 
 const SidebarLink = ({ to, icon: Icon, children }) => {
   const location = useLocation();
@@ -48,7 +49,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       {/* Logo Area */}
       <div className="h-20 md:h-28 flex items-center px-4 md:px-6 border-b border-slate-100 justify-between">
         <Link to="/" className="flex items-center min-w-0">
-          <img src="/src/assets/logo.png" alt="Techhansa" className="h-12 md:h-24 w-auto -ml-2 md:-ml-4 object-contain shrink-0" />
+          <img src={logo} alt="Techhansa" className="h-12 md:h-24 w-auto -ml-2 md:-ml-4 object-contain shrink-0" />
           <span className="text-base md:text-lg font-black ml-2 text-[var(--premium-gold)] tracking-tight uppercase whitespace-nowrap truncate">
             Techhansa Retail
           </span>
