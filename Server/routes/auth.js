@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'techhansa_super_secret_key_2026';
 
 router.post('/seed', async (req, res) => {
   try {
@@ -136,7 +136,7 @@ router.post('/login', async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+    res.status(400).json({ message: 'Server error during login: ' + error.message });
   }
 });
 router.post('/logout', async (req, res) => {
@@ -155,7 +155,7 @@ router.post('/logout', async (req, res) => {
     res.json({ message: 'Logout successful' });
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json({ message: 'Server error during logout' });
+    res.status(400).json({ message: 'Server error during logout: ' + error.message });
   }
 });
 
@@ -183,7 +183,7 @@ router.get('/me', async (req, res) => {
     });
   } catch (error) {
     console.error('Fetch me error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(400).json({ message: 'Server error fetching user: ' + error.message });
   }
 });
 
