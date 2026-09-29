@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
+const Broadcast = require('../models/Broadcast');
 
 // Temporary simple auth check since we're keeping it aligned with admin
 // Depending on auth implementation, we might want to just get 'admin' notifications
@@ -61,6 +62,54 @@ router.post('/seed', async (req, res) => {
     res.json({ success: true, message: 'Notifications seeded successfully' });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// GET /api/notifications/broadcasts/history
+// Fetch all broadcast history
+router.get('/broadcasts/history', async (req, res) => {
+  try {
+    const broadcasts = await Broadcast.find().sort({ createdAt: -1 });
+    res.json(broadcasts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// POST /api/notifications/broadcast
+// Broadcast notification to specific roles
+router.post('/broadcast', async (req, res) => {
+  try {
+    const { title, message, roles } = req.body;
+    if (!title || !message || !roles || !Array.isArray(roles)) {
+      return res.status(400).json({ message: 'Title, message, and an array of roles are required.' });
+    }
+
+    const User = require('../models/User');
+    const users = await User.find({ role: { $in: roles } });
+    
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found for the selected roles.' });
+    }
+
+    const notifications = users.map(user => ({
+      userId: user.userId,
+      title,
+      message,
+      unread: true,
+      time: 'Just now' // Simplified for immediate display
+    }));
+
+    await Notification.insertMany(notifications);
+
+    const newBroadcast = new Broadcast({ title, message, roles });
+    await newBroadcast.save();
+
+    res.json({ success: true, message: `Notification broadcasted to ${users.length} users.` });
+  } catch (err) {
+    console.error('Broadcast Error:', err);
     res.status(500).json({ message: 'Server Error' });
   }
 });
